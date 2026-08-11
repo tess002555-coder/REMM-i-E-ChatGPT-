@@ -1,0 +1,6 @@
+{
+  "name": "Remember ME",
+  "description": "Floating desktop widget application featuring Denia from Wuthering Waves for task management, routines, schedule reminders, and audio notifications.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
