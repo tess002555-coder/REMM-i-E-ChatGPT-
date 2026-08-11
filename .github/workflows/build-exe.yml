@@ -36,7 +36,14 @@ jobs:
       - name: Install npm dependencies
         shell: pwsh
         run: |
-          npm ci --include=optional || npm install --legacy-peer-deps --include=optional
+          if (Test-Path package-lock.json) { Remove-Item -Force package-lock.json }
+          if (Test-Path node_modules) { Remove-Item -Recurse -Force node_modules }
+          npm install --no-package-lock --legacy-peer-deps
+
+      - name: Generate Valid Tauri Icons
+        shell: pwsh
+        run: |
+          npx tauri icon app-icon.png
 
       - name: Build Tauri Desktop App (.exe)
         uses: tauri-apps/tauri-action@v0
@@ -57,3 +64,4 @@ jobs:
           path: |
             src-tauri/target/release/bundle/nsis/*.exe
             src-tauri/target/release/*.exe
+
