@@ -1,4 +1,4 @@
-export type CharacterState = 'peek' | 'pointing' | 'alert';
+export type CharacterState = 'peek' | 'pointing' | 'alert' | 'idle';
 
 export type SnapEdge = 'left' | 'right' | 'top' | 'bottom' | 'none';
 
@@ -52,6 +52,7 @@ export interface CharacterConfig {
     peek?: string;
     pointing?: string;
     alert?: string;
+    idle?: string;
   };
   speechEnabled: boolean;
   ttsEnabled?: boolean;

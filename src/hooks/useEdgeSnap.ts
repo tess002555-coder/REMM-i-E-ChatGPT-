@@ -20,7 +20,7 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
   } = options;
 
   const [windowState, setWindowState] = useState<WindowState>(() => {
-    const initialW = typeof window !== 'undefined' ? window.screen.availWidth : 1200;
+    const initialW = typeof window !== 'undefined' ? window.innerWidth : 1200;
     return {
       x: initialW - 160,
       y: 120,
@@ -40,8 +40,8 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
 
   const getBounds = useCallback(() => {
     return {
-      width: containerBounds?.width || (typeof window !== 'undefined' ? window.screen.availWidth : 1200),
-      height: containerBounds?.height || (typeof window !== 'undefined' ? window.screen.availHeight : 800),
+      width: containerBounds?.width || (typeof window !== 'undefined' ? window.innerWidth : 1200),
+      height: containerBounds?.height || (typeof window !== 'undefined' ? window.innerHeight : 800),
     };
   }, [containerBounds]);
 
@@ -117,60 +117,34 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
 
-    if (hoverDelayMs === 0) {
-      setWindowState(prev => ({
-        ...prev,
-        isPeeking: false,
-        isPanelOpen: true,
-      }));
-    } else {
-      hoverTimerRef.current = setTimeout(() => {
-        setWindowState(prev => ({
-          ...prev,
-          isPeeking: false,
-          isPanelOpen: true,
-        }));
-      }, hoverDelayMs);
-    }
-  }, [hoverDelayMs]);
+    // Change to ready (idle) pose by disabling peek. Do not open panel on hover.
+    setWindowState(prev => ({
+      ...prev,
+      isPeeking: false,
+    }));
+  }, []);
 
   // Handle Mouse leave / touch hover end on widget (Pointing -> Peek transition delay)
   const handleMouseLeave = useCallback(() => {
     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    
     if (closeDelayMs === 0) {
       setWindowState(prev => {
-        if (prev.isPinned) return prev;
-        const boundsW = containerBounds?.width || (typeof window !== 'undefined' ? window.screen.availWidth : 1200);
-        return {
-          ...prev,
-          x: boundsW - 160,
-          y: 120,
-          snappedEdge: 'right',
-          isPanelOpen: false,
-          isPeeking: true,
-        };
+        if (prev.isPinned || prev.isPanelOpen) return prev;
+        return { ...prev, isPeeking: true };
       });
     } else {
-      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
       closeTimerRef.current = setTimeout(() => {
-        setWindowState(p => {
-          if (p.isPinned) return p;
-          const boundsW = containerBounds?.width || (typeof window !== 'undefined' ? window.screen.availWidth : 1200);
-          return {
-            ...p,
-            x: boundsW - 160,
-            y: 120,
-            snappedEdge: 'right',
-            isPanelOpen: false,
-            isPeeking: true,
-          };
+        setWindowState(prev => {
+          if (prev.isPinned || prev.isPanelOpen) return prev;
+          return { ...prev, isPeeking: true };
         });
       }, closeDelayMs);
     }
-
+    
     resetIdleTimer();
-  }, [closeDelayMs, resetIdleTimer, containerBounds]);
+  }, [closeDelayMs, resetIdleTimer]);
 
   // Handle Click / Tap (Pin Open / Toggle)
   const togglePanel = useCallback(() => {
@@ -192,17 +166,13 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
 
-    const boundsW = containerBounds?.width || (typeof window !== 'undefined' ? window.screen.availWidth : 1200);
     setWindowState(prev => ({
       ...prev,
-      x: boundsW - 160,
-      y: 120,
-      snappedEdge: 'right',
       isPanelOpen: false,
       isPinned: false,
       isPeeking: true,
     }));
-  }, [containerBounds]);
+  }, []);
 
   const toggleDisplayMode = useCallback(() => {
     setWindowState(prev => ({

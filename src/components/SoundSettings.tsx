@@ -712,9 +712,10 @@ export const SoundSettings: React.FC<SoundSettingsProps> = ({
 
                   {(
                     [
-                      { key: 'peek', label: 'Gerakan 1: Mengintip (Peek)', desc: 'Tampil saat hover / mengintip dari tepi' },
-                      { key: 'pointing', label: 'Gerakan 2: Menunjuk (Pointing)', desc: 'Tampil saat tabel/panel terbuka' },
-                      { key: 'alert', label: 'Gerakan 3: Peringatan (Alert)', desc: 'Tampil saat mendekati deadline H-Jam' },
+                      { key: 'peek', label: 'Gerakan 1: Mengintip (Peek)', desc: 'Tampil saat maskot sedang di tepi' },
+                      { key: 'idle', label: 'Gerakan 2: Siap / Hover (Idle)', desc: 'Tampil saat cursor diarahkan (hover)' },
+                      { key: 'pointing', label: 'Gerakan 3: Menunjuk (Pointing)', desc: 'Tampil saat tabel/panel terbuka' },
+                      { key: 'alert', label: 'Gerakan 4: Peringatan (Alert)', desc: 'Tampil saat mendekati deadline H-Jam' },
                     ] as const
                   ).map(({ key: st, label, desc }) => {
                     const customUrls = character.customImageUrls || {};

@@ -55,7 +55,7 @@ export default function App() {
     return LocalDataService.getPendingDeadlinesWithinHours(characterConfig.notificationHoursBeforeDeadline || 3);
   }, [tasks, characterConfig.notificationHoursBeforeDeadline]);
 
-  // Update 3 character states (alert, pointing, peek) & trigger push notifications
+  // Update character states & trigger push notifications
   useEffect(() => {
     if (pendingDeadlines.length > 0) {
       setCharacterState('alert');
@@ -72,10 +72,12 @@ export default function App() {
       }
     } else if (windowState.isPanelOpen) {
       setCharacterState('pointing');
+    } else if (!windowState.isPeeking) {
+      setCharacterState('idle');
     } else {
       setCharacterState('peek');
     }
-  }, [pendingDeadlines.length, windowState.isPanelOpen, playNotification, sendPushNotification, characterConfig.pushNotificationsEnabled, characterConfig.projectName]);
+  }, [pendingDeadlines.length, windowState.isPanelOpen, windowState.isPeeking, playNotification, sendPushNotification, characterConfig.pushNotificationsEnabled, characterConfig.projectName]);
 
   // Handlers for Tasks
   const handleToggleTask = useCallback((id: string) => {
@@ -194,7 +196,7 @@ export default function App() {
     const { x, y } = windowState;
 
     if (edge === 'left') {
-      return { left: Math.min(window.screen.availWidth - 350, x + 150), top: Math.max(20, y - 50) };
+      return { left: Math.min(window.innerWidth - 350, x + 150), top: Math.max(20, y - 50) };
     } else if (edge === 'right') {
       return { left: Math.max(20, x - 330), top: Math.max(20, y - 50) };
     } else if (edge === 'top') {

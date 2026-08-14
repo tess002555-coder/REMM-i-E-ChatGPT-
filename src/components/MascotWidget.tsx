@@ -69,6 +69,8 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
         : '⚠️ Ada tugas atau jadwal perkuliahan yang perlu segera diselesaikan!';
     } else if (state === 'pointing' || isPanelOpen) {
       quote = '👉 Denia menunjuk tabel jadwal & tugasmu di samping!';
+    } else if (state === 'idle') {
+      quote = '✨ Denia siap membantu! Klik aku ya~';
     } else {
       // state === 'peek' (Mengintip)
       const quotes = [
@@ -88,8 +90,8 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
     }
   }, [state, isPanelOpen, pendingDeadlines, config.speechEnabled, onSpeakSpeech]);
 
-  const winW = typeof window !== 'undefined' ? window.screen.availWidth : 1200;
-  const winH = typeof window !== 'undefined' ? window.screen.availHeight : 800;
+  const winW = typeof window !== 'undefined' ? window.innerWidth : 1200;
+  const winH = typeof window !== 'undefined' ? window.innerHeight : 800;
 
   // ----------------------------------------------------
   // MODE 1: BILAH SISI (SIDEBAR HANDLE) - MIUI/HYPEROS STYLE
