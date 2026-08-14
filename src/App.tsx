@@ -196,25 +196,19 @@ export default function App() {
 
 
 
-  // Resize Tauri window dynamically based on panel and modal state
+  // Ensure Tauri window is maximized transparently for overlay widgets
   useEffect(() => {
-    if ('__TAURI_INTERNALS__' in window) {
+    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
       try {
-        import('@tauri-apps/api/window').then(({ getCurrentWindow, LogicalSize }) => {
-            const appWindow = getCurrentWindow();
-            if (activeModal !== null) {
-              appWindow.setSize(new LogicalSize(900, 800));
-            } else if (windowState.isPanelOpen) {
-              appWindow.setSize(new LogicalSize(550, 800));
-            } else {
-              appWindow.setSize(new LogicalSize(180, 180));
-            }
+        import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
+          const appWindow = getCurrentWindow();
+          appWindow.maximize();
         });
       } catch (e) {
-        console.error("Failed to resize Tauri window:", e);
+        console.error("Tauri window init:", e);
       }
     }
-  }, [windowState.isPanelOpen, activeModal]);
+  }, []);
 
   return (
     <div className="widget-wrapper relative w-full h-full overflow-hidden text-slate-100 font-sans" data-tauri-drag-region>

@@ -40,11 +40,6 @@ jobs:
           if (Test-Path node_modules) { Remove-Item -Recurse -Force node_modules }
           npm install --no-package-lock --legacy-peer-deps
 
-      - name: Generate Valid Tauri Icons
-        shell: pwsh
-        run: |
-          npx tauri icon app-icon.png
-
       - name: Build Tauri Desktop App (.exe)
         uses: tauri-apps/tauri-action@v0
         env:
