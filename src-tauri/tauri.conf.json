@@ -13,13 +13,18 @@
     "windows": [
       {
         "title": "Remember ME - Denia Widget",
-        "fullscreen": true,
+        "width": 160,
+        "height": 160,
+        "resizable": true,
+        "maximized": false,
+        "shadow": false,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,
         "center": false,
         "skipTaskbar": true,
-        "visible": true
+        "visible": true,
+        "dragDropEnabled": true
       }
     ]
   },

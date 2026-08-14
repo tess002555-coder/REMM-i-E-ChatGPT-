@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { getCurrentWindow, LogicalPosition, LogicalSize } from '@tauri-apps/api/window';
 import { AnimatePresence } from 'motion/react';
 import { CharacterState, TaskItem, RoutineItem, ScheduleItem, CharacterConfig, AudioConfig, SyncConfig, PriorityLevel } from './types';
 import { LocalDataService } from './utils/db';
@@ -190,34 +191,34 @@ export default function App() {
     setSchedules(LocalDataService.getSchedules());
   }, []);
 
-  // Calculate position for Task Panel based on Mascot position & docked edge
-  const getTaskPanelPositionStyle = () => {
-    const edge = windowState.snappedEdge;
-    const { x, y } = windowState;
 
-    if (edge === 'left') {
-      return { left: Math.min(window.innerWidth - 350, x + 150), top: Math.max(20, y - 50) };
-    } else if (edge === 'right') {
-      return { left: Math.max(20, x - 330), top: Math.max(20, y - 50) };
-    } else if (edge === 'top') {
-      return { left: Math.max(20, x - 100), top: y + 150 };
-    } else {
-      return { left: Math.max(20, x - 100), top: Math.max(20, y - 350) };
+
+
+
+
+  // Resize Tauri window dynamically based on panel and modal state
+  useEffect(() => {
+    if ('__TAURI_INTERNALS__' in window) {
+      try {
+        import('@tauri-apps/api/window').then(({ getCurrentWindow, LogicalSize }) => {
+            const appWindow = getCurrentWindow();
+            if (activeModal !== null) {
+              appWindow.setSize(new LogicalSize(900, 800));
+            } else if (windowState.isPanelOpen) {
+              appWindow.setSize(new LogicalSize(550, 800));
+            } else {
+              appWindow.setSize(new LogicalSize(180, 180));
+            }
+        });
+      } catch (e) {
+        console.error("Failed to resize Tauri window:", e);
+      }
     }
-  };
-
-  // Calculate position for Detail Modal (floating to the left of TaskPanel)
-  const getDetailModalPositionStyle = () => {
-    const taskPanelStyle = getTaskPanelPositionStyle();
-    const taskPanelLeft = taskPanelStyle.left as number;
-    // Position floating to the left if space permits, else offset to right
-    const modalLeft = taskPanelLeft >= 340 ? taskPanelLeft - 330 : taskPanelLeft + 330;
-    return { left: Math.max(16, modalLeft), top: taskPanelStyle.top };
-  };
+  }, [windowState.isPanelOpen, activeModal]);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden text-slate-100 font-sans">
-      {/* Mascot Widget / Bilah Sisi */}
+    <div className="widget-wrapper relative w-full h-full overflow-hidden text-slate-100 font-sans" data-tauri-drag-region>
+      {/* Floating Mascot Widget */}
       <MascotWidget
         state={characterState}
         snappedEdge={windowState.snappedEdge}
@@ -234,20 +235,24 @@ export default function App() {
           }
         }}
         onToggleDisplayMode={toggleDisplayMode}
-        onMouseEnter={() => {
-          handleMouseEnter();
-        }}
-        onMouseLeave={() => {
-          handleMouseLeave();
-        }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         onDragEnd={handleDragEnd}
         onSpeakSpeech={speakText}
       />
 
-      {/* Slide-in Task Panel Container */}
+      {/* TaskPanel Flyout - STRICTLY rendered ONLY when isPanelOpen is true */}
       <AnimatePresence>
         {windowState.isPanelOpen && (
-          <div className="fixed z-40 flex items-start gap-4" style={getTaskPanelPositionStyle()}>
+          <div 
+            className="fixed z-40 pointer-events-auto" 
+            style={{
+              left: windowState.snappedEdge === 'left' 
+                ? Math.min(window.innerWidth - 360, windowState.x + 150)
+                : Math.max(16, windowState.x - 340),
+              top: Math.max(16, Math.min(window.innerHeight - 520, windowState.y)),
+            }}
+          >
             <TaskPanel
               isOpen={windowState.isPanelOpen}
               snappedEdge={windowState.snappedEdge}
@@ -261,7 +266,6 @@ export default function App() {
               onDeleteSchedule={handleDeleteSchedule}
               onOpenModal={modal => setActiveModal(modal)}
               onOpenSettings={() => setIsSettingsModalOpen(true)}
-              onOpenInstallModal={() => setIsInstallModalOpen(true)}
               onClose={() => {
                 setActiveModal(null);
                 closePanel();
@@ -274,7 +278,7 @@ export default function App() {
       {/* Detail Pop-Up Modal (Floats to the left of Main Panel as depicted in wireframe) */}
       <AnimatePresence>
         {windowState.isPanelOpen && activeModal && (
-          <div className="fixed z-50" style={getDetailModalPositionStyle()}>
+          <div className="fixed z-50 pointer-events-auto" style={{ left: 490, top: 10 }}>
             <DetailModal
               modalState={activeModal}
               onClose={() => setActiveModal(null)}
@@ -298,36 +302,38 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* System Modals */}
-      <TauriConfigModal isOpen={isTauriModalOpen} onClose={() => setIsTauriModalOpen(false)} />
+      <div className="pointer-events-auto">
+        {/* System Modals */}
+        <TauriConfigModal isOpen={isTauriModalOpen} onClose={() => setIsTauriModalOpen(false)} />
 
-      {isInstallModalOpen && (
-        <InstallAppModal
-          onClose={() => setIsInstallModalOpen(false)}
-          onOpenTauriModal={() => setIsTauriModalOpen(true)}
+        {isInstallModalOpen && (
+          <InstallAppModal
+            onClose={() => setIsInstallModalOpen(false)}
+            onOpenTauriModal={() => setIsTauriModalOpen(true)}
+          />
+        )}
+
+        <SoundSettings
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
+          audioConfig={audioConfig}
+          characterConfig={characterConfig}
+          syncConfig={syncConfig}
+          onSaveAudio={handleSaveAudio}
+          onSaveCharacter={handleSaveCharacter}
+          onSaveSync={handleSaveSync}
+          onTestSound={playNotification}
+          onRefreshData={handleRefreshData}
         />
-      )}
 
-      <SoundSettings
-        isOpen={isSettingsModalOpen}
-        onClose={() => setIsSettingsModalOpen(false)}
-        audioConfig={audioConfig}
-        characterConfig={characterConfig}
-        syncConfig={syncConfig}
-        onSaveAudio={handleSaveAudio}
-        onSaveCharacter={handleSaveCharacter}
-        onSaveSync={handleSaveSync}
-        onTestSound={playNotification}
-        onRefreshData={handleRefreshData}
-      />
-
-      <SyncModal
-        isOpen={isSyncModalOpen}
-        onClose={() => setIsSyncModalOpen(false)}
-        syncConfig={syncConfig}
-        onSaveSyncConfig={handleSaveSync}
-        onRefreshData={handleRefreshData}
-      />
+        <SyncModal
+          isOpen={isSyncModalOpen}
+          onClose={() => setIsSyncModalOpen(false)}
+          syncConfig={syncConfig}
+          onSaveSyncConfig={handleSaveSync}
+          onRefreshData={handleRefreshData}
+        />
+      </div>
     </div>
   );
 }

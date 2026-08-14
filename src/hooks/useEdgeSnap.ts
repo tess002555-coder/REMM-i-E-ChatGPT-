@@ -51,9 +51,9 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
     const wW = widgetSize.width;
     const wH = widgetSize.height;
 
-    // Strictly clamp input coordinates first so they can NEVER exceed screen boundaries
-    const clampedX = Math.max(16, Math.min(currX, boundsW - wW - 16));
-    const clampedY = Math.max(64, Math.min(currY, boundsH - wH - 40));
+    // Clamp input coordinates within screen boundaries
+    const clampedX = Math.max(0, Math.min(currX, boundsW - wW));
+    const clampedY = Math.max(0, Math.min(currY, boundsH - wH));
 
     // Use center of widget for distance calculation to all 4 screen edges
     const centerX = clampedX + wW / 2;
@@ -67,13 +67,13 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
     const minDist = Math.min(distLeft, distRight, distTop, distBottom);
 
     if (minDist === distLeft) {
-      return { x: 16, y: clampedY, edge: 'left' };
+      return { x: 0, y: clampedY, edge: 'left' };
     } else if (minDist === distRight) {
-      return { x: boundsW - wW - 16, y: clampedY, edge: 'right' };
+      return { x: boundsW - wW, y: clampedY, edge: 'right' };
     } else if (minDist === distTop) {
-      return { x: clampedX, y: 64, edge: 'top' };
+      return { x: clampedX, y: 0, edge: 'top' };
     } else {
-      return { x: clampedX, y: clampedY > boundsH - wH - 40 ? boundsH - wH - 40 : clampedY, edge: 'bottom' };
+      return { x: clampedX, y: boundsH - wH, edge: 'bottom' };
     }
   }, [getBounds, widgetSize]);
 

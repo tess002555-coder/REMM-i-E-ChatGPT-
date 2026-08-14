@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, useDragControls } from 'motion/react';
 import { TaskItem, RoutineItem, ScheduleItem, SnapEdge, CharacterConfig } from '../types';
 import { Plus, Calendar, Clock, Check, Trash2, ChevronRight, Sparkles, X, Settings, Search, ListTodo, Trophy, Flame, Zap, Filter, GripHorizontal, Share2, Download, ImageIcon } from 'lucide-react';
 import { DetailModalType } from './DetailModal';
@@ -40,6 +40,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+  const dragControls = useDragControls();
 
   if (!isOpen) return null;
 
@@ -96,6 +97,8 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
   return (
     <motion.div
       drag
+      dragControls={dragControls}
+      dragListener={false}
       dragMomentum={false}
       dragElastic={0.05}
       initial={slideAnim.initial}
@@ -107,12 +110,34 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
         borderColor: panelBorderColor,
         opacity: panelOpacity,
       }}
-      className={`w-80 max-h-[88vh] flex flex-col border rounded-[28px] shadow-2xl overflow-hidden z-40 text-sm font-sans backdrop-blur-xl p-3.5 space-y-3 custom-scrollbar overflow-y-auto ${
+      className={`w-80 max-h-[88vh] flex flex-col border rounded-[28px] shadow-2xl overflow-hidden z-40 text-sm font-sans backdrop-blur-xl p-3.5 space-y-2.5 custom-scrollbar overflow-y-auto ${
         isLight ? 'text-slate-900' : 'text-slate-100'
       }`}
     >
+      {/* Small Header Handle for independent panel repositioning */}
+      <div
+        onPointerDown={(e) => dragControls.start(e)}
+        className="w-full flex items-center justify-center py-1 -mt-1 cursor-grab active:cursor-grabbing group/handle touch-none select-none"
+        title="Tarik untuk memindahkan posisi panel tugas"
+      >
+        <div className={`flex items-center gap-1.5 px-3 py-0.5 rounded-full transition-all ${
+          isLight
+            ? 'bg-slate-200/80 group-hover/handle:bg-cyan-100 text-slate-500 group-hover/handle:text-cyan-700'
+            : 'bg-slate-800/80 group-hover/handle:bg-cyan-950/80 text-slate-400 group-hover/handle:text-cyan-400 border border-slate-700/50'
+        }`}>
+          <GripHorizontal className="w-3.5 h-3.5" />
+          <span className="text-[10px] font-semibold tracking-tight">Pindah Panel</span>
+        </div>
+      </div>
+
       {/* Top Header Controls with Custom Avatar, Project Name & Profile Name */}
-      <div className={`flex items-center justify-between pb-2 border-b cursor-grab active:cursor-grabbing ${isLight ? 'border-slate-300/80' : 'border-[#2A2A2E]'}`}>
+      <div 
+        onPointerDown={(e) => {
+          if ((e.target as HTMLElement).closest('button, input, a, select')) return;
+          dragControls.start(e);
+        }}
+        className={`flex items-center justify-between pb-2 border-b cursor-grab active:cursor-grabbing select-none ${isLight ? 'border-slate-300/80' : 'border-[#2A2A2E]'}`}
+      >
         <div className="flex items-center gap-2">
           {/* Custom Avatar Icon or Fallback */}
           <div className="relative w-8 h-8 rounded-full overflow-hidden border border-cyan-400/80 shadow-md shrink-0 bg-[#16161A] flex items-center justify-center">
@@ -133,19 +158,6 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-1">
-          {onOpenInstallModal && (
-            <button
-              onClick={onOpenInstallModal}
-              className={`p-1.5 rounded-xl border transition-all ${
-                isLight
-                  ? 'bg-slate-100 text-slate-700 hover:text-cyan-700 hover:bg-slate-200 border-slate-300'
-                  : 'bg-[#26262B] text-cyan-400 hover:text-cyan-300 hover:bg-[#323238] border-[#3A3A40]'
-              }`}
-              title="Pasang sebagai Aplikasi (PWA / HP / PC)"
-            >
-              <Download className="w-4 h-4" />
-            </button>
-          )}
           {onOpenSettings && (
             <button
               onClick={onOpenSettings}
