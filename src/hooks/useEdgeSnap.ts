@@ -45,15 +45,18 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
     };
   }, [containerBounds]);
 
-  // Snap to nearest edge logic
+  // Snap to nearest edge logic with safe margin clamping
   const snapToEdge = useCallback((currX: number, currY: number): { x: number; y: number; edge: SnapEdge } => {
     const { width: boundsW, height: boundsH } = getBounds();
     const wW = widgetSize.width;
     const wH = widgetSize.height;
 
-    // Clamp input coordinates within screen boundaries
-    const clampedX = Math.max(0, Math.min(currX, boundsW - wW));
-    const clampedY = Math.max(0, Math.min(currY, boundsH - wH));
+    const marginX = 8;
+    const marginY = 12;
+
+    // Strict clamping within visible desktop screen boundaries
+    const clampedX = Math.max(marginX, Math.min(currX, boundsW - wW - marginX));
+    const clampedY = Math.max(marginY, Math.min(currY, boundsH - wH - marginY));
 
     // Use center of widget for distance calculation to all 4 screen edges
     const centerX = clampedX + wW / 2;
@@ -67,13 +70,13 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
     const minDist = Math.min(distLeft, distRight, distTop, distBottom);
 
     if (minDist === distLeft) {
-      return { x: 0, y: clampedY, edge: 'left' };
+      return { x: marginX, y: clampedY, edge: 'left' };
     } else if (minDist === distRight) {
-      return { x: boundsW - wW, y: clampedY, edge: 'right' };
+      return { x: boundsW - wW - marginX, y: clampedY, edge: 'right' };
     } else if (minDist === distTop) {
-      return { x: clampedX, y: 0, edge: 'top' };
+      return { x: clampedX, y: marginY, edge: 'top' };
     } else {
-      return { x: clampedX, y: boundsH - wH, edge: 'bottom' };
+      return { x: clampedX, y: boundsH - wH - marginY, edge: 'bottom' };
     }
   }, [getBounds, widgetSize]);
 

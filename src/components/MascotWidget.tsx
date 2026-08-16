@@ -18,6 +18,7 @@ interface MascotWidgetProps {
   onToggleDisplayMode?: () => void;
   onSpeakSpeech?: (text: string) => void;
   position: { x: number; y: number };
+  screenWidth?: number;
 }
 
 export const MascotWidget: React.FC<MascotWidgetProps> = ({
@@ -35,12 +36,17 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
   onToggleDisplayMode,
   onSpeakSpeech,
   position,
+  screenWidth,
 }) => {
   const [speechText, setSpeechText] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   const lastQuoteRef = useRef<string | null>(null);
 
   const isTauri = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
+
+  // Determine whether the widget is positioned on or closer to the right edge of the screen
+  const currentScreenWidth = screenWidth || (typeof window !== 'undefined' ? window.innerWidth : 1200);
+  const isRightEdge = snappedEdge === 'right' || (position.x + 70 > currentScreenWidth / 2);
 
   // Manual Tauri window dragging handler
   const handleMouseDown = async (e: React.MouseEvent) => {
@@ -196,7 +202,9 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute left-full ml-2 whitespace-nowrap px-3 py-1.5 rounded-xl bg-slate-950/95 border border-cyan-400/40 text-cyan-300 text-xs font-medium shadow-xl backdrop-blur-md flex items-center gap-2 pointer-events-none z-50"
+                className={`absolute ${
+                  isRightEdge ? 'right-full mr-2' : 'left-full ml-2'
+                } top-1/2 -translate-y-1/2 whitespace-nowrap px-3 py-1.5 rounded-xl bg-slate-950/95 border border-cyan-400/40 text-cyan-300 text-xs font-medium shadow-xl backdrop-blur-md flex items-center gap-2 pointer-events-none z-50`}
               >
                 <div className="w-2 h-2 rounded-full bg-cyan-400" />
                 <span>Bilah Sisi &bull; Klik Buka Tasks</span>
@@ -266,21 +274,29 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
       }}
       onClick={onClick}
     >
-      {/* Speech Bubble */}
+      {/* Dynamic Speech Bubble - Automatic Flip Direction & Word-Wrap */}
       <AnimatePresence>
         {speechText && (isHovered || pendingDeadlines.length > 0) && (
           <motion.div
             initial={{ opacity: 0, y: 8, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.9 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 p-2.5 rounded-2xl bg-slate-950/95 border border-cyan-400/50 shadow-xl backdrop-blur-md text-xs text-slate-100 font-sans pointer-events-none z-30"
+            className={`absolute bottom-full mb-2 max-w-[180px] w-max min-w-[140px] p-2.5 rounded-2xl bg-slate-950/95 border border-cyan-400/50 shadow-xl backdrop-blur-md text-xs text-slate-100 font-sans pointer-events-none z-30 break-words whitespace-normal ${
+              isRightEdge
+                ? 'right-2 origin-bottom-right'
+                : 'left-2 origin-bottom-left'
+            }`}
           >
-            <div className="flex items-start gap-2">
+            <div className="flex items-start gap-1.5">
               <MessageSquare className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-              <p className="leading-snug">{speechText}</p>
+              <p className="leading-snug text-[11.5px] break-words whitespace-normal">{speechText}</p>
             </div>
-            {/* Bubble Tail */}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-950" />
+            {/* Bubble Tail aligned dynamically to mascot position */}
+            <div
+              className={`absolute top-full border-4 border-transparent border-t-slate-950 ${
+                isRightEdge ? 'right-6' : 'left-6'
+              }`}
+            />
           </motion.div>
         )}
       </AnimatePresence>

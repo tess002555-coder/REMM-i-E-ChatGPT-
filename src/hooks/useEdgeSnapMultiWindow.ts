@@ -77,14 +77,14 @@ export function useEdgeSnapMultiWindow(options: UseEdgeSnapMultiWindowOptions = 
           const currentX = (outerPos.x / scale) - monX;
           const currentY = (outerPos.y / scale) - monY;
 
-          const widgetWidth = 220;
-          const widgetHeight = 220;
+          const widgetWidth = 260;
+          const widgetHeight = 260;
 
           // Determine whether closer to left or right edge
           const isRight = (currentX + widgetWidth / 2) > (monWidth / 2);
           const edge: SnapEdge = isRight ? 'right' : 'left';
           
-          const targetX = isRight ? Math.max(0, monWidth - widgetWidth - 10) : 10;
+          const targetX = isRight ? Math.max(10, monWidth - widgetWidth - 10) : 10;
           const targetY = Math.max(10, Math.min(monHeight - widgetHeight - 10, currentY));
 
           await win.setPosition(new LogicalPosition(monX + targetX, monY + targetY));

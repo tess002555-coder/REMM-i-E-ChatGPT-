@@ -212,12 +212,12 @@ export default function App() {
         if (activeModal !== null) {
           appWindow.setSize(new LogicalSize(920, 720));
         } else if (windowState.isPanelOpen) {
-          appWindow.setSize(new LogicalSize(540, 680));
+          appWindow.setSize(new LogicalSize(560, 680));
         } else if (windowState.displayMode === 'bar' || windowState.displayMode === 'sidebar') {
-          appWindow.setSize(new LogicalSize(80, 200));
+          appWindow.setSize(new LogicalSize(90, 220));
         } else {
-          // Ukuran cukup lega (240x240) untuk memuat maskot (144px) + speech bubble (w-52) di atasnya tanpa terpotong
-          appWindow.setSize(new LogicalSize(240, 240));
+          // Ukuran cukup lega (260x260) dengan padding margin agar dialog & maskot leluasa
+          appWindow.setSize(new LogicalSize(260, 260));
         }
       }).catch(err => console.warn("Tauri setSize error:", err));
     }
@@ -225,8 +225,8 @@ export default function App() {
 
   const mascotPos = isTauri
     ? (windowState.displayMode === 'bar' || windowState.displayMode === 'sidebar'
-        ? { x: 18, y: 20 }
-        : { x: 48, y: 86 })
+        ? { x: 20, y: 20 }
+        : { x: 58, y: 92 })
     : { x: windowState.x, y: windowState.y };
 
   return (
@@ -241,6 +241,7 @@ export default function App() {
         config={characterConfig}
         pendingDeadlines={pendingDeadlines}
         position={mascotPos}
+        screenWidth={typeof window !== 'undefined' ? window.innerWidth : 1200}
         onClick={() => {
           togglePanel();
           if (windowState.isPanelOpen) {
