@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { getCurrentWindow, LogicalPosition, LogicalSize } from '@tauri-apps/api/window';
+import { getCurrentWindow, LogicalSize } from '@tauri-apps/api/window';
 import { AnimatePresence } from 'motion/react';
 import { CharacterState, TaskItem, RoutineItem, ScheduleItem, CharacterConfig, AudioConfig, SyncConfig, PriorityLevel } from './types';
 import { LocalDataService } from './utils/db';
@@ -51,10 +51,29 @@ export default function App() {
     closeDelayMs: characterConfig.closeDelayMs ?? 0,
   });
 
+  const isTauri = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
+
   // Check pending deadlines within H-Jam threshold
   const pendingDeadlines = useMemo(() => {
     return LocalDataService.getPendingDeadlinesWithinHours(characterConfig.notificationHoursBeforeDeadline || 3);
   }, [tasks, characterConfig.notificationHoursBeforeDeadline]);
+
+  // Handle Dynamic Resizing & Click-Through Passthrough
+  useEffect(() => {
+    if (isTauri) {
+      const appWindow = getCurrentWindow();
+      
+      if (activeModal !== null) {
+        appWindow.setSize(new LogicalSize(920, 720));
+        appWindow.setIgnoreCursorEvents(false).catch(() => {});
+      } else if (windowState.isPanelOpen) {
+        appWindow.setSize(new LogicalSize(540, 680));
+        appWindow.setIgnoreCursorEvents(false).catch(() => {});
+      } else {
+        appWindow.setSize(new LogicalSize(180, 180));
+      }
+    }
+  }, [isTauri, windowState.isPanelOpen, activeModal]);
 
   // Update character states & trigger push notifications
   useEffect(() => {
@@ -191,57 +210,36 @@ export default function App() {
     setSchedules(LocalDataService.getSchedules());
   }, []);
 
-
-
-
-
-
-  const isTauri = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
-
-  // Dynamically resize Tauri window so it fits strictly the mascot or panel without full screen canvas overlay
-  useEffect(() => {
-    if (isTauri) {
-      import('@tauri-apps/api/window').then(({ getCurrentWindow, LogicalSize }) => {
-        const appWindow = getCurrentWindow();
-        if (activeModal !== null) {
-          appWindow.setSize(new LogicalSize(920, 720));
-        } else if (windowState.isPanelOpen) {
-          appWindow.setSize(new LogicalSize(540, 680));
-        } else {
-          appWindow.setSize(new LogicalSize(180, 180));
-        }
-      }).catch(err => console.warn("Tauri setSize error:", err));
-    }
-  }, [isTauri, windowState.isPanelOpen, activeModal]);
-
   const mascotPos = isTauri
-    ? { x: 10, y: 10 }
+    ? { x: 0, y: 0 }
     : { x: windowState.x, y: windowState.y };
 
   return (
-    <div className="widget-wrapper relative w-full h-full overflow-hidden text-slate-100 font-sans" data-tauri-drag-region>
+    <div className="widget-wrapper relative w-full h-full overflow-hidden text-slate-100 font-sans pointer-events-none">
       {/* Floating Mascot Widget */}
-      <MascotWidget
-        state={characterState}
-        snappedEdge={windowState.snappedEdge}
-        isPeeking={windowState.isPeeking || (!windowState.isPanelOpen && characterState === 'peek')}
-        isPanelOpen={windowState.isPanelOpen}
-        displayMode={windowState.displayMode}
-        config={characterConfig}
-        pendingDeadlines={pendingDeadlines}
-        position={mascotPos}
-        onClick={() => {
-          togglePanel();
-          if (windowState.isPanelOpen) {
-            setActiveModal(null);
-          }
-        }}
-        onToggleDisplayMode={toggleDisplayMode}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onDragEnd={handleDragEnd}
-        onSpeakSpeech={speakText}
-      />
+      <div className="pointer-events-auto inline-block">
+        <MascotWidget
+          state={characterState}
+          snappedEdge={windowState.snappedEdge}
+          isPeeking={windowState.isPeeking || (!windowState.isPanelOpen && characterState === 'peek')}
+          isPanelOpen={windowState.isPanelOpen}
+          displayMode={windowState.displayMode}
+          config={characterConfig}
+          pendingDeadlines={pendingDeadlines}
+          position={mascotPos}
+          onClick={() => {
+            togglePanel();
+            if (windowState.isPanelOpen) {
+              setActiveModal(null);
+            }
+          }}
+          onToggleDisplayMode={toggleDisplayMode}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onDragEnd={handleDragEnd}
+          onSpeakSpeech={speakText}
+        />
+      </div>
 
       {/* TaskPanel Flyout - STRICTLY rendered ONLY when isPanelOpen is true */}
       <AnimatePresence>
@@ -250,7 +248,7 @@ export default function App() {
             className="fixed z-40 pointer-events-auto" 
             style={
               isTauri
-                ? { left: 160, top: 10 }
+                ? { left: 180, top: 10 }
                 : {
                     left: windowState.snappedEdge === 'left' 
                       ? Math.min(window.innerWidth - 360, windowState.x + 150)
@@ -281,12 +279,12 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Detail Pop-Up Modal (Floats to the left/right of Main Panel as depicted in wireframe) */}
+      {/* Detail Pop-Up Modal */}
       <AnimatePresence>
         {windowState.isPanelOpen && activeModal && (
           <div 
             className="fixed z-50 pointer-events-auto" 
-            style={isTauri ? { left: 520, top: 10 } : { left: 490, top: 10 }}
+            style={isTauri ? { left: 540, top: 10 } : { left: 490, top: 10 }}
           >
             <DetailModal
               modalState={activeModal}
