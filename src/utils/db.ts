@@ -58,8 +58,13 @@ export function isLightColor(hexColor?: string): boolean {
 export const DEFAULT_CHARACTER: CharacterConfig = {
   name: 'Maskot Denia',
   projectName: 'REMM(i)E',
-  avatarUrl: '',
-  customImageUrls: {},
+  avatarUrl: '/mascot.png',
+  customImageUrls: {
+    idle: '/mascot.png',
+    peek: '/mascot.png',
+    alert: '/mascot.png',
+    pointing: '/mascot.png',
+  },
   speechEnabled: true,
   ttsEnabled: false,
   pushNotificationsEnabled: true,

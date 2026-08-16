@@ -214,20 +214,23 @@ export default function App() {
         } else if (windowState.isPanelOpen) {
           appWindow.setSize(new LogicalSize(540, 680));
         } else if (windowState.displayMode === 'bar' || windowState.displayMode === 'sidebar') {
-          appWindow.setSize(new LogicalSize(56, 180));
+          appWindow.setSize(new LogicalSize(80, 200));
         } else {
-          appWindow.setSize(new LogicalSize(144, 150));
+          // Ukuran cukup lega (240x240) untuk memuat maskot (144px) + speech bubble (w-52) di atasnya tanpa terpotong
+          appWindow.setSize(new LogicalSize(240, 240));
         }
       }).catch(err => console.warn("Tauri setSize error:", err));
     }
   }, [isTauri, windowState.isPanelOpen, windowState.displayMode, activeModal]);
 
   const mascotPos = isTauri
-    ? { x: 0, y: 0 }
+    ? (windowState.displayMode === 'bar' || windowState.displayMode === 'sidebar'
+        ? { x: 18, y: 20 }
+        : { x: 48, y: 86 })
     : { x: windowState.x, y: windowState.y };
 
   return (
-    <div className="widget-wrapper relative w-full h-full overflow-hidden text-slate-100 font-sans" data-tauri-drag-region>
+    <div className="widget-wrapper relative w-full h-full text-slate-100 font-sans" data-tauri-drag-region>
       {/* Floating Mascot Widget */}
       <MascotWidget
         state={characterState}

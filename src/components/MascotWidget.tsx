@@ -56,15 +56,15 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
     }
   };
 
-  // Determine actual image source based on manual user upload (null by default)
-  const getImageForState = (): string | null => {
+  // Determine actual image source based on manual user upload (defaults to /mascot.png)
+  const getImageForState = (): string => {
     if (config?.customImageUrls?.[state]) {
       return config.customImageUrls[state]!;
     }
     if (config?.avatarUrl) {
       return config.avatarUrl;
     }
-    return null;
+    return '/mascot.png';
   };
 
   const imageSrc = getImageForState();

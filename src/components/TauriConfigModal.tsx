@@ -20,10 +20,11 @@ const TAURI_CONF_JSON = `{
   "app": {
     "windows": [
       {
-        "label": "main",
-        "title": "Remember ME",
-        "width": 140,
-        "height": 160,
+        "label": "mascot",
+        "title": "Remember ME Mascot",
+        "url": "index.html?window=mascot",
+        "width": 220,
+        "height": 220,
         "resizable": false,
         "decorations": false,
         "transparent": true,
@@ -31,6 +32,21 @@ const TAURI_CONF_JSON = `{
         "shadow": false,
         "skipTaskbar": true,
         "visible": true,
+        "dragDropEnabled": false
+      },
+      {
+        "label": "panel",
+        "title": "Remember ME Panel",
+        "url": "index.html?window=panel",
+        "width": 400,
+        "height": 600,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "shadow": false,
+        "skipTaskbar": true,
+        "visible": false,
         "dragDropEnabled": false
       }
     ]
