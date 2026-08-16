@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build",
-    "build:exe": "tauri build",
+    "icons": "node scripts/generate-icons.js",
+    "build": "node scripts/generate-icons.js && vite build",
+    "build:exe": "npm run build && tauri build",
     "tauri": "tauri",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
