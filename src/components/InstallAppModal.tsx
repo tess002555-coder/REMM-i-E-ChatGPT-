@@ -211,10 +211,10 @@ export const InstallAppModal: React.FC<InstallAppModalProps> = ({
                   <div className="p-2.5 rounded-xl bg-purple-950/20 border border-purple-800/30 text-[11px] space-y-1.5">
                     <p className="font-bold text-purple-200">⚡ Opsi 1: Build Otomatis via GitHub Actions (Sangat Mudah)</p>
                     <p className="text-gray-400">
-                      Workflow GitHub Actions sudah siap di repository (<code className="text-purple-300">.github/workflows/build-exe.yml</code>). Cukup Export/Push proyek ke GitHub Anda, maka GitHub akan otomatis mengompilasi dan menyediakan file installer <code className="text-purple-300">.exe</code> di halaman <strong className="text-white">Releases</strong>!
+                      Workflow GitHub Actions sudah siap di repository (<code className="text-purple-300">.github/workflows/build-exe.yml</code>). Cukup Export/Push proyek ke GitHub Anda, maka GitHub akan otomatis mengompilasi dan menyediakan file installer <code className="text-purple-300">.exe</code> di halaman <strong className="text-white">Releases</strong> dan tab <strong className="text-white">Actions &rarr; Artifacts</strong>!
                     </p>
-                    <p className="text-[10px] text-amber-300/90 bg-amber-950/30 p-1.5 rounded border border-amber-800/40">
-                      ⚠️ <strong>Solusi jika error "Runner/Internal Server Error":</strong> Pesan <em>"The job was not acquired by Runner..."</em> adalah gangguan antrean server Windows sementara di GitHub. Cukup masuk ke tab Actions di GitHub dan klik tombol <strong>"Re-run all jobs"</strong>.
+                    <p className="text-[10px] text-emerald-300/90 bg-emerald-950/30 p-1.5 rounded border border-emerald-800/40">
+                      ✅ <strong>Header Icon Windows Resource Compiler:</strong> File <code className="text-emerald-300">icon.ico</code> kini telah dikonversi ke format <em>Uncompressed DIB (Device-Independent Bitmap)</em> 32-bit standar Microsoft Win32, sehingga 100% kompatibel tanpa error RC2176.
                     </p>
                   </div>
 
