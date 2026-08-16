@@ -196,19 +196,27 @@ export default function App() {
 
 
 
-  // Ensure Tauri window is maximized transparently for overlay widgets
+  const isTauri = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
+
+  // Dynamically resize Tauri window so it fits strictly the mascot or panel without full screen canvas overlay
   useEffect(() => {
-    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-      try {
-        import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
-          const appWindow = getCurrentWindow();
-          appWindow.maximize();
-        });
-      } catch (e) {
-        console.error("Tauri window init:", e);
-      }
+    if (isTauri) {
+      import('@tauri-apps/api/window').then(({ getCurrentWindow, LogicalSize }) => {
+        const appWindow = getCurrentWindow();
+        if (activeModal !== null) {
+          appWindow.setSize(new LogicalSize(920, 720));
+        } else if (windowState.isPanelOpen) {
+          appWindow.setSize(new LogicalSize(540, 680));
+        } else {
+          appWindow.setSize(new LogicalSize(180, 180));
+        }
+      }).catch(err => console.warn("Tauri setSize error:", err));
     }
-  }, []);
+  }, [isTauri, windowState.isPanelOpen, activeModal]);
+
+  const mascotPos = isTauri
+    ? { x: 10, y: 10 }
+    : { x: windowState.x, y: windowState.y };
 
   return (
     <div className="widget-wrapper relative w-full h-full overflow-hidden text-slate-100 font-sans" data-tauri-drag-region>
@@ -221,7 +229,7 @@ export default function App() {
         displayMode={windowState.displayMode}
         config={characterConfig}
         pendingDeadlines={pendingDeadlines}
-        position={{ x: windowState.x, y: windowState.y }}
+        position={mascotPos}
         onClick={() => {
           togglePanel();
           if (windowState.isPanelOpen) {
@@ -240,12 +248,16 @@ export default function App() {
         {windowState.isPanelOpen && (
           <div 
             className="fixed z-40 pointer-events-auto" 
-            style={{
-              left: windowState.snappedEdge === 'left' 
-                ? Math.min(window.innerWidth - 360, windowState.x + 150)
-                : Math.max(16, windowState.x - 340),
-              top: Math.max(16, Math.min(window.innerHeight - 520, windowState.y)),
-            }}
+            style={
+              isTauri
+                ? { left: 160, top: 10 }
+                : {
+                    left: windowState.snappedEdge === 'left' 
+                      ? Math.min(window.innerWidth - 360, windowState.x + 150)
+                      : Math.max(16, windowState.x - 340),
+                    top: Math.max(16, Math.min(window.innerHeight - 520, windowState.y)),
+                  }
+            }
           >
             <TaskPanel
               isOpen={windowState.isPanelOpen}
@@ -269,10 +281,13 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Detail Pop-Up Modal (Floats to the left of Main Panel as depicted in wireframe) */}
+      {/* Detail Pop-Up Modal (Floats to the left/right of Main Panel as depicted in wireframe) */}
       <AnimatePresence>
         {windowState.isPanelOpen && activeModal && (
-          <div className="fixed z-50 pointer-events-auto" style={{ left: 490, top: 10 }}>
+          <div 
+            className="fixed z-50 pointer-events-auto" 
+            style={isTauri ? { left: 520, top: 10 } : { left: 490, top: 10 }}
+          >
             <DetailModal
               modalState={activeModal}
               onClose={() => setActiveModal(null)}

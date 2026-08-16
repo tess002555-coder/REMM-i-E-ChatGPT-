@@ -277,7 +277,7 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
           <img
             src={imageSrc}
             alt="Mascot Character"
-            className="w-32 h-32 object-contain select-none pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]"
+            className="w-32 h-32 object-contain select-none pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.45)]"
             referrerPolicy="no-referrer"
             draggable={false}
             data-tauri-drag-region
@@ -296,36 +296,9 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
           </div>
         )}
 
-        {/* Small Status Badge Tag */}
-        <div className="absolute top-1 right-1 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-slate-950/80 text-[10px] text-cyan-300 backdrop-blur-sm border border-cyan-500/30 shadow-md pointer-events-none">
-          {state === 'alert' || pendingDeadlines.length > 0 ? (
-            <span className="flex items-center gap-1 text-amber-400 font-bold">
-              <BellRing className="w-2.5 h-2.5" /> Alert!
-            </span>
-          ) : isPeeking ? (
-            <span className="flex items-center gap-1 text-cyan-300">
-              <Eye className="w-2.5 h-2.5 text-cyan-400" /> Peek
-            </span>
-          ) : (
-            <span className="flex items-center gap-1">
-              <Sparkles className="w-2.5 h-2.5 text-cyan-400" /> Denia
-            </span>
-          )}
-        </div>
-
-        {/* Toggle to Sidebar Mode Button on Hover */}
-        {isHovered && onToggleDisplayMode && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleDisplayMode();
-            }}
-            title="Ganti ke Tampilan Bilah Sisi (Garis Tipis Edge)"
-            className="clickable absolute top-0 left-0 p-1.5 rounded-full bg-slate-950/80 border border-cyan-400/80 text-cyan-300 hover:bg-cyan-400 hover:text-slate-950 shadow-xl transition-all z-20"
-          >
-            <ShieldCheck className="w-3 h-3" />
-          </button>
+        {/* Subtle Alert Notification Glow Dot (Only when there is an active alert) */}
+        {(state === 'alert' || pendingDeadlines.length > 0) && (
+          <div className="absolute top-2 right-2 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-slate-900 shadow-[0_0_8px_rgba(251,191,36,1)] animate-pulse pointer-events-none" />
         )}
       </div>
     </motion.div>
