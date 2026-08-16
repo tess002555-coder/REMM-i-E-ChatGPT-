@@ -21,7 +21,7 @@
         "skipTaskbar": true,
         "shadow": false
       }
-    ],
+    ]
   },
   "bundle": {
     "active": true,
