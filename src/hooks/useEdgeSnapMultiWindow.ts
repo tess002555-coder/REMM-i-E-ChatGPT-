@@ -175,17 +175,31 @@ export function useEdgeSnapMultiWindow(options: UseEdgeSnapMultiWindowOptions = 
         const { WebviewWindow, getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow');
         const { currentMonitor } = await import('@tauri-apps/api/window');
         const { LogicalPosition } = await import('@tauri-apps/api/dpi');
+        const { emit } = await import('@tauri-apps/api/event');
         
-        const panelWin = await WebviewWindow.getByLabel('panel');
+        let panelWin = await WebviewWindow.getByLabel('panel');
         if (!panelWin) {
-          console.warn('Panel window not found');
-          return;
+          panelWin = new WebviewWindow('panel', {
+            url: 'index.html?window=panel',
+            title: 'Remember ME Panel',
+            width: 420,
+            height: 620,
+            resizable: false,
+            decorations: false,
+            transparent: true,
+            alwaysOnTop: true,
+            shadow: false,
+            skipTaskbar: true,
+            visible: false,
+            dragDropEnabled: false,
+          });
         }
 
         const isVisible = await panelWin.isVisible();
         if (isVisible) {
           await panelWin.hide();
           setIsPanelOpen(false);
+          await emit('panel-state-changed', { isOpen: false });
           resetIdleTimer();
         } else {
           // Unpeek mascot before opening panel
@@ -221,6 +235,7 @@ export function useEdgeSnapMultiWindow(options: UseEdgeSnapMultiWindowOptions = 
             await panelWin.show();
             await panelWin.setFocus();
             setIsPanelOpen(true);
+            await emit('panel-state-changed', { isOpen: true });
           }
         }
       } catch (err) {

@@ -80,6 +80,20 @@ export default function App() {
     }
   }, [pendingDeadlines.length, windowState.isPanelOpen, windowState.isPeeking, playNotification, sendPushNotification, characterConfig.pushNotificationsEnabled, characterConfig.projectName]);
 
+  const isTauri = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
+
+  // Broadcast state changes across all windows
+  const broadcastDataUpdate = useCallback(async () => {
+    if (isTauri) {
+      try {
+        const { emit } = await import('@tauri-apps/api/event');
+        await emit('data-updated', {});
+      } catch (err) {
+        console.warn('Failed to broadcast data-updated from App.tsx:', err);
+      }
+    }
+  }, [isTauri]);
+
   // Handlers for Tasks
   const handleToggleTask = useCallback((id: string) => {
     const updated = LocalDataService.toggleTask(id);
@@ -90,7 +104,8 @@ export default function App() {
       playNotification('complete');
       setCharacterState('peek');
     }
-  }, [playNotification]);
+    broadcastDataUpdate();
+  }, [playNotification, broadcastDataUpdate]);
 
   const handleAddTask = useCallback((title: string, dueDate?: string, isDeadline?: boolean, priority?: PriorityLevel) => {
     LocalDataService.addTask({
@@ -102,27 +117,32 @@ export default function App() {
     });
     setTasks(LocalDataService.getTasks());
     playNotification('task');
-  }, [playNotification]);
+    broadcastDataUpdate();
+  }, [playNotification, broadcastDataUpdate]);
 
   const handleDeleteTask = useCallback((id: string) => {
     setTasks(LocalDataService.deleteTask(id));
-  }, []);
+    broadcastDataUpdate();
+  }, [broadcastDataUpdate]);
 
   // Handlers for Routines
   const handleToggleRoutine = useCallback((id: string) => {
     setRoutines(LocalDataService.toggleRoutine(id));
-  }, []);
+    broadcastDataUpdate();
+  }, [broadcastDataUpdate]);
 
   const handleAddRoutine = useCallback((title: string, description: string) => {
     const updated = LocalDataService.addRoutine(title, description, 0);
     setRoutines(updated);
     playNotification('routine');
-  }, [playNotification]);
+    broadcastDataUpdate();
+  }, [playNotification, broadcastDataUpdate]);
 
   const handleDeleteRoutine = useCallback((id: string) => {
     const updated = LocalDataService.deleteRoutine(id);
     setRoutines(updated);
-  }, []);
+    broadcastDataUpdate();
+  }, [broadcastDataUpdate]);
 
   // Handlers for Schedules
   const handleAddSchedule = useCallback((title: string, datetime: string) => {
@@ -134,20 +154,24 @@ export default function App() {
     });
     setSchedules(LocalDataService.getSchedules());
     playNotification('schedule');
-  }, [playNotification]);
+    broadcastDataUpdate();
+  }, [playNotification, broadcastDataUpdate]);
 
   const handleToggleSchedule = useCallback((id: string) => {
     setSchedules(LocalDataService.toggleSchedule(id));
-  }, []);
+    broadcastDataUpdate();
+  }, [broadcastDataUpdate]);
 
   const handleDeleteSchedule = useCallback((id: string) => {
     setSchedules(LocalDataService.deleteSchedule(id));
-  }, []);
+    broadcastDataUpdate();
+  }, [broadcastDataUpdate]);
 
   // Handlers for Routine Daily Logs
   const handleSaveRoutineLog = useCallback((id: string, dateStr: string, content: string) => {
     const updated = LocalDataService.updateRoutineDailyLog(id, dateStr, content);
     setRoutines(updated);
+    broadcastDataUpdate();
     setActiveModal(prev => {
       if (prev?.kind === 'routine' && prev.item.id === id) {
         const updatedItem = updated.find(r => r.id === id);
@@ -155,11 +179,12 @@ export default function App() {
       }
       return prev;
     });
-  }, []);
+  }, [broadcastDataUpdate]);
 
   const handleDeleteRoutineLog = useCallback((id: string, dateStr: string) => {
     const updated = LocalDataService.deleteRoutineDailyLog(id, dateStr);
     setRoutines(updated);
+    broadcastDataUpdate();
     setActiveModal(prev => {
       if (prev?.kind === 'routine' && prev.item.id === id) {
         const updatedItem = updated.find(r => r.id === id);
@@ -167,13 +192,14 @@ export default function App() {
       }
       return prev;
     });
-  }, []);
+  }, [broadcastDataUpdate]);
 
   // Settings Save Handlers
   const handleSaveAudio = useCallback((config: AudioConfig) => {
     setAudioConfig(config);
     LocalDataService.saveAudioConfig(config);
-  }, []);
+    broadcastDataUpdate();
+  }, [broadcastDataUpdate]);
 
   const handleSaveCharacter = useCallback((config: CharacterConfig) => {
     setCharacterConfig(config);
@@ -184,44 +210,209 @@ export default function App() {
         displayMode: config.displayMode,
       }));
     }
-  }, [setWindowState]);
+    broadcastDataUpdate();
+  }, [setWindowState, broadcastDataUpdate]);
 
   const handleSaveSync = useCallback((config: SyncConfig) => {
     setSyncConfig(config);
     LocalDataService.saveSyncConfig(config);
-  }, []);
+    broadcastDataUpdate();
+  }, [broadcastDataUpdate]);
 
   const handleRefreshData = useCallback(() => {
     setTasks(LocalDataService.getTasks());
     setRoutines(LocalDataService.getRoutines());
     setSchedules(LocalDataService.getSchedules());
-  }, []);
+    setCharacterConfig(LocalDataService.getCharacterConfig());
+    setAudioConfig(LocalDataService.getAudioConfig());
+    setSyncConfig(LocalDataService.getSyncConfig());
+    broadcastDataUpdate();
+  }, [broadcastDataUpdate]);
 
 
 
 
 
 
-  const isTauri = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
-
-  // Dynamically resize Tauri window so it fits strictly the mascot or panel without full screen canvas overlay
-  useEffect(() => {
+  // WebviewWindow coordinator: spawn & position panel relative to mascot
+  const handleOpenPanelWindow = useCallback(async () => {
     if (isTauri) {
-      import('@tauri-apps/api/window').then(({ getCurrentWindow, LogicalSize }) => {
-        const appWindow = getCurrentWindow();
-        if (activeModal !== null) {
-          appWindow.setSize(new LogicalSize(920, 720));
-        } else if (windowState.isPanelOpen) {
-          appWindow.setSize(new LogicalSize(560, 680));
-        } else if (windowState.displayMode === 'bar' || windowState.displayMode === 'sidebar') {
-          appWindow.setSize(new LogicalSize(90, 220));
-        } else {
-          // Ukuran cukup lega (260x260) dengan padding margin agar dialog & maskot leluasa
-          appWindow.setSize(new LogicalSize(260, 260));
+      try {
+        const { WebviewWindow, getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow');
+        const { currentMonitor } = await import('@tauri-apps/api/window');
+        const { LogicalPosition } = await import('@tauri-apps/api/dpi');
+        const { emit } = await import('@tauri-apps/api/event');
+
+        let panelWin = await WebviewWindow.getByLabel('panel');
+        if (!panelWin) {
+          panelWin = new WebviewWindow('panel', {
+            url: 'index.html?window=panel',
+            title: 'Remember ME Panel',
+            width: 420,
+            height: 620,
+            resizable: false,
+            decorations: false,
+            transparent: true,
+            alwaysOnTop: true,
+            shadow: false,
+            skipTaskbar: true,
+            visible: false,
+            dragDropEnabled: false,
+          });
         }
-      }).catch(err => console.warn("Tauri setSize error:", err));
+
+        const isVisible = await panelWin.isVisible();
+        if (isVisible) {
+          await panelWin.hide();
+          await emit('panel-state-changed', { isOpen: false });
+        } else {
+          const mascotWin = await WebviewWindow.getByLabel('mascot') || getCurrentWebviewWindow();
+          const mascotPos = await mascotWin.outerPosition();
+          const monitor = await currentMonitor();
+
+          if (monitor) {
+            const scale = monitor.scaleFactor || 1;
+            const monWidth = monitor.size.width / scale;
+            const monHeight = monitor.size.height / scale;
+            const monX = monitor.position.x / scale;
+            const monY = monitor.position.y / scale;
+
+            const mascotX = (mascotPos.x / scale) - monX;
+            const mascotY = (mascotPos.y / scale) - monY;
+
+            const panelWidth = 420;
+            const panelHeight = 620;
+
+            const placeLeft = (mascotX + 90) > (monWidth / 2);
+            let panelX = placeLeft ? (mascotX - panelWidth - 10) : (mascotX + 180 + 10);
+            panelX = Math.max(10, Math.min(monWidth - panelWidth - 10, panelX));
+            const panelY = Math.max(10, Math.min(monHeight - panelHeight - 10, mascotY - 20));
+
+            await panelWin.setPosition(new LogicalPosition(monX + panelX, monY + panelY));
+            await panelWin.show();
+            await panelWin.setFocus();
+            await emit('panel-state-changed', { isOpen: true });
+          }
+        }
+      } catch (err) {
+        console.warn('Error toggling panel window in App.tsx:', err);
+      }
     }
-  }, [isTauri, windowState.isPanelOpen, windowState.displayMode, activeModal]);
+  }, [isTauri]);
+
+  // WebviewWindow coordinator: spawn & position modal relative to panel
+  const handleOpenModalWindow = useCallback(async (type: 'detail' | 'settings' | 'sync' | 'tauri' | 'install', payload?: any) => {
+    if (isTauri) {
+      try {
+        const { WebviewWindow, getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow');
+        const { currentMonitor } = await import('@tauri-apps/api/window');
+        const { LogicalPosition } = await import('@tauri-apps/api/dpi');
+        const { emit } = await import('@tauri-apps/api/event');
+
+        let modalWin = await WebviewWindow.getByLabel('modal');
+        if (!modalWin) {
+          modalWin = new WebviewWindow('modal', {
+            url: 'index.html?window=modal',
+            title: 'Remember ME Modal',
+            width: 500,
+            height: 600,
+            resizable: false,
+            decorations: false,
+            transparent: true,
+            alwaysOnTop: true,
+            shadow: false,
+            skipTaskbar: true,
+            visible: false,
+            dragDropEnabled: false,
+          });
+        }
+
+        let refWin = await WebviewWindow.getByLabel('panel');
+        if (!refWin || !(await refWin.isVisible())) {
+          refWin = await WebviewWindow.getByLabel('mascot') || getCurrentWebviewWindow();
+        }
+
+        const monitor = await currentMonitor();
+        const refPos = await refWin.outerPosition();
+
+        if (monitor) {
+          const scale = monitor.scaleFactor || 1;
+          const monWidth = monitor.size.width / scale;
+          const monHeight = monitor.size.height / scale;
+          const monX = monitor.position.x / scale;
+          const monY = monitor.position.y / scale;
+
+          const refX = (refPos.x / scale) - monX;
+          const refY = (refPos.y / scale) - monY;
+
+          const modalWidth = 500;
+          const modalHeight = 600;
+
+          const placeLeft = (refX + 210) > (monWidth / 2);
+          let modalX = placeLeft ? (refX - modalWidth - 10) : (refX + 420 + 10);
+          modalX = Math.max(10, Math.min(monWidth - modalWidth - 10, modalX));
+          const modalY = Math.max(10, Math.min(monHeight - modalHeight - 10, refY));
+
+          await modalWin.setPosition(new LogicalPosition(monX + modalX, monY + modalY));
+          await modalWin.show();
+          await modalWin.setFocus();
+          await emit('open-modal-view', { type, payload });
+          return;
+        }
+      } catch (err) {
+        console.warn('Error opening modal window in App.tsx:', err);
+      }
+    }
+
+    // Fallback for browser preview
+    if (type === 'detail') setActiveModal(payload);
+    else if (type === 'settings') setIsSettingsModalOpen(true);
+    else if (type === 'sync') setIsSyncModalOpen(true);
+    else if (type === 'tauri') setIsTauriModalOpen(true);
+    else if (type === 'install') setIsInstallModalOpen(true);
+  }, [isTauri]);
+
+  // Synchronize state across windows via Tauri event listeners
+  useEffect(() => {
+    let unlistenData: (() => void) | undefined;
+    let unlistenMascot: (() => void) | undefined;
+    let unlistenPanelState: (() => void) | undefined;
+
+    const setupListeners = async () => {
+      if (isTauri) {
+        try {
+          const { listen } = await import('@tauri-apps/api/event');
+          unlistenData = await listen('data-updated', () => {
+            setTasks(LocalDataService.getTasks());
+            setRoutines(LocalDataService.getRoutines());
+            setSchedules(LocalDataService.getSchedules());
+            setCharacterConfig(LocalDataService.getCharacterConfig());
+            setAudioConfig(LocalDataService.getAudioConfig());
+            setSyncConfig(LocalDataService.getSyncConfig());
+          });
+
+          unlistenMascot = await listen<{ state: CharacterState }>('mascot-state-changed', (event) => {
+            if (event.payload?.state) {
+              setCharacterState(event.payload.state);
+            }
+          });
+
+          unlistenPanelState = await listen<{ isOpen: boolean }>('panel-state-changed', (event) => {
+            setWindowState(prev => ({ ...prev, isPanelOpen: event.payload.isOpen }));
+          });
+        } catch (err) {
+          console.warn('Tauri listen error in App.tsx:', err);
+        }
+      }
+    };
+
+    setupListeners();
+    return () => {
+      if (unlistenData) unlistenData();
+      if (unlistenMascot) unlistenMascot();
+      if (unlistenPanelState) unlistenPanelState();
+    };
+  }, [isTauri, setWindowState]);
 
   const mascotPos = isTauri
     ? (windowState.displayMode === 'bar' || windowState.displayMode === 'sidebar'
@@ -243,9 +434,13 @@ export default function App() {
         position={mascotPos}
         screenWidth={typeof window !== 'undefined' ? window.innerWidth : 1200}
         onClick={() => {
-          togglePanel();
-          if (windowState.isPanelOpen) {
-            setActiveModal(null);
+          if (isTauri) {
+            handleOpenPanelWindow();
+          } else {
+            togglePanel();
+            if (windowState.isPanelOpen) {
+              setActiveModal(null);
+            }
           }
         }}
         onToggleDisplayMode={toggleDisplayMode}
@@ -282,8 +477,27 @@ export default function App() {
               onDeleteTask={handleDeleteTask}
               onToggleRoutine={handleToggleRoutine}
               onDeleteSchedule={handleDeleteSchedule}
-              onOpenModal={modal => setActiveModal(modal)}
-              onOpenSettings={() => setIsSettingsModalOpen(true)}
+              onOpenModal={modal => {
+                if (isTauri) {
+                  handleOpenModalWindow('detail', modal);
+                } else {
+                  setActiveModal(modal);
+                }
+              }}
+              onOpenSettings={() => {
+                if (isTauri) {
+                  handleOpenModalWindow('settings');
+                } else {
+                  setIsSettingsModalOpen(true);
+                }
+              }}
+              onOpenInstallModal={() => {
+                if (isTauri) {
+                  handleOpenModalWindow('install');
+                } else {
+                  setIsInstallModalOpen(true);
+                }
+              }}
               onClose={() => {
                 setActiveModal(null);
                 closePanel();

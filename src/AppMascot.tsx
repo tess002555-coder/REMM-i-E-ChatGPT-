@@ -64,22 +64,57 @@ export default function AppMascot() {
     }
   }, [pendingDeadlines.length, isPanelOpen, isPeeking, playNotification, sendPushNotification, characterConfig.pushNotificationsEnabled, characterConfig.projectName]);
 
-  // Listen to Tauri events from panel window (e.g. when panel closes or data changes)
+  // Emit state updates to panel and modal windows when characterState changes
+  useEffect(() => {
+    const broadcastMascotState = async () => {
+      const isTauri = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
+      if (isTauri) {
+        try {
+          const { emit } = await import('@tauri-apps/api/event');
+          await emit('mascot-state-changed', {
+            state: characterState,
+            snappedEdge,
+            isPeeking,
+            isPanelOpen,
+          });
+        } catch (err) {
+          console.warn('Failed to emit mascot-state-changed:', err);
+        }
+      }
+    };
+    broadcastMascotState();
+  }, [characterState, snappedEdge, isPeeking, isPanelOpen]);
+
+  // Listen to Tauri events from panel and modal windows
   useEffect(() => {
     let unlistenPanelClose: (() => void) | undefined;
+    let unlistenPanelState: (() => void) | undefined;
     let unlistenDataUpdate: (() => void) | undefined;
+    let unlistenTogglePanel: (() => void) | undefined;
 
     const setupListeners = async () => {
       const isTauri = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
       if (isTauri) {
         try {
           const { listen } = await import('@tauri-apps/api/event');
+          
           unlistenPanelClose = await listen('panel-closed', () => {
             setCharacterState('idle');
           });
+
+          unlistenPanelState = await listen<{ isOpen: boolean }>('panel-state-changed', (event) => {
+            if (!event.payload.isOpen) {
+              setCharacterState('idle');
+            }
+          });
+
           unlistenDataUpdate = await listen('data-updated', () => {
             setTasks(LocalDataService.getTasks());
             setCharacterConfig(LocalDataService.getCharacterConfig());
+          });
+
+          unlistenTogglePanel = await listen('toggle-panel', () => {
+            togglePanel();
           });
         } catch (err) {
           console.warn('Tauri event listen error in Mascot window:', err);
@@ -90,9 +125,11 @@ export default function AppMascot() {
     setupListeners();
     return () => {
       if (unlistenPanelClose) unlistenPanelClose();
+      if (unlistenPanelState) unlistenPanelState();
       if (unlistenDataUpdate) unlistenDataUpdate();
+      if (unlistenTogglePanel) unlistenTogglePanel();
     };
-  }, []);
+  }, [togglePanel]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     // Left mouse click initiates window dragging
