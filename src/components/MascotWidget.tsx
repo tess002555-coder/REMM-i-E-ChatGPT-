@@ -1,27 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CharacterState, SnapEdge, CharacterConfig, TaskItem } from '../types';
-import { BellRing, MessageSquare, ImageIcon, Sparkles } from 'lucide-react';
-
-import defaultIdleImg from '../assets/images/denia_idle_1785427012199.jpg';
-import defaultPeekImg from '../assets/images/denia_peek_1785427027382.jpg';
-import defaultAlertImg from '../assets/images/denia_alert_1785427040053.jpg';
-import defaultHoverImg from '../assets/images/denia_hover_1785427054104.jpg';
-import defaultChibiImg from '../assets/images/denia_anime_chibi_1785429306117.jpg';
-
-const DEFAULT_MASCOT_IMAGES: Record<CharacterState, string> = {
-  idle: defaultIdleImg,
-  peek: defaultPeekImg,
-  alert: defaultAlertImg,
-  pointing: defaultHoverImg,
-};
+import { BellRing, MessageSquare, ImageIcon, Sparkles, SlidersHorizontal } from 'lucide-react';
 
 interface MascotWidgetProps {
   state: CharacterState;
   snappedEdge: SnapEdge;
   isPeeking: boolean;
   isPanelOpen: boolean;
-  displayMode?: 'sidebar' | 'mascot';
+  displayMode?: 'sidebar' | 'mascot' | 'bar';
   config: CharacterConfig;
   pendingDeadlines: TaskItem[];
   onClick: () => void;
@@ -38,7 +25,7 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
   snappedEdge,
   isPeeking,
   isPanelOpen,
-  displayMode = 'mascot',
+  displayMode = 'bar',
   config,
   pendingDeadlines,
   onClick,
@@ -69,15 +56,15 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
     }
   };
 
-  // Determine actual image source based on user config (with bundled fallback)
-  const getImageForState = (): string => {
+  // Determine actual image source based on manual user upload (null by default)
+  const getImageForState = (): string | null => {
     if (config?.customImageUrls?.[state]) {
       return config.customImageUrls[state]!;
     }
     if (config?.avatarUrl) {
       return config.avatarUrl;
     }
-    return DEFAULT_MASCOT_IMAGES[state] || defaultChibiImg;
+    return null;
   };
 
   const imageSrc = getImageForState();
@@ -120,12 +107,28 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
   }, [state, isPanelOpen, pendingDeadlines, config.speechEnabled, onSpeakSpeech]);
 
   // ----------------------------------------------------
-  // MODE 1: BILAH SISI (SIDEBAR HANDLE) - SLEEK MINIMAL
+  // MODE 1: BILAH SISI (SIDEBAR / BAR HANDLE) - SLEEK MINIMAL
   // ----------------------------------------------------
-  if (displayMode === 'sidebar') {
+  if (displayMode === 'sidebar' || displayMode === 'bar') {
     return (
-      <div
-        className="inline-block bg-transparent p-0 m-0 cursor-grab active:cursor-grabbing relative select-none"
+      <motion.div
+        drag
+        dragMomentum={false}
+        onDragEnd={(_, info) => {
+          onDragEnd(position.x + info.offset.x, position.y + info.offset.y);
+        }}
+        animate={{
+          x: position.x,
+          y: position.y,
+          scale: isHovered ? 1.05 : 1,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 24,
+        }}
+        className="interactive-widget fixed z-50 inline-block bg-transparent p-0 m-0 cursor-grab active:cursor-grabbing select-none"
+        style={{ left: 0, top: 0 }}
         data-tauri-drag-region
         onMouseDown={handleMouseDown}
         onMouseEnter={() => {
@@ -140,7 +143,7 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
       >
         {/* Sleek Edge Handle Container */}
         <div
-          className="relative flex flex-col items-center justify-between w-10 py-3 px-1.5 rounded-full bg-slate-950/90 border border-cyan-500/50 shadow-xl transition-all gap-2"
+          className="relative flex flex-col items-center justify-between w-10 py-3 px-1.5 rounded-full bg-slate-950/95 border border-cyan-500/50 shadow-xl transition-all gap-2"
           data-tauri-drag-region
         >
           {/* Glowing White/Cyan Vertical Handle Bar */}
@@ -160,7 +163,7 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
               <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
             )}
             {pendingDeadlines.length > 0 && (
-              <div className="absolute top-0 right-0 w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.9)]" />
+              <div className="absolute top-0 right-0 w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.9)] animate-pulse" />
             )}
           </div>
 
@@ -179,10 +182,10 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
                 e.stopPropagation();
                 onToggleDisplayMode();
               }}
-              title="Ganti Tampilan Widget"
-              className="p-1 rounded-full text-cyan-300/80 hover:text-cyan-200 hover:scale-110 transition-all"
+              title="Ganti Tampilan Widget (Bar / Maskot)"
+              className="p-1 rounded-full text-cyan-300/80 hover:text-cyan-200 hover:scale-110 transition-all cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <SlidersHorizontal className="w-3.5 h-3.5" />
             </button>
           )}
 
@@ -201,7 +204,7 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
             )}
           </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -314,6 +317,21 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
         {/* Subtle Alert Notification Glow Dot (Only when there is an active alert) */}
         {(state === 'alert' || pendingDeadlines.length > 0) && (
           <div className="absolute top-2 right-2 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-slate-900 shadow-[0_0_8px_rgba(251,191,36,1)] animate-pulse pointer-events-none" />
+        )}
+
+        {/* Quick Switch Button to Bar Mode on Hover */}
+        {onToggleDisplayMode && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleDisplayMode();
+            }}
+            title="Kembali ke Mode Bar (Bilah Sisi)"
+            className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-slate-950/90 hover:bg-slate-900 text-cyan-400 border border-cyan-500/50 shadow-lg hover:scale-110 transition-all opacity-80 hover:opacity-100 cursor-pointer z-20"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+          </button>
         )}
       </div>
     </motion.div>

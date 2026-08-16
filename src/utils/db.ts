@@ -58,13 +58,14 @@ export function isLightColor(hexColor?: string): boolean {
 export const DEFAULT_CHARACTER: CharacterConfig = {
   name: 'Maskot Denia',
   projectName: 'REMM(i)E',
+  avatarUrl: '',
   customImageUrls: {},
   speechEnabled: true,
   ttsEnabled: false,
   pushNotificationsEnabled: true,
   voiceVolume: 0.8,
   autoHideSeconds: 0, // Default 0 (always visible on desktop/mobile, no auto-hiding offscreen)
-  displayMode: 'mascot',
+  displayMode: 'bar',
   hoverDelayMs: 0, // 0 ms delay = instant transition
   closeDelayMs: 0, // 0 ms delay = instant transition
   notificationHoursBeforeDeadline: 3, // Default 3 Jam Sebelum Deadline

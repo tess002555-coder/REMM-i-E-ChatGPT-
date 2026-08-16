@@ -38,6 +38,7 @@ export default function App() {
 
   const {
     windowState,
+    setWindowState,
     handleDragEnd,
     handleMouseEnter,
     handleMouseLeave,
@@ -177,7 +178,13 @@ export default function App() {
   const handleSaveCharacter = useCallback((config: CharacterConfig) => {
     setCharacterConfig(config);
     LocalDataService.saveCharacterConfig(config);
-  }, []);
+    if (config.displayMode) {
+      setWindowState(prev => ({
+        ...prev,
+        displayMode: config.displayMode,
+      }));
+    }
+  }, [setWindowState]);
 
   const handleSaveSync = useCallback((config: SyncConfig) => {
     setSyncConfig(config);
@@ -206,12 +213,14 @@ export default function App() {
           appWindow.setSize(new LogicalSize(920, 720));
         } else if (windowState.isPanelOpen) {
           appWindow.setSize(new LogicalSize(540, 680));
+        } else if (windowState.displayMode === 'bar' || windowState.displayMode === 'sidebar') {
+          appWindow.setSize(new LogicalSize(90, 200));
         } else {
           appWindow.setSize(new LogicalSize(180, 180));
         }
       }).catch(err => console.warn("Tauri setSize error:", err));
     }
-  }, [isTauri, windowState.isPanelOpen, activeModal]);
+  }, [isTauri, windowState.isPanelOpen, windowState.displayMode, activeModal]);
 
   const mascotPos = isTauri
     ? { x: 10, y: 10 }

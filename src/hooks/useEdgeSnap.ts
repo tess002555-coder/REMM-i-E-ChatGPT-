@@ -30,7 +30,7 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
       isPanelOpen: false,
       isPinned: false,
       alwaysOnTop: true,
-      displayMode: 'mascot',
+      displayMode: 'bar',
     };
   });
 
@@ -175,10 +175,14 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
   }, []);
 
   const toggleDisplayMode = useCallback(() => {
-    setWindowState(prev => ({
-      ...prev,
-      displayMode: prev.displayMode === 'sidebar' ? 'mascot' : 'sidebar',
-    }));
+    setWindowState(prev => {
+      const current = prev.displayMode;
+      const nextMode = (current === 'bar' || current === 'sidebar') ? 'mascot' : 'bar';
+      return {
+        ...prev,
+        displayMode: nextMode,
+      };
+    });
   }, []);
 
   // Window resize handler adjustment

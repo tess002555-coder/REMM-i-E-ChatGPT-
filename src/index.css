@@ -13,14 +13,12 @@ html, body, #root {
   user-select: none;
 }
 
-/* 2. Pastikan wrapper mengisi ukuran jendela tanpa sisa margin */
+/* 2. Pastikan wrapper mengisi ukuran jendela tanpa memaksa elemen fixed/absolute ke tengah */
 .widget-wrapper {
   pointer-events: none !important;
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
 }
 
 /* 3. Elemen interaktif */

@@ -59,7 +59,7 @@ export interface CharacterConfig {
   pushNotificationsEnabled?: boolean;
   voiceVolume: number;
   autoHideSeconds: number;
-  displayMode?: 'sidebar' | 'mascot';
+  displayMode?: 'sidebar' | 'mascot' | 'bar';
   hoverDelayMs: number; // ms delay before hover peek opens
   closeDelayMs: number; // ms delay before hover peek closes
   notificationHoursBeforeDeadline: number; // H-Jam deadline threshold (e.g. 1, 3, 12, 24)

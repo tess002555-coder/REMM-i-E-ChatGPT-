@@ -258,6 +258,52 @@ export const SoundSettings: React.FC<SoundSettingsProps> = ({
             {/* SUB-TAB 1: WARNA & TEMA */}
             {characterSubTab === 'theme' && (
               <div className="space-y-3.5">
+                {/* Mode Tampilan Widget (Bar vs Maskot) */}
+                <div className="p-4 rounded-2xl bg-[#16161A] border border-[#2A2A2E] space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-bold text-cyan-300 pb-2 border-b border-[#2A2A2E]">
+                    <Sliders className="w-4 h-4 text-cyan-400" />
+                    <span>Mode Tampilan Floating Widget</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setCharacter({ ...character, displayMode: 'bar' })}
+                      className={`p-3 rounded-xl border flex flex-col items-start gap-1 text-left transition-all ${
+                        (character.displayMode === 'bar' || character.displayMode === 'sidebar' || !character.displayMode)
+                          ? 'border-cyan-400 bg-cyan-500/10 text-cyan-300 font-bold'
+                          : 'border-[#2A2A2E] bg-[#0F0F12] text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+                        <span className="w-2 h-4 rounded-full bg-cyan-400 inline-block" />
+                        <span>Mode Bar (Bilah Sisi)</span>
+                      </div>
+                      <p className="text-[10px] text-gray-400 leading-snug">
+                        Bilah vertikal minimalis di tepi layar tanpa frame/gambar.
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCharacter({ ...character, displayMode: 'mascot' })}
+                      className={`p-3 rounded-xl border flex flex-col items-start gap-1 text-left transition-all ${
+                        character.displayMode === 'mascot'
+                          ? 'border-cyan-400 bg-cyan-500/10 text-cyan-300 font-bold'
+                          : 'border-[#2A2A2E] bg-[#0F0F12] text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+                        <ImageIcon className="w-4 h-4 text-cyan-400" />
+                        <span>Mode Maskot Mengambang</span>
+                      </div>
+                      <p className="text-[10px] text-gray-400 leading-snug">
+                        Menampilkan foto/gambar maskot utuh yang Anda upload.
+                      </p>
+                    </button>
+                  </div>
+                </div>
+
                 {/* Identitas Header */}
                 <div className="p-4 rounded-2xl bg-[#16161A] border border-[#2A2A2E] space-y-3">
                   <div className="flex items-center gap-2 text-xs font-bold text-cyan-300 pb-2 border-b border-[#2A2A2E]">
