@@ -48,20 +48,6 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
   const currentScreenWidth = screenWidth || (typeof window !== 'undefined' ? window.innerWidth : 1200);
   const isRightEdge = snappedEdge === 'right' || (position.x + 70 > currentScreenWidth / 2);
 
-  // Manual Tauri window dragging handler
-  const handleMouseDown = async (e: React.MouseEvent) => {
-    if (e.button === 0) { // Left click
-      try {
-        if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-          const { getCurrentWindow } = await import('@tauri-apps/api/window');
-          await getCurrentWindow().startDragging();
-        }
-      } catch (err) {
-        console.warn('Tauri startDragging error:', err);
-      }
-    }
-  };
-
   // Determine actual image source based on manual user upload (defaults to /mascot.png)
   const getImageForState = (): string => {
     if (config?.customImageUrls?.[state]) {
@@ -133,10 +119,9 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
           stiffness: 300,
           damping: 24,
         }}
-        className="interactive-widget fixed z-50 inline-block bg-transparent p-0 m-0 cursor-grab active:cursor-grabbing select-none"
+        className="interactive-widget fixed z-50 inline-block bg-transparent p-0 m-0 cursor-grab active:cursor-grabbing select-none interactive-element"
         style={{ left: 0, top: 0 }}
         data-tauri-drag-region
-        onMouseDown={handleMouseDown}
         onMouseEnter={() => {
           setIsHovered(true);
           onMouseEnter();
@@ -260,10 +245,9 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
         stiffness: 300,
         damping: 24,
       }}
-      className="interactive-widget fixed z-50 inline-flex flex-col items-center select-none"
+      className="interactive-widget fixed z-50 inline-flex flex-col items-center select-none interactive-element"
       style={{ left: 0, top: 0 }}
       data-tauri-drag-region
-      onMouseDown={handleMouseDown}
       onMouseEnter={() => {
         setIsHovered(true);
         onMouseEnter();
