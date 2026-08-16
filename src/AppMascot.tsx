@@ -22,7 +22,7 @@ export default function AppMascot() {
     togglePanel,
     toggleDisplayMode,
     resetIdleTimer,
-    setIsPeeking,
+    unPeek,
   } = useEdgeSnapMultiWindow({ config: characterConfig });
 
   // Real-time pending deadlines for alert pose & push notifications
@@ -124,7 +124,7 @@ export default function AppMascot() {
         onClick={togglePanel}
         onToggleDisplayMode={toggleDisplayMode}
         onMouseEnter={() => {
-          setIsPeeking(false);
+          unPeek();
         }}
         onMouseLeave={resetIdleTimer}
         onDragEnd={() => snapToEdge()}

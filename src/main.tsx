@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import AppMascot from './AppMascot.tsx';
 import AppPanel from './AppPanel.tsx';
+import AppModal from './AppModal.tsx';
 import './index.css';
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -14,6 +15,9 @@ function RootRouter() {
   }
   if (windowType === 'panel') {
     return <AppPanel />;
+  }
+  if (windowType === 'modal') {
+    return <AppModal />;
   }
   return <App />;
 }

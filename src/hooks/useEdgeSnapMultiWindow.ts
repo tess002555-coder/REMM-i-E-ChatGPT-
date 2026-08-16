@@ -24,6 +24,65 @@ export function useEdgeSnapMultiWindow(options: UseEdgeSnapMultiWindowOptions = 
 
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Apply OS window movement for Peek state
+  const applyPeekState = useCallback(async (peeking: boolean, edge?: SnapEdge) => {
+    if (!isTauri) return;
+    try {
+      const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow');
+      const { currentMonitor } = await import('@tauri-apps/api/window');
+      const { LogicalPosition } = await import('@tauri-apps/api/dpi');
+      const win = getCurrentWebviewWindow();
+      const monitor = await currentMonitor();
+
+      if (monitor) {
+        const scale = monitor.scaleFactor || 1;
+        const monWidth = monitor.size.width / scale;
+        const monHeight = monitor.size.height / scale;
+        const monX = monitor.position.x / scale;
+        const monY = monitor.position.y / scale;
+
+        const outerPos = await win.outerPosition();
+        const currentY = Math.max(10, Math.min(monHeight - 180 - 10, (outerPos.y / scale) - monY));
+        const currentX = (outerPos.x / scale) - monX;
+
+        const currentEdge = edge || (currentX + 90 > monWidth / 2 ? 'right' : 'left');
+
+        const mascotWidth = 180;
+        const peekVisibleWidth = 60; // Leaves 60px of the mascot peek visible
+
+        if (peeking) {
+          if (currentEdge === 'right') {
+            // Screen Right Peek: Window starts at monWidth - 60 (leaving 60px on screen)
+            const targetX = monWidth - peekVisibleWidth;
+            await win.setPosition(new LogicalPosition(monX + targetX, monY + currentY));
+          } else {
+            // Screen Left Peek: Window starts at -120 (leaving 60px on screen)
+            const targetX = -(mascotWidth - peekVisibleWidth);
+            await win.setPosition(new LogicalPosition(monX + targetX, monY + currentY));
+          }
+        } else {
+          // Un-peek (full visible)
+          if (currentEdge === 'right') {
+            const targetX = monWidth - mascotWidth - 10;
+            await win.setPosition(new LogicalPosition(monX + targetX, monY + currentY));
+          } else {
+            const targetX = 10;
+            await win.setPosition(new LogicalPosition(monX + targetX, monY + currentY));
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Apply peek error:', err);
+    }
+  }, [isTauri]);
+
+  // Un-peek handler (onMouseEnter or click)
+  const unPeek = useCallback(() => {
+    setIsPeeking(false);
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    applyPeekState(false, snappedEdge);
+  }, [applyPeekState, snappedEdge]);
+
   // Reset idle peek timer
   const resetIdleTimer = useCallback(() => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
@@ -31,9 +90,10 @@ export function useEdgeSnapMultiWindow(options: UseEdgeSnapMultiWindowOptions = 
     if (autoHideSec > 0 && !isPanelOpen) {
       idleTimerRef.current = setTimeout(() => {
         setIsPeeking(true);
+        applyPeekState(true, snappedEdge);
       }, autoHideSec * 1000);
     }
-  }, [config?.autoHideSeconds, isPanelOpen]);
+  }, [config?.autoHideSeconds, isPanelOpen, applyPeekState, snappedEdge]);
 
   useEffect(() => {
     resetIdleTimer();
@@ -77,8 +137,8 @@ export function useEdgeSnapMultiWindow(options: UseEdgeSnapMultiWindowOptions = 
           const currentX = (outerPos.x / scale) - monX;
           const currentY = (outerPos.y / scale) - monY;
 
-          const widgetWidth = 260;
-          const widgetHeight = 260;
+          const widgetWidth = 180;
+          const widgetHeight = 180;
 
           // Determine whether closer to left or right edge
           const isRight = (currentX + widgetWidth / 2) > (monWidth / 2);
@@ -90,6 +150,7 @@ export function useEdgeSnapMultiWindow(options: UseEdgeSnapMultiWindowOptions = 
           await win.setPosition(new LogicalPosition(monX + targetX, monY + targetY));
           setSnappedEdge(edge);
           setIsPeeking(false);
+          resetIdleTimer();
         }
       } catch (err) {
         console.warn('Tauri edge snap error:', err);
@@ -103,8 +164,9 @@ export function useEdgeSnapMultiWindow(options: UseEdgeSnapMultiWindowOptions = 
       setBrowserPos(prev => ({ ...prev, x: targetX }));
       setSnappedEdge(edge);
       setIsPeeking(false);
+      resetIdleTimer();
     }
-  }, [isTauri, browserPos.x]);
+  }, [isTauri, browserPos.x, resetIdleTimer]);
 
   // Toggle Panel Window (Multi-window coordinator)
   const togglePanel = useCallback(async () => {
@@ -124,7 +186,11 @@ export function useEdgeSnapMultiWindow(options: UseEdgeSnapMultiWindowOptions = 
         if (isVisible) {
           await panelWin.hide();
           setIsPanelOpen(false);
+          resetIdleTimer();
         } else {
+          // Unpeek mascot before opening panel
+          unPeek();
+
           // Position panel directly adjacent to mascot
           const mascotWin = getCurrentWebviewWindow();
           const mascotPos = await mascotWin.outerPosition();
@@ -140,12 +206,12 @@ export function useEdgeSnapMultiWindow(options: UseEdgeSnapMultiWindowOptions = 
             const mascotX = (mascotPos.x / scale) - monX;
             const mascotY = (mascotPos.y / scale) - monY;
 
-            const panelWidth = 400;
-            const panelHeight = 600;
+            const panelWidth = 420;
+            const panelHeight = 620;
 
             // Position to the left if mascot is near right edge, or to the right if mascot is near left edge
-            const placeLeft = (mascotX + 110) > (monWidth / 2);
-            let panelX = placeLeft ? (mascotX - panelWidth - 10) : (mascotX + 220 + 10);
+            const placeLeft = (mascotX + 90) > (monWidth / 2);
+            let panelX = placeLeft ? (mascotX - panelWidth - 10) : (mascotX + 180 + 10);
             
             // Boundary checks
             panelX = Math.max(10, Math.min(monWidth - panelWidth - 10, panelX));
@@ -163,7 +229,7 @@ export function useEdgeSnapMultiWindow(options: UseEdgeSnapMultiWindowOptions = 
     } else {
       setIsPanelOpen(prev => !prev);
     }
-  }, [isTauri]);
+  }, [isTauri, unPeek, resetIdleTimer]);
 
   const toggleDisplayMode = useCallback(() => {
     setDisplayMode(prev => {
@@ -184,6 +250,7 @@ export function useEdgeSnapMultiWindow(options: UseEdgeSnapMultiWindowOptions = 
     browserPos,
     setBrowserPos,
     setIsPeeking,
+    unPeek,
     startDragging,
     snapToEdge,
     togglePanel,

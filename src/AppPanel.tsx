@@ -32,7 +32,7 @@ export default function AppPanel() {
   // Audio Hook
   const { playNotification } = useAudio(audioConfig);
 
-  // Broadcast data update to other windows (Mascot)
+  // Broadcast data update to other windows (Mascot & Modal)
   const broadcastUpdate = useCallback(async () => {
     if (isTauri) {
       try {
@@ -42,6 +42,86 @@ export default function AppPanel() {
         console.warn('Failed to emit data-updated event:', err);
       }
     }
+  }, [isTauri]);
+
+  // Open Modal Helper (Pure Multi-Window coordination for Tauri + fallback for preview)
+  const openModalWindow = useCallback(async (type: 'detail' | 'settings' | 'sync' | 'tauri' | 'install', payload?: any) => {
+    if (isTauri) {
+      try {
+        const { WebviewWindow, getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow');
+        const { currentMonitor } = await import('@tauri-apps/api/window');
+        const { LogicalPosition } = await import('@tauri-apps/api/dpi');
+        const { emit } = await import('@tauri-apps/api/event');
+
+        const modalWin = await WebviewWindow.getByLabel('modal');
+        if (modalWin) {
+          const panelWin = getCurrentWebviewWindow();
+          const panelPos = await panelWin.outerPosition();
+          const monitor = await currentMonitor();
+
+          if (monitor) {
+            const scale = monitor.scaleFactor || 1;
+            const monWidth = monitor.size.width / scale;
+            const monHeight = monitor.size.height / scale;
+            const monX = monitor.position.x / scale;
+            const monY = monitor.position.y / scale;
+
+            const panelX = (panelPos.x / scale) - monX;
+            const panelY = (panelPos.y / scale) - monY;
+
+            const modalWidth = 500;
+            const modalHeight = 600;
+
+            // Place modal to the left if panel is on the right, or to the right if panel is on the left
+            const placeLeft = (panelX + 210) > (monWidth / 2);
+            let modalX = placeLeft ? (panelX - modalWidth - 10) : (panelX + 420 + 10);
+            modalX = Math.max(10, Math.min(monWidth - modalWidth - 10, modalX));
+            const modalY = Math.max(10, Math.min(monHeight - modalHeight - 10, panelY));
+
+            await modalWin.setPosition(new LogicalPosition(monX + modalX, monY + modalY));
+            await modalWin.show();
+            await modalWin.setFocus();
+            await emit('open-modal-view', { type, payload });
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to open modal window:', err);
+      }
+    }
+
+    // Fallback for browser preview
+    if (type === 'detail') setActiveModal(payload);
+    else if (type === 'settings') setIsSettingsModalOpen(true);
+    else if (type === 'sync') setIsSyncModalOpen(true);
+    else if (type === 'tauri') setIsTauriModalOpen(true);
+    else if (type === 'install') setIsInstallModalOpen(true);
+  }, [isTauri]);
+
+  // Listen to data update events from other windows
+  useEffect(() => {
+    let unlistenDataUpdate: (() => void) | undefined;
+    const setupListeners = async () => {
+      if (isTauri) {
+        try {
+          const { listen } = await import('@tauri-apps/api/event');
+          unlistenDataUpdate = await listen('data-updated', () => {
+            setTasks(LocalDataService.getTasks());
+            setRoutines(LocalDataService.getRoutines());
+            setSchedules(LocalDataService.getSchedules());
+            setCharacterConfig(LocalDataService.getCharacterConfig());
+            setAudioConfig(LocalDataService.getAudioConfig());
+            setSyncConfig(LocalDataService.getSyncConfig());
+          });
+        } catch (err) {
+          console.warn('Tauri event error in Panel window:', err);
+        }
+      }
+    };
+    setupListeners();
+    return () => {
+      if (unlistenDataUpdate) unlistenDataUpdate();
+    };
   }, [isTauri]);
 
   // Close panel window handler
@@ -200,9 +280,9 @@ export default function AppPanel() {
           onDeleteTask={handleDeleteTask}
           onToggleRoutine={handleToggleRoutine}
           onDeleteSchedule={handleDeleteSchedule}
-          onOpenModal={modal => setActiveModal(modal)}
-          onOpenSettings={() => setIsSettingsModalOpen(true)}
-          onOpenInstallModal={() => setIsInstallModalOpen(true)}
+          onOpenModal={modal => openModalWindow('detail', modal)}
+          onOpenSettings={() => openModalWindow('settings')}
+          onOpenInstallModal={() => openModalWindow('install')}
           onClose={handleClosePanel}
         />
       </div>
