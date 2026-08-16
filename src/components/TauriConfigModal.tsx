@@ -20,16 +20,18 @@ const TAURI_CONF_JSON = `{
   "app": {
     "windows": [
       {
-        "title": "Remember ME - Denia Widget",
-        "width": 380,
-        "height": 480,
-        "resizable": true,
+        "label": "main",
+        "title": "Remember ME",
+        "width": 140,
+        "height": 160,
+        "resizable": false,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,
-        "center": false,
-        "skipTaskbar": false,
-        "visible": true
+        "shadow": false,
+        "skipTaskbar": true,
+        "visible": true,
+        "dragDropEnabled": false
       }
     ]
   },
@@ -45,7 +47,7 @@ const TAURI_CONF_JSON = `{
       "icons/icon.ico"
     ],
     "shortDescription": "Floating Anime Mascot Reminder Widget featuring Denia",
-    "targets": "all"
+    "targets": ["nsis"]
   }
 }`;
 

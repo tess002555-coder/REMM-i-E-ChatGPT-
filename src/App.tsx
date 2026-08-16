@@ -214,16 +214,16 @@ export default function App() {
         } else if (windowState.isPanelOpen) {
           appWindow.setSize(new LogicalSize(540, 680));
         } else if (windowState.displayMode === 'bar' || windowState.displayMode === 'sidebar') {
-          appWindow.setSize(new LogicalSize(90, 200));
+          appWindow.setSize(new LogicalSize(56, 180));
         } else {
-          appWindow.setSize(new LogicalSize(180, 180));
+          appWindow.setSize(new LogicalSize(144, 150));
         }
       }).catch(err => console.warn("Tauri setSize error:", err));
     }
   }, [isTauri, windowState.isPanelOpen, windowState.displayMode, activeModal]);
 
   const mascotPos = isTauri
-    ? { x: 10, y: 10 }
+    ? { x: 0, y: 0 }
     : { x: windowState.x, y: windowState.y };
 
   return (
