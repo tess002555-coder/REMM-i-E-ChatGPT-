@@ -1,7 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CharacterState, SnapEdge, CharacterConfig, TaskItem } from '../types';
-import { Sparkles, BellRing, MessageSquare, ShieldCheck, ImageIcon, Eye } from 'lucide-react';
+import { BellRing, MessageSquare, ImageIcon, Sparkles } from 'lucide-react';
+
+import defaultIdleImg from '../assets/images/denia_idle_1785427012199.jpg';
+import defaultPeekImg from '../assets/images/denia_peek_1785427027382.jpg';
+import defaultAlertImg from '../assets/images/denia_alert_1785427040053.jpg';
+import defaultHoverImg from '../assets/images/denia_hover_1785427054104.jpg';
+import defaultChibiImg from '../assets/images/denia_anime_chibi_1785429306117.jpg';
+
+const DEFAULT_MASCOT_IMAGES: Record<CharacterState, string> = {
+  idle: defaultIdleImg,
+  peek: defaultPeekImg,
+  alert: defaultAlertImg,
+  pointing: defaultHoverImg,
+};
 
 interface MascotWidgetProps {
   state: CharacterState;
@@ -40,6 +53,8 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const lastQuoteRef = useRef<string | null>(null);
 
+  const isTauri = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
+
   // Manual Tauri window dragging handler
   const handleMouseDown = async (e: React.MouseEvent) => {
     if (e.button === 0) { // Left click
@@ -54,15 +69,15 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
     }
   };
 
-  // Determine actual image source based on user config (returns null if no image imported)
-  const getImageForState = (): string | null => {
+  // Determine actual image source based on user config (with bundled fallback)
+  const getImageForState = (): string => {
     if (config?.customImageUrls?.[state]) {
       return config.customImageUrls[state]!;
     }
     if (config?.avatarUrl) {
       return config.avatarUrl;
     }
-    return null;
+    return DEFAULT_MASCOT_IMAGES[state] || defaultChibiImg;
   };
 
   const imageSrc = getImageForState();
@@ -195,7 +210,7 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
   // ----------------------------------------------------
   // Calculate peek offset when in peek mode: Denia shows ~55% of her body (hides ~45% behind the edge)
   const getPeekOffset = () => {
-    if (!isPeeking || isPanelOpen || isHovered) {
+    if (isTauri || !isPeeking || isPanelOpen || isHovered) {
       return { x: 0, y: 0 };
     }
     // Total mascot widget width is 144px (w-36).

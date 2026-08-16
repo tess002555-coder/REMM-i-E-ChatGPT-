@@ -1,22 +1,39 @@
 @import "tailwindcss";
 
+/* 1. Hilangkan margin/padding default browser & gunakan 100% (bukan 100vw/vh) */
 html, body, #root {
   background: transparent !important;
   background-color: transparent !important;
   margin: 0 !important;
   padding: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
+  width: 100% !important;
+  height: 100% !important;
   overflow: hidden !important;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
+/* 2. Pastikan wrapper mengisi ukuran jendela tanpa sisa margin */
 .widget-wrapper {
   pointer-events: none !important;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Pastikan gambar/widget interaktif tidak 0px */
+/* 3. Elemen interaktif */
+.widget-wrapper img,
+.widget-wrapper button,
+.widget-wrapper a,
+.widget-wrapper .clickable,
 .interactive-widget {
   pointer-events: auto !important;
+  cursor: grab;
+}
+
+.widget-wrapper .interactive-widget:active,
+.interactive-widget:active {
+  cursor: grabbing;
 }
