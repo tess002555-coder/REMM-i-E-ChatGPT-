@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { AnimatePresence } from 'motion/react';
 import { CharacterState, TaskItem, RoutineItem, ScheduleItem, CharacterConfig, AudioConfig, SyncConfig, PriorityLevel } from './types';
 import { LocalDataService } from './utils/db';
-import { addInteraction, removeInteraction } from './utils/cursorEvents';
+import { addInteraction, removeInteraction, initCursorEvents } from './utils/cursorEvents';
 import { useAudio } from './hooks/useAudio';
 import { useEdgeSnap } from './hooks/useEdgeSnap';
 
@@ -51,6 +51,11 @@ export default function App() {
     hoverDelayMs: characterConfig.hoverDelayMs ?? 0,
     closeDelayMs: characterConfig.closeDelayMs ?? 0,
   });
+
+  // Initialize cursor passthrough on mount
+  useEffect(() => {
+    initCursorEvents();
+  }, []);
 
   // Check pending deadlines within H-Jam threshold
   const pendingDeadlines = useMemo(() => {

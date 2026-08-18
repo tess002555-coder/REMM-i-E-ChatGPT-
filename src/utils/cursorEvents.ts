@@ -11,6 +11,11 @@ export const removeInteraction = async () => {
   await updateCursorEvents();
 };
 
+export const initCursorEvents = async () => {
+  interactionCount = 0;
+  await updateCursorEvents();
+};
+
 const updateCursorEvents = async () => {
   const isTauri = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
   if (!isTauri) return;
