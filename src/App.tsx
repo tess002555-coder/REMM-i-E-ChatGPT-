@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { CharacterState, TaskItem, RoutineItem, ScheduleItem, CharacterConfig, AudioConfig, SyncConfig, PriorityLevel } from './types';
 import { LocalDataService } from './utils/db';
@@ -225,6 +225,31 @@ export default function App() {
 
   const mascotPos = { x: windowState.x, y: windowState.y };
 
+  // Calculate static spawn positions for independent drag capability
+  const panelPosRef = useRef<{left: number, top: number} | null>(null);
+  if (!windowState.isPanelOpen) {
+    panelPosRef.current = null;
+  } else if (!panelPosRef.current) {
+    panelPosRef.current = {
+      left: windowState.snappedEdge === 'left' 
+        ? Math.min(window.innerWidth - 360, windowState.x + 150)
+        : Math.max(16, windowState.x - 340),
+      top: Math.max(16, Math.min(window.innerHeight - 520, windowState.y)),
+    };
+  }
+
+  const modalPosRef = useRef<{left: number, top: number} | null>(null);
+  if (!activeModal) {
+    modalPosRef.current = null;
+  } else if (!modalPosRef.current) {
+    modalPosRef.current = {
+      left: windowState.snappedEdge === 'left' 
+        ? Math.min(window.innerWidth - 420, windowState.x + 150 + 360)
+        : Math.max(16, windowState.x - 340 - 520),
+      top: Math.max(16, Math.min(window.innerHeight - 620, windowState.y)),
+    };
+  }
+
   return (
     <div className="widget-wrapper relative w-full h-full text-slate-100 font-sans" data-tauri-drag-region>
       {/* Floating Mascot Widget */}
@@ -257,12 +282,7 @@ export default function App() {
         {windowState.isPanelOpen && (
           <div 
             className="fixed z-40 interactive-element pointer-events-auto" 
-            style={{
-              left: windowState.snappedEdge === 'left' 
-                ? Math.min(window.innerWidth - 360, windowState.x + 150)
-                : Math.max(16, windowState.x - 340),
-              top: Math.max(16, Math.min(window.innerHeight - 520, windowState.y)),
-            }}
+            style={panelPosRef.current || {}}
             onMouseEnter={addInteraction}
             onMouseLeave={removeInteraction}
           >
@@ -294,12 +314,7 @@ export default function App() {
         {windowState.isPanelOpen && activeModal && (
           <div 
             className="fixed z-50 interactive-element pointer-events-auto" 
-            style={{
-              left: windowState.snappedEdge === 'left' 
-                ? Math.min(window.innerWidth - 420, windowState.x + 150 + 360)
-                : Math.max(16, windowState.x - 340 - 520),
-              top: Math.max(16, Math.min(window.innerHeight - 620, windowState.y)),
-            }}
+            style={modalPosRef.current || {}}
             onMouseEnter={addInteraction}
             onMouseLeave={removeInteraction}
           >

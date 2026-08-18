@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useDragControls } from 'motion/react';
 import { ScheduleItem, RoutineItem, TaskItem, CharacterConfig, PriorityLevel } from '../types';
 import { Calendar, Clock, Plus, X, Check, Trash2, Save, RotateCcw, Search, ChevronRight, ChevronLeft, FileText, Filter, Share2, Trophy } from 'lucide-react';
 import { isLightColor } from '../utils/db';
@@ -58,6 +58,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
   onDeleteTask,
   onOpenAddScheduleModal,
 }) => {
+  const dragControls = useDragControls();
   // Form states
   const [schTitle, setSchTitle] = useState('');
   const [schTime, setSchTime] = useState('');
@@ -226,6 +227,11 @@ export const DetailModal: React.FC<DetailModalProps> = ({
   return (
     <AnimatePresence>
       <motion.div
+        drag
+        dragControls={dragControls}
+        dragListener={false}
+        dragMomentum={false}
+        dragElastic={0.05}
         initial={{ opacity: 0, x: -20, scale: 0.95 }}
         animate={{ opacity: 1, x: 0, scale: 1 }}
         exit={{ opacity: 0, x: -20, scale: 0.95 }}
@@ -240,7 +246,10 @@ export const DetailModal: React.FC<DetailModalProps> = ({
         }`}
       >
         {/* Header Bar */}
-        <div className={`flex items-center justify-between pb-3 border-b mb-3 ${isLight ? 'border-slate-300' : 'border-[#3A3A40]'}`}>
+        <div 
+          onPointerDown={(e) => dragControls.start(e)}
+          className={`flex items-center justify-between pb-3 border-b mb-3 cursor-grab active:cursor-grabbing select-none ${isLight ? 'border-slate-300' : 'border-[#3A3A40]'}`}
+        >
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
             <h3 className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-cyan-700' : 'text-cyan-300'}`}>
