@@ -346,38 +346,44 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <div className="interactive-element pointer-events-auto">
-        {/* System Modals */}
-        <TauriConfigModal isOpen={isTauriModalOpen} onClose={() => setIsTauriModalOpen(false)} />
+      {/* System Modals */}
+      {(isTauriModalOpen || isInstallModalOpen || isSettingsModalOpen || isSyncModalOpen) && (
+        <div 
+          className="interactive-element pointer-events-auto fixed inset-0 z-50"
+          onMouseEnter={addInteraction}
+          onMouseLeave={removeInteraction}
+        >
+          <TauriConfigModal isOpen={isTauriModalOpen} onClose={() => setIsTauriModalOpen(false)} />
 
-        {isInstallModalOpen && (
-          <InstallAppModal
-            onClose={() => setIsInstallModalOpen(false)}
-            onOpenTauriModal={() => setIsTauriModalOpen(true)}
+          {isInstallModalOpen && (
+            <InstallAppModal
+              onClose={() => setIsInstallModalOpen(false)}
+              onOpenTauriModal={() => setIsTauriModalOpen(true)}
+            />
+          )}
+
+          <SoundSettings
+            isOpen={isSettingsModalOpen}
+            onClose={() => setIsSettingsModalOpen(false)}
+            audioConfig={audioConfig}
+            characterConfig={characterConfig}
+            syncConfig={syncConfig}
+            onSaveAudio={handleSaveAudio}
+            onSaveCharacter={handleSaveCharacter}
+            onSaveSync={handleSaveSync}
+            onTestSound={playNotification}
+            onRefreshData={handleRefreshData}
           />
-        )}
 
-        <SoundSettings
-          isOpen={isSettingsModalOpen}
-          onClose={() => setIsSettingsModalOpen(false)}
-          audioConfig={audioConfig}
-          characterConfig={characterConfig}
-          syncConfig={syncConfig}
-          onSaveAudio={handleSaveAudio}
-          onSaveCharacter={handleSaveCharacter}
-          onSaveSync={handleSaveSync}
-          onTestSound={playNotification}
-          onRefreshData={handleRefreshData}
-        />
-
-        <SyncModal
-          isOpen={isSyncModalOpen}
-          onClose={() => setIsSyncModalOpen(false)}
-          syncConfig={syncConfig}
-          onSaveSyncConfig={handleSaveSync}
-          onRefreshData={handleRefreshData}
-        />
-      </div>
+          <SyncModal
+            isOpen={isSyncModalOpen}
+            onClose={() => setIsSyncModalOpen(false)}
+            syncConfig={syncConfig}
+            onSaveSyncConfig={handleSaveSync}
+            onRefreshData={handleRefreshData}
+          />
+        </div>
+      )}
     </div>
   );
 }
