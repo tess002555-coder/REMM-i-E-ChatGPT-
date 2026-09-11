@@ -148,7 +148,7 @@ export default function App() {
   }
 
   return (
-    <div className="widget-wrapper relative w-full h-full text-slate-100 font-sans" data-tauri-drag-region>
+    <div className="widget-wrapper relative w-full h-full text-slate-100 font-sans">
       <MascotWidget
         state={characterState}
         snappedEdge={windowState.snappedEdge}
