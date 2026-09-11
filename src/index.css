@@ -6,6 +6,9 @@ html, body, #root {
   margin: 0;
   padding: 0;
   overflow: hidden;
+}
+
+html, body {
   background: transparent;
   font-family: Arial, sans-serif;
 }
@@ -18,8 +21,6 @@ body {
 button { font: inherit; }
 
 .mascot-hitbox {
-  position: fixed;
-  inset: 0;
   width: 180px;
   height: 180px;
   margin: 0;
@@ -27,6 +28,7 @@ button { font: inherit; }
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   background: transparent;
   cursor: grab;
 }
@@ -37,29 +39,18 @@ button { font: inherit; }
   display: block;
   width: 180px;
   height: 180px;
+  max-width: none;
+  max-height: none;
   object-fit: contain;
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
 }
 
-.mascot-hint {
-  position: absolute;
-  top: -34px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.92);
-  color: white;
-  font-size: 12px;
-  pointer-events: none;
-  white-space: nowrap;
-}
-
 .panel {
   width: 520px;
   height: 720px;
+  margin: 0;
   padding: 24px;
   overflow: hidden;
   color: #e2e8f0;
@@ -73,7 +64,10 @@ button { font: inherit; }
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  cursor: grab;
 }
+
+.panel-header:active { cursor: grabbing; }
 
 .panel-kicker {
   font-size: 11px;
