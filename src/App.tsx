@@ -3,11 +3,11 @@ import { SimplePanel } from './components/SimplePanel';
 import { useMascotWindow } from './hooks/useMascotWindow';
 
 export default function App() {
-  const { mode, beginDrag, endDrag, closePanel } = useMascotWindow();
+  const { mode, beginDrag, openPanel, closePanel } = useMascotWindow();
 
   if (mode === 'panel') {
     return <SimplePanel onClose={closePanel} />;
   }
 
-  return <Mascot onBeginDrag={beginDrag} onEndDrag={endDrag} />;
+  return <Mascot onBeginDrag={beginDrag} onOpen={openPanel} />;
 }
