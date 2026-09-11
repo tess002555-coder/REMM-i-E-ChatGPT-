@@ -35,6 +35,7 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
+    "icon": [],
     "category": "Productivity",
     "shortDescription": "Remember ME floating mascot widget"
   }
