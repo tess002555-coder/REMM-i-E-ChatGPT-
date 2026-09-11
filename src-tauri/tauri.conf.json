@@ -14,12 +14,19 @@
       {
         "label": "main",
         "title": "Remember ME",
-        "fullscreen": true,
+        "width": 180,
+        "height": 180,
+        "minWidth": 180,
+        "minHeight": 180,
+        "resizable": false,
+        "fullscreen": false,
         "transparent": true,
         "decorations": false,
         "alwaysOnTop": true,
         "skipTaskbar": true,
-        "shadow": false
+        "shadow": false,
+        "visible": true,
+        "focus": false
       }
     ]
   },
