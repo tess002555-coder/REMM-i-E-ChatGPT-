@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { SnapEdge, WindowState } from '../types';
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi';
 
 interface EdgeSnapOptions {
@@ -14,17 +14,18 @@ interface EdgeSnapOptions {
 
 const CLOSED_SIZE = { width: 180, height: 180 };
 const OPEN_SIZE = { width: 520, height: 720 };
-const MARGIN = 8;
+const EDGE_PEEK = 90;
+const MARGIN = 0;
 
 export function useEdgeSnap(options: EdgeSnapOptions) {
   const { autoHideSeconds = 0, closeDelayMs = 0 } = options;
 
   const [windowState, setWindowState] = useState<WindowState>(() => ({
     x: 0, y: 0, isSnapped: true, snappedEdge: 'right', isPeeking: false,
-    isPanelOpen: false, isPinned: false, alwaysOnTop: true, displayMode: 'bar',
+    isPanelOpen: false, isPinned: false, alwaysOnTop: true, displayMode: 'mascot',
   }));
 
-  const nativeWindowRef = useRef<ReturnType<typeof getCurrentWebviewWindow> | null>(null);
+  const nativeWindowRef = useRef<ReturnType<typeof getCurrentWindow> | null>(null);
   const screenRef = useRef({ width: 1920, height: 1080 });
   const positionRef = useRef({ x: 0, y: 120 });
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -35,7 +36,7 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
     positionRef.current = { x, y };
     if (!isTauri) return;
     try {
-      const nativeWindow = nativeWindowRef.current ?? getCurrentWebviewWindow();
+      const nativeWindow = nativeWindowRef.current ?? getCurrentWindow();
       nativeWindowRef.current = nativeWindow;
       await nativeWindow.setPosition(new LogicalPosition(x, y));
     } catch (error) {
@@ -46,7 +47,7 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
   const resizeNativeWindow = useCallback(async (width: number, height: number) => {
     if (!isTauri) return;
     try {
-      const nativeWindow = nativeWindowRef.current ?? getCurrentWebviewWindow();
+      const nativeWindow = nativeWindowRef.current ?? getCurrentWindow();
       nativeWindowRef.current = nativeWindow;
       await nativeWindow.setSize(new LogicalSize(width, height));
     } catch (error) {
@@ -56,30 +57,55 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
 
   const snapToEdge = useCallback((currX: number, currY: number, width = CLOSED_SIZE.width, height = CLOSED_SIZE.height) => {
     const { width: boundsW, height: boundsH } = screenRef.current;
-    const maxX = Math.max(MARGIN, boundsW - width - MARGIN);
-    const maxY = Math.max(MARGIN, boundsH - height - MARGIN);
-    const x = Math.max(MARGIN, Math.min(currX, maxX));
-    const y = Math.max(MARGIN, Math.min(currY, maxY));
+    const maxX = Math.max(0, boundsW - width);
+    const maxY = Math.max(0, boundsH - height);
+    const x = Math.max(0, Math.min(currX, maxX));
+    const y = Math.max(0, Math.min(currY, maxY));
     const centerX = x + width / 2;
     const centerY = y + height / 2;
     const distances = { left: centerX, right: boundsW - centerX, top: centerY, bottom: boundsH - centerY } as const;
     const edge = (Object.keys(distances) as SnapEdge[]).reduce((a, b) => distances[a] < distances[b] ? a : b);
-    if (edge === 'left') return { x: MARGIN, y, edge };
-    if (edge === 'right') return { x: maxX, y, edge };
-    if (edge === 'top') return { x, y: MARGIN, edge };
-    return { x, y: maxY, edge };
+    return { x, y, edge };
+  }, []);
+
+  const getPeekPosition = useCallback((edge: SnapEdge, width = CLOSED_SIZE.width, height = CLOSED_SIZE.height) => {
+    const { width: boundsW, height: boundsH } = screenRef.current;
+    const maxX = Math.max(0, boundsW - width);
+    const maxY = Math.max(0, boundsH - height);
+
+    if (edge === 'left') return { x: -EDGE_PEEK, y: Math.max(0, Math.min(positionRef.current.y, maxY)) };
+    if (edge === 'right') return { x: boundsW - width + EDGE_PEEK, y: Math.max(0, Math.min(positionRef.current.y, maxY)) };
+    if (edge === 'top') return { x: Math.max(0, Math.min(positionRef.current.x, maxX)), y: -EDGE_PEEK };
+    return { x: Math.max(0, Math.min(positionRef.current.x, maxX)), y: boundsH - height + EDGE_PEEK };
   }, []);
 
   const applyNativeAnchor = useCallback(async (edge: SnapEdge, preferredX: number, preferredY: number, width: number, height: number) => {
     const { width: boundsW, height: boundsH } = screenRef.current;
-    const maxX = Math.max(MARGIN, boundsW - width - MARGIN);
-    const maxY = Math.max(MARGIN, boundsH - height - MARGIN);
-    const x = edge === 'left' ? MARGIN : edge === 'right' ? maxX : Math.max(MARGIN, Math.min(preferredX, maxX));
-    const y = edge === 'top' ? MARGIN : edge === 'bottom' ? maxY : Math.max(MARGIN, Math.min(preferredY, maxY));
+    const maxX = Math.max(0, boundsW - width);
+    const maxY = Math.max(0, boundsH - height);
+    const x = edge === 'left' ? 0 : edge === 'right' ? maxX : Math.max(0, Math.min(preferredX, maxX));
+    const y = edge === 'top' ? 0 : edge === 'bottom' ? maxY : Math.max(0, Math.min(preferredY, maxY));
     await syncNativePosition(x, y);
+
     const localX = edge === 'right' ? Math.max(0, width - CLOSED_SIZE.width) : (width > CLOSED_SIZE.width ? 50 : 0);
     const localY = edge === 'bottom' ? Math.max(0, height - CLOSED_SIZE.height) : 0;
     setWindowState(prev => ({ ...prev, x: localX, y: localY, snappedEdge: edge, isSnapped: true }));
+  }, [syncNativePosition]);
+
+  const placePeekWidget = useCallback(async (edge: SnapEdge, preferredX: number, preferredY: number) => {
+    const { width: boundsW, height: boundsH } = screenRef.current;
+    const maxX = Math.max(0, boundsW - CLOSED_SIZE.width);
+    const maxY = Math.max(0, boundsH - CLOSED_SIZE.height);
+    let x = Math.max(0, Math.min(preferredX, maxX));
+    let y = Math.max(0, Math.min(preferredY, maxY));
+
+    if (edge === 'left') x = -EDGE_PEEK;
+    if (edge === 'right') x = boundsW - CLOSED_SIZE.width + EDGE_PEEK;
+    if (edge === 'top') y = -EDGE_PEEK;
+    if (edge === 'bottom') y = boundsH - CLOSED_SIZE.height + EDGE_PEEK;
+
+    await syncNativePosition(x, y);
+    setWindowState(prev => ({ ...prev, x: 0, y: 0, snappedEdge: edge, isSnapped: true }));
   }, [syncNativePosition]);
 
   useEffect(() => {
@@ -87,19 +113,24 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
     let cancelled = false;
     const setup = async () => {
       try {
-        const nativeWindow = getCurrentWebviewWindow();
+        const nativeWindow = getCurrentWindow();
         nativeWindowRef.current = nativeWindow;
         const monitor = await nativeWindow.primaryMonitor();
         if (monitor && !cancelled) {
           const scale = monitor.scaleFactor;
           screenRef.current = { width: monitor.size.width / scale, height: monitor.size.height / scale };
         }
+
         const pos = await nativeWindow.outerPosition();
         const scale = monitor?.scaleFactor ?? 1;
         positionRef.current = { x: pos.x / scale, y: pos.y / scale };
         await resizeNativeWindow(CLOSED_SIZE.width, CLOSED_SIZE.height);
-        const snapped = snapToEdge(positionRef.current.x, positionRef.current.y);
-        await syncNativePosition(snapped.x, snapped.y);
+
+        const currentX = positionRef.current.x;
+        const currentY = positionRef.current.y;
+        const snapped = snapToEdge(currentX, currentY);
+        const peek = getPeekPosition(snapped.edge);
+        await syncNativePosition(peek.x, peek.y);
         setWindowState(prev => ({ ...prev, x: 0, y: 0, snappedEdge: snapped.edge }));
       } catch (error) {
         console.warn('Failed to initialize widget window:', error);
@@ -107,25 +138,29 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
     };
     setup();
     return () => { cancelled = true; };
-  }, [isTauri, resizeNativeWindow, snapToEdge, syncNativePosition]);
+  }, [isTauri, getPeekPosition, resizeNativeWindow, snapToEdge, syncNativePosition]);
 
   const handleDragEnd = useCallback(async () => {
     if (!isTauri) return;
     try {
-      const nativeWindow = nativeWindowRef.current ?? getCurrentWebviewWindow();
+      const nativeWindow = nativeWindowRef.current ?? getCurrentWindow();
       nativeWindowRef.current = nativeWindow;
       const monitor = await nativeWindow.primaryMonitor();
       const scale = monitor?.scaleFactor ?? 1;
       const pos = await nativeWindow.outerPosition();
       const current = { x: pos.x / scale, y: pos.y / scale };
       positionRef.current = current;
-      const snapped = snapToEdge(current.x, current.y, CLOSED_SIZE.width, CLOSED_SIZE.height);
-      await syncNativePosition(snapped.x, snapped.y);
-      setWindowState(prev => ({ ...prev, x: 0, y: 0, isSnapped: true, snappedEdge: snapped.edge, isPeeking: false }));
+
+      // Native dragging can end partly off-screen. Clamp only for edge detection,
+      // then move the 180px widget so exactly half of it peeks beyond the edge.
+      const clampedX = Math.max(0, Math.min(current.x, screenRef.current.width - CLOSED_SIZE.width));
+      const clampedY = Math.max(0, Math.min(current.y, screenRef.current.height - CLOSED_SIZE.height));
+      const snapped = snapToEdge(clampedX, clampedY, CLOSED_SIZE.width, CLOSED_SIZE.height);
+      await placePeekWidget(snapped.edge, snapped.x, snapped.y);
     } catch (error) {
       console.warn('Failed to snap widget after native drag:', error);
     }
-  }, [isTauri, snapToEdge, syncNativePosition]);
+  }, [isTauri, placePeekWidget, snapToEdge]);
 
   const resetIdleTimer = useCallback(() => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
@@ -157,49 +192,59 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
     const opening = !windowState.isPanelOpen;
     const current = positionRef.current;
     const edge = windowState.snappedEdge;
+
     if (opening) {
       await resizeNativeWindow(OPEN_SIZE.width, OPEN_SIZE.height);
       await applyNativeAnchor(edge, current.x, current.y, OPEN_SIZE.width, OPEN_SIZE.height);
     } else {
       await resizeNativeWindow(CLOSED_SIZE.width, CLOSED_SIZE.height);
-      await applyNativeAnchor(edge, current.x, current.y, CLOSED_SIZE.width, CLOSED_SIZE.height);
+      const peek = getPeekPosition(edge);
+      await syncNativePosition(peek.x, peek.y);
+      setWindowState(prev => ({ ...prev, x: 0, y: 0, snappedEdge: edge, isSnapped: true }));
     }
+
     setWindowState(prev => ({ ...prev, isPanelOpen: opening, isPinned: opening, isPeeking: false }));
-  }, [applyNativeAnchor, resizeNativeWindow, windowState.isPanelOpen, windowState.snappedEdge]);
+  }, [applyNativeAnchor, getPeekPosition, resizeNativeWindow, syncNativePosition, windowState.isPanelOpen, windowState.snappedEdge]);
 
   const closePanel = useCallback(async () => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     const edge = windowState.snappedEdge;
     await resizeNativeWindow(CLOSED_SIZE.width, CLOSED_SIZE.height);
-    await applyNativeAnchor(edge, positionRef.current.x, positionRef.current.y, CLOSED_SIZE.width, CLOSED_SIZE.height);
-    setWindowState(prev => ({ ...prev, isPanelOpen: false, isPinned: false, isPeeking: true }));
-  }, [applyNativeAnchor, resizeNativeWindow, windowState.snappedEdge]);
+    const peek = getPeekPosition(edge);
+    await syncNativePosition(peek.x, peek.y);
+    setWindowState(prev => ({ ...prev, isPanelOpen: false, isPinned: false, isPeeking: true, x: 0, y: 0 }));
+  }, [getPeekPosition, resizeNativeWindow, syncNativePosition, windowState.snappedEdge]);
 
   const toggleDisplayMode = useCallback(() => {
-    setWindowState(prev => ({ ...prev, displayMode: (prev.displayMode === 'bar' || prev.displayMode === 'sidebar') ? 'mascot' : 'bar' }));
+    setWindowState(prev => ({ ...prev, displayMode: prev.displayMode === 'mascot' ? 'bar' : 'mascot' }));
   }, []);
 
   useEffect(() => {
     const handleResize = async () => {
       if (!isTauri) return;
       try {
-        const nativeWindow = nativeWindowRef.current ?? getCurrentWebviewWindow();
+        const nativeWindow = nativeWindowRef.current ?? getCurrentWindow();
         nativeWindowRef.current = nativeWindow;
         const monitor = await nativeWindow.primaryMonitor();
         if (!monitor) return;
         const scale = monitor.scaleFactor;
         screenRef.current = { width: monitor.size.width / scale, height: monitor.size.height / scale };
         const size = windowState.isPanelOpen ? OPEN_SIZE : CLOSED_SIZE;
-        const snapped = snapToEdge(positionRef.current.x, positionRef.current.y, size.width, size.height);
-        await syncNativePosition(snapped.x, snapped.y);
-        setWindowState(s => ({ ...s, x: snapped.edge === 'right' ? Math.max(0, size.width - CLOSED_SIZE.width) : (size.width > CLOSED_SIZE.width ? 50 : 0), y: snapped.edge === 'bottom' ? Math.max(0, size.height - CLOSED_SIZE.height) : 0, snappedEdge: snapped.edge }));
+        const edge = windowState.snappedEdge;
+
+        if (windowState.isPanelOpen) {
+          await applyNativeAnchor(edge, positionRef.current.x, positionRef.current.y, size.width, size.height);
+        } else {
+          const peek = getPeekPosition(edge);
+          await syncNativePosition(peek.x, peek.y);
+        }
       } catch (error) {
         console.warn('Failed to handle widget resize:', error);
       }
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [isTauri, snapToEdge, syncNativePosition, windowState.isPanelOpen]);
+  }, [applyNativeAnchor, getPeekPosition, isTauri, syncNativePosition, windowState.isPanelOpen, windowState.snappedEdge]);
 
   useEffect(() => () => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
