@@ -15,7 +15,6 @@ import { TauriConfigModal } from './components/TauriConfigModal';
 import { InstallAppModal } from './components/InstallAppModal';
 
 export default function App() {
-  // State from Local Data Storage
   const [tasks, setTasks] = useState<TaskItem[]>(() => LocalDataService.getTasks());
   const [routines, setRoutines] = useState<RoutineItem[]>(() => LocalDataService.getRoutines());
   const [schedules, setSchedules] = useState<ScheduleItem[]>(() => LocalDataService.getSchedules());
@@ -24,17 +23,14 @@ export default function App() {
   const [audioConfig, setAudioConfig] = useState<AudioConfig>(() => LocalDataService.getAudioConfig());
   const [syncConfig, setSyncConfig] = useState<SyncConfig>(() => LocalDataService.getSyncConfig());
 
-  // Mascot State
   const [characterState, setCharacterState] = useState<CharacterState>('peek');
 
-  // Modals state
   const [activeModal, setActiveModal] = useState<DetailModalType | null>(null);
   const [isTauriModalOpen, setIsTauriModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
-  // Hooks
   const { playNotification, speakText, sendPushNotification } = useAudio(audioConfig);
 
   const {
@@ -52,17 +48,14 @@ export default function App() {
     closeDelayMs: characterConfig.closeDelayMs ?? 0,
   });
 
-  // Initialize cursor passthrough on mount
   useEffect(() => {
     initCursorEvents();
   }, []);
 
-  // Check pending deadlines within H-Jam threshold
   const pendingDeadlines = useMemo(() => {
     return LocalDataService.getPendingDeadlinesWithinHours(characterConfig.notificationHoursBeforeDeadline || 3);
   }, [tasks, characterConfig.notificationHoursBeforeDeadline]);
 
-  // Update character states & trigger push notifications
   useEffect(() => {
     if (pendingDeadlines.length > 0) {
       setCharacterState('alert');
@@ -86,7 +79,6 @@ export default function App() {
     }
   }, [pendingDeadlines.length, windowState.isPanelOpen, windowState.isPeeking, playNotification, sendPushNotification, characterConfig.pushNotificationsEnabled, characterConfig.projectName]);
 
-  // Ensure modals that cover the screen trigger interaction state
   useEffect(() => {
     if (activeModal || isTauriModalOpen || isSettingsModalOpen || isSyncModalOpen || isInstallModalOpen) {
       addInteraction();
@@ -94,7 +86,6 @@ export default function App() {
     }
   }, [activeModal, isTauriModalOpen, isSettingsModalOpen, isSyncModalOpen, isInstallModalOpen]);
 
-  // Handlers for Tasks
   const handleToggleTask = useCallback((id: string) => {
     const updated = LocalDataService.toggleTask(id);
     setTasks(updated);
@@ -122,7 +113,6 @@ export default function App() {
     setTasks(LocalDataService.deleteTask(id));
   }, []);
 
-  // Handlers for Routines
   const handleToggleRoutine = useCallback((id: string) => {
     setRoutines(LocalDataService.toggleRoutine(id));
   }, []);
@@ -138,7 +128,6 @@ export default function App() {
     setRoutines(updated);
   }, []);
 
-  // Handlers for Schedules
   const handleAddSchedule = useCallback((title: string, datetime: string) => {
     LocalDataService.addSchedule({
       title,
@@ -148,24 +137,20 @@ export default function App() {
     });
     setSchedules(LocalDataService.getSchedules());
     playNotification('schedule');
-    
   }, [playNotification]);
 
   const handleToggleSchedule = useCallback((id: string) => {
     setSchedules(LocalDataService.toggleSchedule(id));
-    
   }, []);
 
   const handleDeleteSchedule = useCallback((id: string) => {
     setSchedules(LocalDataService.deleteSchedule(id));
-    
   }, []);
 
-  // Handlers for Routine Daily Logs
   const handleSaveRoutineLog = useCallback((id: string, dateStr: string, content: string) => {
     const updated = LocalDataService.updateRoutineDailyLog(id, dateStr, content);
     setRoutines(updated);
-    
+
     setActiveModal(prev => {
       if (prev?.kind === 'routine' && prev.item.id === id) {
         const updatedItem = updated.find(r => r.id === id);
@@ -178,7 +163,7 @@ export default function App() {
   const handleDeleteRoutineLog = useCallback((id: string, dateStr: string) => {
     const updated = LocalDataService.deleteRoutineDailyLog(id, dateStr);
     setRoutines(updated);
-    
+
     setActiveModal(prev => {
       if (prev?.kind === 'routine' && prev.item.id === id) {
         const updatedItem = updated.find(r => r.id === id);
@@ -188,11 +173,9 @@ export default function App() {
     });
   }, []);
 
-  // Settings Save Handlers
   const handleSaveAudio = useCallback((config: AudioConfig) => {
     setAudioConfig(config);
     LocalDataService.saveAudioConfig(config);
-    
   }, []);
 
   const handleSaveCharacter = useCallback((config: CharacterConfig) => {
@@ -204,13 +187,11 @@ export default function App() {
         displayMode: config.displayMode,
       }));
     }
-    
   }, [setWindowState]);
 
   const handleSaveSync = useCallback((config: SyncConfig) => {
     setSyncConfig(config);
     LocalDataService.saveSyncConfig(config);
-    
   }, []);
 
   const handleRefreshData = useCallback(() => {
@@ -220,35 +201,52 @@ export default function App() {
     setCharacterConfig(LocalDataService.getCharacterConfig());
     setAudioConfig(LocalDataService.getAudioConfig());
     setSyncConfig(LocalDataService.getSyncConfig());
-    
   }, []);
-
-
-
-
-
 
   const mascotPos = { x: windowState.x, y: windowState.y };
 
-  // Calculate static spawn positions for independent drag capability
-  const panelPosRef = useRef<{left: number, top: number} | null>(null);
-  if (!windowState.isPanelOpen) {
-    panelPosRef.current = null;
-  } else if (!panelPosRef.current) {
-    panelPosRef.current = {
-      left: windowState.snappedEdge === 'left' 
-        ? Math.min(window.innerWidth - 360, windowState.x + 150)
-        : Math.max(16, windowState.x - 340),
-      top: Math.max(16, Math.min(window.innerHeight - 520, windowState.y)),
-    };
-  }
+  // Keep floating panels inside the viewport without assuming a fixed panel height.
+  // The CSS max-height on TaskPanel remains responsible for internal scrolling.
+  const panelPosRef = useRef<{ left: number; top: number } | null>(null);
+  const panelMeasureRef = useRef<HTMLDivElement | null>(null);
 
-  const modalPosRef = useRef<{left: number, top: number} | null>(null);
+  useEffect(() => {
+    if (!windowState.isPanelOpen) {
+      panelPosRef.current = null;
+      return;
+    }
+
+    const updatePanelPosition = () => {
+      const panel = panelMeasureRef.current;
+      const panelWidth = panel?.getBoundingClientRect().width ?? 320;
+      const panelHeight = panel?.getBoundingClientRect().height ?? Math.min(window.innerHeight * 0.88, 700);
+      const gap = 16;
+      const maxLeft = Math.max(gap, window.innerWidth - panelWidth - gap);
+      const maxTop = Math.max(gap, window.innerHeight - panelHeight - gap);
+
+      const preferredLeft = windowState.snappedEdge === 'left'
+        ? windowState.x + 150
+        : windowState.x - panelWidth - 20;
+      const preferredTop = windowState.y;
+
+      panelPosRef.current = {
+        left: Math.max(gap, Math.min(maxLeft, preferredLeft)),
+        top: Math.max(gap, Math.min(maxTop, preferredTop)),
+      };
+    };
+
+    updatePanelPosition();
+    window.addEventListener('resize', updatePanelPosition);
+
+    return () => window.removeEventListener('resize', updatePanelPosition);
+  }, [windowState.isPanelOpen, windowState.snappedEdge, windowState.x, windowState.y, tasks, routines, schedules]);
+
+  const modalPosRef = useRef<{ left: number; top: number } | null>(null);
   if (!activeModal) {
     modalPosRef.current = null;
   } else if (!modalPosRef.current) {
     modalPosRef.current = {
-      left: windowState.snappedEdge === 'left' 
+      left: windowState.snappedEdge === 'left'
         ? Math.min(window.innerWidth - 420, windowState.x + 150 + 360)
         : Math.max(16, windowState.x - 340 - 520),
       top: Math.max(16, Math.min(window.innerHeight - 620, windowState.y)),
@@ -257,7 +255,6 @@ export default function App() {
 
   return (
     <div className="widget-wrapper relative w-full h-full text-slate-100 font-sans" data-tauri-drag-region>
-      {/* Floating Mascot Widget */}
       <MascotWidget
         state={characterState}
         snappedEdge={windowState.snappedEdge}
@@ -282,12 +279,12 @@ export default function App() {
         onSpeakSpeech={speakText}
       />
 
-      {/* TaskPanel Flyout - STRICTLY rendered ONLY when isPanelOpen is true */}
       <AnimatePresence>
         {windowState.isPanelOpen && (
-          <div 
-            className="fixed z-40 interactive-element pointer-events-auto" 
-            style={panelPosRef.current || {}}
+          <div
+            ref={panelMeasureRef}
+            className="fixed z-40 interactive-element pointer-events-auto"
+            style={panelPosRef.current || { left: 16, top: 16 }}
             onMouseEnter={addInteraction}
             onMouseLeave={removeInteraction}
           >
@@ -314,11 +311,10 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Detail Pop-Up Modal (Floats to the left/right of Main Panel as depicted in wireframe) */}
       <AnimatePresence>
         {windowState.isPanelOpen && activeModal && (
-          <div 
-            className="fixed z-50 interactive-element pointer-events-auto" 
+          <div
+            className="fixed z-50 interactive-element pointer-events-auto"
             style={modalPosRef.current || {}}
             onMouseEnter={addInteraction}
             onMouseLeave={removeInteraction}
@@ -346,9 +342,8 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* System Modals */}
       {(isTauriModalOpen || isInstallModalOpen || isSettingsModalOpen || isSyncModalOpen) && (
-        <div 
+        <div
           className="interactive-element pointer-events-auto fixed inset-0 z-50"
           onMouseEnter={addInteraction}
           onMouseLeave={removeInteraction}
