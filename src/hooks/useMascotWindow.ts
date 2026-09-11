@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { currentMonitor, getCurrentWindow } from '@tauri-apps/api/window';
-import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi';
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
+import { LogicalPosition } from '@tauri-apps/api/dpi';
 
 const MASCOT = 180;
 const PANEL_W = 520;
@@ -9,13 +10,12 @@ const PEEK = 90;
 const SNAP = 140;
 
 type Edge = 'left' | 'right' | 'top' | 'bottom';
-type WindowMode = 'mascot' | 'panel';
 interface Bounds { x: number; y: number; width: number; height: number; scale: number; }
+
+const EDGE_KEY = 'rememberme-widget-edge';
 
 export function useMascotWindow() {
   const win = getCurrentWindow();
-  const [mode, setMode] = useState<WindowMode>('mascot');
-  const [edge, setEdge] = useState<Edge>('right');
   const bounds = useRef<Bounds>({ x: 0, y: 0, width: 1920, height: 1080, scale: 1 });
   const lastPosition = useRef({ x: 0, y: 200 });
   const dragging = useRef(false);
@@ -26,11 +26,12 @@ export function useMascotWindow() {
     const monitor = await currentMonitor();
     if (!monitor) return;
     const scale = monitor.scaleFactor || 1;
+    const work = monitor.workArea;
     bounds.current = {
-      x: monitor.workArea.position.x / scale,
-      y: monitor.workArea.position.y / scale,
-      width: monitor.workArea.size.width / scale,
-      height: monitor.workArea.size.height / scale,
+      x: work.position.x / scale,
+      y: work.position.y / scale,
+      width: work.size.width / scale,
+      height: work.size.height / scale,
       scale,
     };
   }, []);
@@ -40,99 +41,155 @@ export function useMascotWindow() {
     await win.setPosition(new LogicalPosition(x, y));
   }, [win]);
 
-  const resize = useCallback(async (width: number, height: number) => {
-    await win.setSize(new LogicalSize(width, height));
-  }, [win]);
-
-  const peekPosition = useCallback((e: Edge) => {
-    const b = bounds.current;
-    const maxX = Math.max(b.x, b.x + b.width - MASCOT);
-    const maxY = Math.max(b.y, b.y + b.height - MASCOT);
-    const y = Math.max(b.y, Math.min(lastPosition.current.y, maxY));
-    const x = Math.max(b.x, Math.min(lastPosition.current.x, maxX));
-    if (e === 'left') return { x: b.x - PEEK, y };
-    if (e === 'right') return { x: b.x + b.width - MASCOT + PEEK, y };
-    if (e === 'top') return { x, y: b.y - PEEK };
-    return { x, y: b.y + b.height - MASCOT + PEEK };
+  const getEdge = useCallback((): Edge => {
+    const saved = localStorage.getItem(EDGE_KEY);
+    if (saved === 'left' || saved === 'right' || saved === 'top' || saved === 'bottom') return saved;
+    return 'right';
   }, []);
 
-  const applyPeek = useCallback(async (e: Edge) => {
-    const p = peekPosition(e);
-    await resize(MASCOT, MASCOT);
-    await move(p.x, p.y);
-    setEdge(e);
-    setMode('mascot');
-  }, [move, peekPosition, resize]);
+  const setEdge = useCallback((edge: Edge) => {
+    localStorage.setItem(EDGE_KEY, edge);
+  }, []);
+
+  const snapToPeek = useCallback(async (edge: Edge) => {
+    const b = bounds.current;
+    const maxX = b.x + b.width - MASCOT;
+    const maxY = b.y + b.height - MASCOT;
+    const x = Math.max(b.x, Math.min(lastPosition.current.x, maxX));
+    const y = Math.max(b.y, Math.min(lastPosition.current.y, maxY));
+
+    let px = x;
+    let py = y;
+    if (edge === 'left') px = b.x - PEEK;
+    if (edge === 'right') px = b.x + b.width - MASCOT + PEEK;
+    if (edge === 'top') py = b.y - PEEK;
+    if (edge === 'bottom') py = b.y + b.height - MASCOT + PEEK;
+
+    await move(px, py);
+    setEdge(edge);
+  }, [move, setEdge]);
+
+  const snapAfterDrag = useCallback(async () => {
+    if (!dragging.current) return;
+    dragging.current = false;
+    await readBounds();
+
+    const position = await win.outerPosition();
+    const scale = (await win.scaleFactor()) || 1;
+    const currentX = position.x / scale;
+    const currentY = position.y / scale;
+    const b = bounds.current;
+    const maxX = b.x + Math.max(0, b.width - MASCOT);
+    const maxY = b.y + Math.max(0, b.height - MASCOT);
+    const x = Math.max(b.x, Math.min(currentX, maxX));
+    const y = Math.max(b.y, Math.min(currentY, maxY));
+
+    const distances: Record<Edge, number> = {
+      left: x - b.x,
+      right: maxX - x,
+      top: y - b.y,
+      bottom: maxY - y,
+    };
+    const nearest = (Object.keys(distances) as Edge[]).reduce(
+      (best, edge) => distances[edge] < distances[best] ? edge : best,
+      'left',
+    );
+
+    lastPosition.current = { x, y };
+    if (distances[nearest] <= SNAP) {
+      await snapToPeek(nearest);
+    } else {
+      await move(x, y);
+      localStorage.removeItem(EDGE_KEY);
+    }
+  }, [move, readBounds, snapToPeek, win]);
+
+  const beginDrag = useCallback(async () => {
+    movedDuringDrag.current = false;
+    dragging.current = true;
+    await win.startDragging();
+  }, [win]);
 
   const openPanel = useCallback(async () => {
     if (movedDuringDrag.current) {
       movedDuringDrag.current = false;
       return;
     }
+
     await readBounds();
     const b = bounds.current;
+    const mascotPosition = await win.outerPosition();
+    const scale = (await win.scaleFactor()) || 1;
+    const mascotX = mascotPosition.x / scale;
+    const mascotY = mascotPosition.y / scale;
+    lastPosition.current = { x: mascotX, y: mascotY };
+
+    const edge = getEdge();
     const maxX = b.x + Math.max(0, b.width - PANEL_W);
     const maxY = b.y + Math.max(0, b.height - PANEL_H);
-    let x = lastPosition.current.x;
-    let y = lastPosition.current.y;
-    if (edge === 'left') x = b.x;
+    let x = Math.max(b.x, Math.min(mascotX, maxX));
+    let y = Math.max(b.y, Math.min(mascotY, maxY));
+
     if (edge === 'right') x = maxX;
+    if (edge === 'left') x = b.x;
     if (edge === 'top') y = b.y;
     if (edge === 'bottom') y = maxY;
-    x = Math.max(b.x, Math.min(x, maxX));
-    y = Math.max(b.y, Math.min(y, maxY));
-    await move(x, y);
-    await resize(PANEL_W, PANEL_H);
-    await move(x, y);
-    lastPosition.current = { x, y };
-    setMode('panel');
-  }, [edge, move, readBounds, resize]);
 
-  const closePanel = useCallback(async () => {
-    await readBounds();
-    await resize(MASCOT, MASCOT);
-    const p = peekPosition(edge);
-    await move(p.x, p.y);
-    setMode('mascot');
-  }, [edge, move, peekPosition, readBounds, resize]);
+    if (edge === 'left' || edge === 'right') {
+      y = Math.max(b.y, Math.min(mascotY + MASCOT / 2 - PANEL_H / 2, maxY));
+    } else {
+      x = Math.max(b.x, Math.min(mascotX + MASCOT / 2 - PANEL_W / 2, maxX));
+    }
 
-  const beginDrag = useCallback(async () => {
-    if (mode !== 'mascot') return;
-    movedDuringDrag.current = false;
-    dragging.current = true;
-    await win.startDragging();
-  }, [mode, win]);
+    const existing = await WebviewWindow.getByLabel('task-panel');
+    if (existing) {
+      await existing.setPosition(new LogicalPosition(x, y));
+      await existing.show();
+      await existing.setFocus();
+      return;
+    }
 
-  const snapAfterDrag = useCallback(async () => {
-    if (!dragging.current || mode !== 'mascot') return;
-    dragging.current = false;
-    await readBounds();
-    const b = bounds.current;
-    const p = await win.outerPosition();
-    const scale = (await win.scaleFactor()) || 1;
-    const current = { x: p.x / scale, y: p.y / scale };
-    const maxX = b.x + Math.max(0, b.width - MASCOT);
-    const maxY = b.y + Math.max(0, b.height - MASCOT);
-    const x = Math.max(b.x, Math.min(current.x, maxX));
-    const y = Math.max(b.y, Math.min(current.y, maxY));
-    const distances = { left: x - b.x, right: maxX - x, top: y - b.y, bottom: maxY - y } as Record<Edge, number>;
-    const nearest = (Object.keys(distances) as Edge[]).reduce((a, e) => distances[e] < distances[a] ? e : a, 'left');
-    lastPosition.current = { x, y };
-    if (distances[nearest] <= SNAP) await applyPeek(nearest);
-    else await move(x, y);
-  }, [applyPeek, mode, move, readBounds, win]);
+    const panel = new WebviewWindow('task-panel', {
+      url: '/?window=panel',
+      title: 'Remember ME - Tasks',
+      x,
+      y,
+      width: PANEL_W,
+      height: PANEL_H,
+      minWidth: PANEL_W,
+      minHeight: PANEL_H,
+      maxWidth: PANEL_W,
+      maxHeight: PANEL_H,
+      resizable: false,
+      fullscreen: false,
+      transparent: false,
+      decorations: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      shadow: true,
+      visible: true,
+      focus: true,
+    });
+
+    panel.once('tauri://error', (event) => {
+      console.error('Task panel creation failed:', event);
+    });
+  }, [getEdge, readBounds, win]);
 
   useEffect(() => {
     let active = true;
-    (async () => {
+
+    void (async () => {
       try {
         await readBounds();
         if (!active) return;
-        await resize(MASCOT, MASCOT);
         const b = bounds.current;
-        const start = { x: b.x + b.width - MASCOT + PEEK, y: b.y + b.height / 2 - MASCOT / 2 };
-        lastPosition.current = start;
-        await move(start.x, start.y);
+        const edge = getEdge();
+        const startX = b.x + b.width - MASCOT + PEEK;
+        const startY = b.y + (b.height - MASCOT) / 2;
+        lastPosition.current = { x: startX, y: startY };
+        await move(startX, startY);
+        await snapToPeek(edge);
       } catch (error) {
         console.warn('Mascot initialization failed:', error);
       }
@@ -140,7 +197,7 @@ export function useMascotWindow() {
 
     let unlisten: (() => void) | undefined;
     void win.onMoved(() => {
-      if (!dragging.current || mode !== 'mascot') return;
+      if (!dragging.current) return;
       movedDuringDrag.current = true;
       if (snapTimer.current) clearTimeout(snapTimer.current);
       snapTimer.current = setTimeout(() => { void snapAfterDrag(); }, 180);
@@ -151,7 +208,7 @@ export function useMascotWindow() {
       if (snapTimer.current) clearTimeout(snapTimer.current);
       unlisten?.();
     };
-  }, [mode, move, readBounds, resize, snapAfterDrag, win]);
+  }, [getEdge, move, readBounds, snapAfterDrag, snapToPeek, win]);
 
-  return { mode, edge, beginDrag, openPanel, closePanel };
+  return { beginDrag, openPanel };
 }
