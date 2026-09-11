@@ -75,8 +75,6 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
   const setOpenWindowPosition = useCallback(async (edge: SnapEdge, preferredX: number, preferredY: number) => {
     const target = getOpenPosition(edge, preferredX, preferredY);
     const w = getNativeWindow();
-    // First move inside the screen, then resize, then apply the position again.
-    // This avoids Windows retaining the old partially off-screen transparent origin.
     await w.setPosition(new LogicalPosition(target.x, target.y));
     positionRef.current = target;
     await resizeNativeWindow(OPEN_SIZE.width, OPEN_SIZE.height);
@@ -151,7 +149,7 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
       await refreshMonitorBounds();
       if (windowState.isSnapped) {
         await setOpenWindowPosition(edge, current.x, current.y);
-        setWindowState(p => ({ ...p, x: edge === 'right' ? OPEN_SIZE.width - CLOSED_SIZE.width : 0, y: edge === 'bottom' ? OPEN_SIZE.height - CLOSED_SIZE.height : 0, snappedEdge: edge, isSnapped: true, isPeeking: false }));
+        setWindowState(p => ({ ...p, x: 0, y: 0, snappedEdge: edge, isSnapped: true, isPeeking: false }));
       } else {
         const target = getOpenPosition(edge, current.x, current.y);
         await setOpenWindowPosition(edge, target.x, target.y);
@@ -183,9 +181,12 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
       try {
         await refreshMonitorBounds();
         const edge = windowState.snappedEdge;
-        if (windowState.isPanelOpen && windowState.isSnapped) await setOpenWindowPosition(edge, positionRef.current.x, positionRef.current.y);
-        else if (!windowState.isPanelOpen && windowState.isSnapped) await syncNativePosition(...Object.values(getPeekPosition(edge)) as [number, number]);
-        else if (!windowState.isPanelOpen) {
+        if (windowState.isPanelOpen && windowState.isSnapped) {
+          await setOpenWindowPosition(edge, positionRef.current.x, positionRef.current.y);
+        } else if (!windowState.isPanelOpen && windowState.isSnapped) {
+          const peek = getPeekPosition(edge);
+          await syncNativePosition(peek.x, peek.y);
+        } else if (!windowState.isPanelOpen) {
           const maxX = Math.max(0, screenRef.current.width - CLOSED_SIZE.width), maxY = Math.max(0, screenRef.current.height - CLOSED_SIZE.height);
           await syncNativePosition(Math.max(0, Math.min(positionRef.current.x, maxX)), Math.max(0, Math.min(positionRef.current.y, maxY)));
         }
