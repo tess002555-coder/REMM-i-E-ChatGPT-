@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CharacterState, SnapEdge, CharacterConfig, TaskItem } from '../types';
 import { MessageSquare, Sparkles } from 'lucide-react';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
 interface MascotWidgetProps {
   state: CharacterState;
@@ -23,7 +24,6 @@ interface MascotWidgetProps {
 export const MascotWidget: React.FC<MascotWidgetProps> = ({
   state,
   snappedEdge,
-  isPeeking,
   isPanelOpen,
   config,
   pendingDeadlines,
@@ -36,10 +36,10 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
   const [speechText, setSpeechText] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   const lastQuoteRef = useRef<string | null>(null);
+  const dragStartedRef = useRef(false);
 
-  // The uploaded mascot is used as the native 180x180 peek image.
-  // Custom/avatar images still take priority when configured by the user.
-  const imageSrc = config?.customImageUrls?.[state] || config?.avatarUrl || '/mascot-peek.webp';
+  // public/mascot.png is already part of the repository and is the peek image.
+  const imageSrc = config?.customImageUrls?.[state] || config?.avatarUrl || '/mascot.png';
 
   useEffect(() => {
     if (!config.speechEnabled) {
@@ -69,12 +69,25 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
     }
   }, [state, isPanelOpen, pendingDeadlines, config.speechEnabled, onSpeakSpeech]);
 
-  const handleNativeDragEnd = () => onDragEnd(0, 0);
+  const handleMouseDown = async (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || isPanelOpen) return;
+    dragStartedRef.current = true;
+    try {
+      await getCurrentWindow().startDragging();
+    } catch (error) {
+      console.warn('Failed to start native mascot drag:', error);
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (!dragStartedRef.current) return;
+    dragStartedRef.current = false;
+    onDragEnd(0, 0);
+  };
 
   return (
     <div
       className="interactive-widget fixed left-0 top-0 z-50 w-[180px] h-[180px] m-0 p-0 bg-transparent select-none"
-      data-tauri-drag-region
       onMouseEnter={() => {
         setIsHovered(true);
         onMouseEnter();
@@ -83,7 +96,8 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
         setIsHovered(false);
         onMouseLeave();
       }}
-      onMouseUp={handleNativeDragEnd}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
       onClick={onClick}
     >
       {config.speechEnabled && speechText && (isHovered || pendingDeadlines.length > 0) && !isPanelOpen && (
@@ -99,10 +113,7 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
         </div>
       )}
 
-      <div
-        className="relative w-[180px] h-[180px] flex items-center justify-center bg-transparent cursor-grab active:cursor-grabbing"
-        data-tauri-drag-region
-      >
+      <div className="relative w-[180px] h-[180px] flex items-center justify-center bg-transparent cursor-grab active:cursor-grabbing">
         {imageSrc ? (
           <img
             src={imageSrc}
