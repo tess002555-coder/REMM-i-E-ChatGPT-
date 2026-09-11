@@ -37,7 +37,9 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const lastQuoteRef = useRef<string | null>(null);
 
-  const imageSrc = config?.customImageUrls?.[state] || config?.avatarUrl || '/mascot.png';
+  // The uploaded mascot is used as the native 180x180 peek image.
+  // Custom/avatar images still take priority when configured by the user.
+  const imageSrc = config?.customImageUrls?.[state] || config?.avatarUrl || '/mascot-peek.webp';
 
   useEffect(() => {
     if (!config.speechEnabled) {
