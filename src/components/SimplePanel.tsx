@@ -5,7 +5,7 @@ interface SimplePanelProps {
 export function SimplePanel({ onClose }: SimplePanelProps) {
   return (
     <main className="panel">
-      <header className="panel-header">
+      <header className="panel-header" data-tauri-drag-region>
         <div>
           <div className="panel-kicker">REMEMBER ME</div>
           <h1>Task Panel</h1>
@@ -17,13 +17,13 @@ export function SimplePanel({ onClose }: SimplePanelProps) {
         <div className="status-dot" />
         <div>
           <strong>Widget aktif</strong>
-          <p>Versi baru dimulai dari arsitektur native yang sederhana.</p>
+          <p>Maskot tetap menjadi window kecil terpisah. Panel ini hanya dibuat ketika maskot diklik.</p>
         </div>
       </section>
 
       <section className="task-card">
         <h2>Today</h2>
-        <div className="empty-task">Belum ada tugas. Fitur task akan ditambahkan setelah drag dan peek stabil.</div>
+        <div className="empty-task">Belum ada tugas. Tambahkan task di versi berikutnya.</div>
       </section>
     </main>
   );
