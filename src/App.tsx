@@ -141,38 +141,10 @@ export default function App() {
     setSyncConfig(LocalDataService.getSyncConfig());
   }, []);
 
-  const mascotPos = { x: windowState.x, y: windowState.y };
-  const panelPosRef = useRef<{ left: number; top: number } | null>(null);
-  const panelMeasureRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!windowState.isPanelOpen) { panelPosRef.current = null; return; }
-    const updatePanelPosition = () => {
-      const panel = panelMeasureRef.current;
-      const panelWidth = panel?.getBoundingClientRect().width ?? 320;
-      const panelHeight = panel?.getBoundingClientRect().height ?? Math.min(window.innerHeight * 0.88, 700);
-      const gap = 16;
-      const maxLeft = Math.max(gap, window.innerWidth - panelWidth - gap);
-      const maxTop = Math.max(gap, window.innerHeight - panelHeight - gap);
-      const preferredLeft = windowState.snappedEdge === 'left' ? windowState.x + 150 : windowState.x - panelWidth - 20;
-      const preferredTop = windowState.y;
-      panelPosRef.current = {
-        left: Math.max(gap, Math.min(maxLeft, preferredLeft)),
-        top: Math.max(gap, Math.min(maxTop, preferredTop)),
-      };
-    };
-    updatePanelPosition();
-    window.addEventListener('resize', updatePanelPosition);
-    return () => window.removeEventListener('resize', updatePanelPosition);
-  }, [windowState.isPanelOpen, windowState.snappedEdge, windowState.x, windowState.y, tasks, routines, schedules]);
-
   const modalPosRef = useRef<{ left: number; top: number } | null>(null);
   if (!activeModal) modalPosRef.current = null;
   else if (!modalPosRef.current) {
-    modalPosRef.current = {
-      left: windowState.snappedEdge === 'left' ? Math.min(window.innerWidth - 420, windowState.x + 150 + 360) : Math.max(16, windowState.x - 340 - 520),
-      top: Math.max(16, Math.min(window.innerHeight - 620, windowState.y)),
-    };
+    modalPosRef.current = { left: 0, top: 0 };
   }
 
   return (
@@ -185,7 +157,7 @@ export default function App() {
         displayMode={windowState.displayMode}
         config={characterConfig}
         pendingDeadlines={pendingDeadlines}
-        position={mascotPos}
+        position={{ x: 0, y: 0 }}
         screenWidth={typeof window !== 'undefined' ? window.innerWidth : 1200}
         onClick={() => { togglePanel(); if (windowState.isPanelOpen) setActiveModal(null); }}
         onToggleDisplayMode={toggleDisplayMode}
@@ -197,7 +169,11 @@ export default function App() {
 
       <AnimatePresence>
         {windowState.isPanelOpen && (
-          <div ref={panelMeasureRef} className="fixed z-40 interactive-element pointer-events-auto" style={panelPosRef.current || { left: 16, top: 16 }} onMouseEnter={addInteraction} onMouseLeave={removeInteraction}>
+          <div
+            className="fixed left-0 top-0 z-40 interactive-element pointer-events-auto"
+            onMouseEnter={addInteraction}
+            onMouseLeave={removeInteraction}
+          >
             <TaskPanel
               isOpen={windowState.isPanelOpen}
               snappedEdge={windowState.snappedEdge}
@@ -221,7 +197,7 @@ export default function App() {
 
       <AnimatePresence>
         {windowState.isPanelOpen && activeModal && (
-          <div className="fixed z-50 interactive-element pointer-events-auto" style={modalPosRef.current || {}} onMouseEnter={addInteraction} onMouseLeave={removeInteraction}>
+          <div className="fixed left-0 top-0 z-50 interactive-element pointer-events-auto" onMouseEnter={addInteraction} onMouseLeave={removeInteraction}>
             <DetailModal
               modalState={activeModal}
               onClose={() => setActiveModal(null)}
