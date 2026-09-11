@@ -9,9 +9,7 @@ const PEEK = 90;
 const SNAP = 140;
 
 type Edge = 'left' | 'right' | 'top' | 'bottom';
-
 type WindowMode = 'mascot' | 'panel';
-
 interface Bounds { x: number; y: number; width: number; height: number; scale: number; }
 
 export function useMascotWindow() {
@@ -24,7 +22,7 @@ export function useMascotWindow() {
   const dragging = useRef(false);
 
   const readBounds = useCallback(async () => {
-    const monitor = await win.primaryMonitor();
+    const monitor = await win.currentMonitor();
     if (!monitor) return;
     const scale = monitor.scaleFactor || 1;
     bounds.current = {
@@ -59,8 +57,7 @@ export function useMascotWindow() {
 
   const applyPeek = useCallback(async (e: Edge) => {
     await resize(MASCOT, MASCOT);
-    const p = peekPosition(e);
-    await move(p.x, p.y);
+    await move(...Object.values(peekPosition(e)) as [number, number]);
     setEdge(e);
     setMode('mascot');
   }, [move, peekPosition, resize]);
@@ -78,9 +75,6 @@ export function useMascotWindow() {
     if (edge === 'bottom') y = maxY;
     x = Math.max(b.x, Math.min(x, maxX));
     y = Math.max(b.y, Math.min(y, maxY));
-
-    // Move inside the work area before resizing. This prevents Windows from
-    // keeping part of the enlarged transparent window outside the screen.
     await move(x, y);
     await resize(PANEL_W, PANEL_H);
     await move(x, y);
@@ -115,30 +109,21 @@ export function useMascotWindow() {
     const current = { x: p.x / scale, y: p.y / scale };
     const dx = current.x - dragStart.current.x;
     const dy = current.y - dragStart.current.y;
-
     if (Math.abs(dx) < 6 && Math.abs(dy) < 6) {
       await openPanel();
       return;
     }
-
     const maxX = b.x + Math.max(0, b.width - MASCOT);
     const maxY = b.y + Math.max(0, b.height - MASCOT);
     const x = Math.max(b.x, Math.min(current.x, maxX));
     const y = Math.max(b.y, Math.min(current.y, maxY));
-    const distances = {
-      left: x - b.x,
-      right: maxX - x,
-      top: y - b.y,
-      bottom: maxY - y,
-    } as Record<Edge, number>;
+    const distances = { left: x - b.x, right: maxX - x, top: y - b.y, bottom: maxY - y } as Record<Edge, number>;
     const nearest = (Object.keys(distances) as Edge[]).reduce((a, e) => distances[e] < distances[a] ? e : a, 'left');
-
     if (distances[nearest] <= SNAP) {
       lastPosition.current = { x, y };
       await applyPeek(nearest);
     } else {
       await move(x, y);
-      lastPosition.current = { x, y };
     }
   }, [applyPeek, mode, move, openPanel, readBounds, win]);
 
