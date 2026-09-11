@@ -20,6 +20,7 @@ export function useMascotWindow() {
   const lastPosition = useRef({ x: 0, y: 200 });
   const dragStart = useRef({ x: 0, y: 0 });
   const dragging = useRef(false);
+  const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const readBounds = useCallback(async () => {
     const monitor = await win.currentMonitor();
@@ -56,8 +57,9 @@ export function useMascotWindow() {
   }, []);
 
   const applyPeek = useCallback(async (e: Edge) => {
+    const p = peekPosition(e);
     await resize(MASCOT, MASCOT);
-    await move(...Object.values(peekPosition(e)) as [number, number]);
+    await move(p.x, p.y);
     setEdge(e);
     setMode('mascot');
   }, [move, peekPosition, resize]);
@@ -99,7 +101,7 @@ export function useMascotWindow() {
     await win.startDragging();
   }, [mode, win]);
 
-  const endDrag = useCallback(async () => {
+  const snapAfterDrag = useCallback(async () => {
     if (!dragging.current || mode !== 'mascot') return;
     dragging.current = false;
     await readBounds();
@@ -107,25 +109,19 @@ export function useMascotWindow() {
     const p = await win.outerPosition();
     const scale = (await win.scaleFactor()) || 1;
     const current = { x: p.x / scale, y: p.y / scale };
-    const dx = current.x - dragStart.current.x;
-    const dy = current.y - dragStart.current.y;
-    if (Math.abs(dx) < 6 && Math.abs(dy) < 6) {
-      await openPanel();
-      return;
-    }
     const maxX = b.x + Math.max(0, b.width - MASCOT);
     const maxY = b.y + Math.max(0, b.height - MASCOT);
     const x = Math.max(b.x, Math.min(current.x, maxX));
     const y = Math.max(b.y, Math.min(current.y, maxY));
     const distances = { left: x - b.x, right: maxX - x, top: y - b.y, bottom: maxY - y } as Record<Edge, number>;
     const nearest = (Object.keys(distances) as Edge[]).reduce((a, e) => distances[e] < distances[a] ? e : a, 'left');
+    lastPosition.current = { x, y };
     if (distances[nearest] <= SNAP) {
-      lastPosition.current = { x, y };
       await applyPeek(nearest);
     } else {
       await move(x, y);
     }
-  }, [applyPeek, mode, move, openPanel, readBounds, win]);
+  }, [applyPeek, mode, move, readBounds, win]);
 
   useEffect(() => {
     let active = true;
@@ -142,8 +138,20 @@ export function useMascotWindow() {
         console.warn('Mascot initialization failed:', error);
       }
     })();
-    return () => { active = false; };
-  }, [move, readBounds, resize]);
 
-  return { mode, edge, beginDrag, endDrag, openPanel, closePanel };
+    let unlisten: (() => void) | undefined;
+    void win.onMoved(() => {
+      if (!dragging.current || mode !== 'mascot') return;
+      if (snapTimer.current) clearTimeout(snapTimer.current);
+      snapTimer.current = setTimeout(() => { void snapAfterDrag(); }, 180);
+    }).then((fn) => { unlisten = fn; });
+
+    return () => {
+      active = false;
+      if (snapTimer.current) clearTimeout(snapTimer.current);
+      unlisten?.();
+    };
+  }, [mode, move, readBounds, resize, snapAfterDrag, win]);
+
+  return { mode, edge, beginDrag, openPanel, closePanel };
 }
