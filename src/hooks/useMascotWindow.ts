@@ -18,8 +18,8 @@ export function useMascotWindow() {
   const [edge, setEdge] = useState<Edge>('right');
   const bounds = useRef<Bounds>({ x: 0, y: 0, width: 1920, height: 1080, scale: 1 });
   const lastPosition = useRef({ x: 0, y: 200 });
-  const dragStart = useRef({ x: 0, y: 0 });
   const dragging = useRef(false);
+  const movedDuringDrag = useRef(false);
   const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const readBounds = useCallback(async () => {
@@ -65,6 +65,10 @@ export function useMascotWindow() {
   }, [move, peekPosition, resize]);
 
   const openPanel = useCallback(async () => {
+    if (movedDuringDrag.current) {
+      movedDuringDrag.current = false;
+      return;
+    }
     await readBounds();
     const b = bounds.current;
     const maxX = b.x + Math.max(0, b.width - PANEL_W);
@@ -94,9 +98,7 @@ export function useMascotWindow() {
 
   const beginDrag = useCallback(async () => {
     if (mode !== 'mascot') return;
-    const p = await win.outerPosition();
-    const scale = (await win.scaleFactor()) || 1;
-    dragStart.current = { x: p.x / scale, y: p.y / scale };
+    movedDuringDrag.current = false;
     dragging.current = true;
     await win.startDragging();
   }, [mode, win]);
@@ -116,11 +118,8 @@ export function useMascotWindow() {
     const distances = { left: x - b.x, right: maxX - x, top: y - b.y, bottom: maxY - y } as Record<Edge, number>;
     const nearest = (Object.keys(distances) as Edge[]).reduce((a, e) => distances[e] < distances[a] ? e : a, 'left');
     lastPosition.current = { x, y };
-    if (distances[nearest] <= SNAP) {
-      await applyPeek(nearest);
-    } else {
-      await move(x, y);
-    }
+    if (distances[nearest] <= SNAP) await applyPeek(nearest);
+    else await move(x, y);
   }, [applyPeek, mode, move, readBounds, win]);
 
   useEffect(() => {
@@ -142,6 +141,7 @@ export function useMascotWindow() {
     let unlisten: (() => void) | undefined;
     void win.onMoved(() => {
       if (!dragging.current || mode !== 'mascot') return;
+      movedDuringDrag.current = true;
       if (snapTimer.current) clearTimeout(snapTimer.current);
       snapTimer.current = setTimeout(() => { void snapAfterDrag(); }, 180);
     }).then((fn) => { unlisten = fn; });
