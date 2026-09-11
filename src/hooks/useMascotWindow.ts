@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getCurrentWindow } from '@tauri-apps/api/window';
+import { currentMonitor, getCurrentWindow } from '@tauri-apps/api/window';
 import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi';
 
 const MASCOT = 180;
@@ -23,7 +23,7 @@ export function useMascotWindow() {
   const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const readBounds = useCallback(async () => {
-    const monitor = await win.currentMonitor();
+    const monitor = await currentMonitor();
     if (!monitor) return;
     const scale = monitor.scaleFactor || 1;
     bounds.current = {
@@ -33,7 +33,7 @@ export function useMascotWindow() {
       height: monitor.workArea.size.height / scale,
       scale,
     };
-  }, [win]);
+  }, []);
 
   const move = useCallback(async (x: number, y: number) => {
     lastPosition.current = { x, y };
