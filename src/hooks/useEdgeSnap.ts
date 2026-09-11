@@ -109,12 +109,23 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
     return () => { cancelled = true; };
   }, [isTauri, resizeNativeWindow, snapToEdge, syncNativePosition]);
 
-  const handleDragEnd = useCallback(async (offsetX: number, offsetY: number) => {
-    const current = positionRef.current;
-    const snapped = snapToEdge(current.x + offsetX, current.y + offsetY);
-    await syncNativePosition(snapped.x, snapped.y);
-    setWindowState(prev => ({ ...prev, x: snapped.edge === 'right' ? 0 : 0, y: snapped.edge === 'bottom' ? 0 : 0, isSnapped: true, snappedEdge: snapped.edge, isPeeking: false }));
-  }, [snapToEdge, syncNativePosition]);
+  const handleDragEnd = useCallback(async () => {
+    if (!isTauri) return;
+    try {
+      const nativeWindow = nativeWindowRef.current ?? getCurrentWebviewWindow();
+      nativeWindowRef.current = nativeWindow;
+      const monitor = await nativeWindow.primaryMonitor();
+      const scale = monitor?.scaleFactor ?? 1;
+      const pos = await nativeWindow.outerPosition();
+      const current = { x: pos.x / scale, y: pos.y / scale };
+      positionRef.current = current;
+      const snapped = snapToEdge(current.x, current.y, CLOSED_SIZE.width, CLOSED_SIZE.height);
+      await syncNativePosition(snapped.x, snapped.y);
+      setWindowState(prev => ({ ...prev, x: 0, y: 0, isSnapped: true, snappedEdge: snapped.edge, isPeeking: false }));
+    } catch (error) {
+      console.warn('Failed to snap widget after native drag:', error);
+    }
+  }, [isTauri, snapToEdge, syncNativePosition]);
 
   const resetIdleTimer = useCallback(() => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
