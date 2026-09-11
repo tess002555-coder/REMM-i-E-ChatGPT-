@@ -5,7 +5,7 @@ html, body, #root, .widget-wrapper {
   width: 100vw;
   height: 100vh;
   pointer-events: none !important;
-  overflow: hidden;
+  overflow: visible;
   margin: 0;
   padding: 0;
   -webkit-user-select: none;
