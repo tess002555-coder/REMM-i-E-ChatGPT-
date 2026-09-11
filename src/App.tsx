@@ -205,8 +205,6 @@ export default function App() {
 
   const mascotPos = { x: windowState.x, y: windowState.y };
 
-  // Keep floating panels inside the viewport without assuming a fixed panel height.
-  // The CSS max-height on TaskPanel remains responsible for internal scrolling.
   const panelPosRef = useRef<{ left: number; top: number } | null>(null);
   const panelMeasureRef = useRef<HTMLDivElement | null>(null);
 
@@ -274,8 +272,7 @@ export default function App() {
         onToggleDisplayMode={toggleDisplayMode}
         onMouseEnter={() => { handleMouseEnter(); addInteraction(); }}
         onMouseLeave={() => { handleMouseLeave(); removeInteraction(); }}
-        onDragStart={addInteraction}
-        onDragEnd={(x, y) => { removeInteraction(); handleDragEnd(x, y); }}
+        onDragEnd={() => { removeInteraction(); handleDragEnd(); }}
         onSpeakSpeech={speakText}
       />
 
@@ -332,10 +329,9 @@ export default function App() {
               onAddRoutine={handleAddRoutine}
               onSaveRoutineLog={handleSaveRoutineLog}
               onDeleteRoutineLog={handleDeleteRoutineLog}
-              onDeleteRoutine={handleDeleteRoutine}
+              onDeleteTask={handleDeleteTask}
               onAddTask={handleAddTask}
               onToggleTask={handleToggleTask}
-              onDeleteTask={handleDeleteTask}
               onOpenAddScheduleModal={() => setActiveModal({ kind: 'add-schedule' })}
             />
           </div>
