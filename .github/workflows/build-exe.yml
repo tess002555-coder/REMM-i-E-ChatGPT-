@@ -34,7 +34,15 @@ jobs:
           workspaces: "src-tauri -> target"
 
       - name: Install npm dependencies
-        run: npm ci
+        shell: pwsh
+        run: |
+          # Tailwind CSS v4 uses @tailwindcss/oxide with platform-specific
+          # optional native packages. npm ci can fail to restore these optional
+          # dependencies on the Windows runner, so rebuild node_modules from
+          # package.json instead of using the existing lockfile.
+          if (Test-Path node_modules) { Remove-Item -Recurse -Force node_modules }
+          if (Test-Path package-lock.json) { Remove-Item -Force package-lock.json }
+          npm install --legacy-peer-deps --include=optional
 
       - name: Build Tauri Desktop App (.exe)
         uses: tauri-apps/tauri-action@v0
