@@ -15,10 +15,7 @@ body {
   user-select: none;
 }
 
-button,
-.masсot-hitbox {
-  font: inherit;
-}
+button { font: inherit; }
 
 .mascot-hitbox {
   position: fixed;
@@ -32,12 +29,9 @@ button,
   justify-content: center;
   background: transparent;
   cursor: grab;
-  -webkit-app-region: drag;
 }
 
-.mascot-hitbox:active {
-  cursor: grabbing;
-}
+.mascot-hitbox:active { cursor: grabbing; }
 
 .mascot-hitbox img {
   display: block;
@@ -88,10 +82,7 @@ button,
   font-weight: 700;
 }
 
-.panel h1 {
-  margin: 6px 0 0;
-  font-size: 28px;
-}
+.panel h1 { margin: 6px 0 0; font-size: 28px; }
 
 .close-button {
   width: 38px;
@@ -105,9 +96,7 @@ button,
   cursor: pointer;
 }
 
-.close-button:hover {
-  background: rgba(255, 255, 255, 0.16);
-}
+.close-button:hover { background: rgba(255, 255, 255, 0.16); }
 
 .welcome-card,
 .task-card {
@@ -117,38 +106,8 @@ button,
   background: rgba(30, 41, 59, 0.9);
 }
 
-.welcome-card {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.status-dot {
-  width: 10px;
-  height: 10px;
-  margin-top: 5px;
-  border-radius: 50%;
-  background: #22c55e;
-  box-shadow: 0 0 14px rgba(34, 197, 94, 0.7);
-}
-
-.welcome-card p {
-  margin: 5px 0 0;
-  color: #94a3b8;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.task-card h2 {
-  margin: 0 0 14px;
-  font-size: 18px;
-}
-
-.empty-task {
-  padding: 16px;
-  border-radius: 12px;
-  color: #94a3b8;
-  background: rgba(15, 23, 42, 0.7);
-  font-size: 13px;
-  line-height: 1.5;
-}
+.welcome-card { display: flex; gap: 12px; align-items: flex-start; }
+.status-dot { width: 10px; height: 10px; margin-top: 5px; border-radius: 50%; background: #22c55e; }
+.welcome-card p { margin: 5px 0 0; color: #94a3b8; font-size: 13px; line-height: 1.5; }
+.task-card h2 { margin: 0 0 14px; font-size: 18px; }
+.empty-task { padding: 16px; border-radius: 12px; color: #94a3b8; background: rgba(15, 23, 42, 0.7); font-size: 13px; line-height: 1.5; }
