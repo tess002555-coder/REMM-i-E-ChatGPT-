@@ -63,15 +63,13 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
     }
   }, [state, isPanelOpen, pendingDeadlines, config.speechEnabled, onSpeakSpeech]);
 
-  const handleDragEnd = (_: unknown, info: { offset: { x: number; y: number } }) => {
-    // The native Tauri window, not the DOM element, is moved by useEdgeSnap.
-    onDragEnd(info.offset.x, info.offset.y);
+  const handleNativeDragEnd = () => {
+    onDragEnd(0, 0);
   };
 
   if (displayMode === 'sidebar' || displayMode === 'bar') {
     return (
       <motion.div
-        drag dragMomentum={false} onDragEnd={handleDragEnd}
         animate={{ x: position.x, y: position.y, scale: isHovered ? 1.05 : 1 }}
         transition={{ type: 'spring', stiffness: 300, damping: 24 }}
         className="interactive-widget fixed z-50 inline-block bg-transparent p-0 m-0 cursor-grab active:cursor-grabbing select-none interactive-element"
@@ -79,9 +77,10 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
         data-tauri-drag-region
         onMouseEnter={() => { setIsHovered(true); onMouseEnter(); }}
         onMouseLeave={() => { setIsHovered(false); onMouseLeave(); }}
+        onMouseUp={handleNativeDragEnd}
         onClick={onClick}
       >
-        <div className="relative flex flex-col items-center justify-between w-10 py-3 px-1.5 rounded-full bg-slate-950/95 border border-cyan-500/50 shadow-xl transition-all gap-2">
+        <div className="relative flex flex-col items-center justify-between w-10 py-3 px-1.5 rounded-full bg-slate-950/95 border border-cyan-500/50 shadow-xl transition-all gap-2" data-tauri-drag-region>
           <div className="w-2 h-10 rounded-full bg-gradient-to-b from-white via-cyan-300 to-cyan-500 shadow-[0_0_12px_rgba(34,211,238,0.8)]" />
           <div className="relative w-7 h-7 rounded-full overflow-hidden bg-cyan-950/40 flex items-center justify-center border border-cyan-400/60">
             {imageSrc ? <img src={imageSrc} alt="Mascot" className="w-full h-full object-cover pointer-events-none select-none" draggable={false} /> : <Sparkles className="w-3.5 h-3.5 text-cyan-300" />}
@@ -99,7 +98,6 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
 
   return (
     <motion.div
-      drag dragMomentum={false} onDragEnd={handleDragEnd}
       animate={{ x: position.x, y: position.y, scale: isHovered ? 1.05 : 1 }}
       transition={{ type: 'spring', stiffness: 300, damping: 24 }}
       className="interactive-widget fixed z-50 inline-flex flex-col items-center select-none interactive-element"
@@ -107,13 +105,14 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
       data-tauri-drag-region
       onMouseEnter={() => { setIsHovered(true); onMouseEnter(); }}
       onMouseLeave={() => { setIsHovered(false); onMouseLeave(); }}
+      onMouseUp={handleNativeDragEnd}
       onClick={onClick}
     >
       <AnimatePresence>
         {speechText && (isHovered || pendingDeadlines.length > 0) && <motion.div initial={{ opacity: 0, y: 8, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 5, scale: 0.9 }} className={`absolute bottom-full mb-2 max-w-[180px] w-max min-w-[140px] p-2.5 rounded-2xl bg-slate-950/95 border border-cyan-400/50 shadow-xl text-xs text-slate-100 pointer-events-none z-30 ${isRightEdge ? 'right-2' : 'left-2'}`}><div className="flex items-start gap-1.5"><MessageSquare className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" /><p className="leading-snug text-[11.5px]">{speechText}</p></div></motion.div>}
       </AnimatePresence>
 
-      <div className="clickable relative w-36 h-36 flex items-center justify-center bg-transparent p-0 m-0">
+      <div className="clickable relative w-36 h-36 flex items-center justify-center bg-transparent p-0 m-0" data-tauri-drag-region>
         {imageSrc ? <img src={imageSrc} alt="Mascot Character" className="w-32 h-32 object-contain select-none pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.45)]" draggable={false} /> : <div className="w-32 h-32 flex flex-col items-center justify-center gap-1 text-cyan-300 text-center"><div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center"><ImageIcon className="w-6 h-6" /></div><span className="text-[11px] font-bold text-white">Belum Ada Gambar</span></div>}
         {(state === 'alert' || pendingDeadlines.length > 0) && <div className="absolute top-2 right-2 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-slate-900 animate-pulse pointer-events-none" />}
         {onToggleDisplayMode && <button type="button" onClick={(e) => { e.stopPropagation(); onToggleDisplayMode(); }} title="Kembali ke Mode Bar" className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-slate-950/90 text-cyan-400 border border-cyan-500/50 shadow-lg cursor-pointer z-20"><SlidersHorizontal className="w-3.5 h-3.5" /></button>}
