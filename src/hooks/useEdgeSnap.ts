@@ -15,6 +15,7 @@ interface EdgeSnapOptions {
 const CLOSED_SIZE = { width: 180, height: 180 };
 const OPEN_SIZE = { width: 520, height: 720 };
 const EDGE_PEEK = 90;
+const EDGE_SNAP_DISTANCE = 140;
 const MARGIN = 0;
 
 export function useEdgeSnap(options: EdgeSnapOptions) {
@@ -105,7 +106,7 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
     if (edge === 'bottom') y = boundsH - CLOSED_SIZE.height + EDGE_PEEK;
 
     await syncNativePosition(x, y);
-    setWindowState(prev => ({ ...prev, x: 0, y: 0, snappedEdge: edge, isSnapped: true }));
+    setWindowState(prev => ({ ...prev, x: 0, y: 0, snappedEdge: edge, isSnapped: true, isPeeking: true }));
   }, [syncNativePosition]);
 
   useEffect(() => {
@@ -131,7 +132,7 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
         const snapped = snapToEdge(currentX, currentY);
         const peek = getPeekPosition(snapped.edge);
         await syncNativePosition(peek.x, peek.y);
-        setWindowState(prev => ({ ...prev, x: 0, y: 0, snappedEdge: snapped.edge }));
+        setWindowState(prev => ({ ...prev, x: 0, y: 0, snappedEdge: snapped.edge, isSnapped: true, isPeeking: true }));
       } catch (error) {
         console.warn('Failed to initialize widget window:', error);
       }
@@ -151,16 +152,40 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
       const current = { x: pos.x / scale, y: pos.y / scale };
       positionRef.current = current;
 
-      // Native dragging can end partly off-screen. Clamp only for edge detection,
-      // then move the 180px widget so exactly half of it peeks beyond the edge.
-      const clampedX = Math.max(0, Math.min(current.x, screenRef.current.width - CLOSED_SIZE.width));
-      const clampedY = Math.max(0, Math.min(current.y, screenRef.current.height - CLOSED_SIZE.height));
+      const { width: boundsW, height: boundsH } = screenRef.current;
+      const maxX = Math.max(0, boundsW - CLOSED_SIZE.width);
+      const maxY = Math.max(0, boundsH - CLOSED_SIZE.height);
+      const clampedX = Math.max(0, Math.min(current.x, maxX));
+      const clampedY = Math.max(0, Math.min(current.y, maxY));
       const snapped = snapToEdge(clampedX, clampedY, CLOSED_SIZE.width, CLOSED_SIZE.height);
-      await placePeekWidget(snapped.edge, snapped.x, snapped.y);
+
+      // The widget may be dragged freely around the desktop. It only peeks
+      // outside the screen when the user releases it close enough to an edge.
+      const distanceToEdge = Math.min(
+        clampedX,
+        boundsW - (clampedX + CLOSED_SIZE.width),
+        clampedY,
+        boundsH - (clampedY + CLOSED_SIZE.height),
+      );
+
+      if (distanceToEdge <= EDGE_SNAP_DISTANCE) {
+        await placePeekWidget(snapped.edge, snapped.x, snapped.y);
+      } else {
+        // Never leave the widget clipped when it is placed in the middle of the screen.
+        await syncNativePosition(clampedX, clampedY);
+        setWindowState(prev => ({
+          ...prev,
+          x: 0,
+          y: 0,
+          snappedEdge: snapped.edge,
+          isSnapped: false,
+          isPeeking: false,
+        }));
+      }
     } catch (error) {
-      console.warn('Failed to snap widget after native drag:', error);
+      console.warn('Failed to position widget after native drag:', error);
     }
-  }, [isTauri, placePeekWidget, snapToEdge]);
+  }, [isTauri, placePeekWidget, snapToEdge, syncNativePosition]);
 
   const resetIdleTimer = useCallback(() => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
@@ -195,16 +220,24 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
 
     if (opening) {
       await resizeNativeWindow(OPEN_SIZE.width, OPEN_SIZE.height);
-      await applyNativeAnchor(edge, current.x, current.y, OPEN_SIZE.width, OPEN_SIZE.height);
+      if (windowState.isSnapped) {
+        await applyNativeAnchor(edge, current.x, current.y, OPEN_SIZE.width, OPEN_SIZE.height);
+      } else {
+        const { width: boundsW, height: boundsH } = screenRef.current;
+        const x = Math.max(0, Math.min(current.x, boundsW - OPEN_SIZE.width));
+        const y = Math.max(0, Math.min(current.y, boundsH - OPEN_SIZE.height));
+        await syncNativePosition(x, y);
+        setWindowState(prev => ({ ...prev, x: 0, y: 0 }));
+      }
     } else {
       await resizeNativeWindow(CLOSED_SIZE.width, CLOSED_SIZE.height);
       const peek = getPeekPosition(edge);
       await syncNativePosition(peek.x, peek.y);
-      setWindowState(prev => ({ ...prev, x: 0, y: 0, snappedEdge: edge, isSnapped: true }));
+      setWindowState(prev => ({ ...prev, x: 0, y: 0, snappedEdge: edge, isSnapped: true, isPeeking: true }));
     }
 
     setWindowState(prev => ({ ...prev, isPanelOpen: opening, isPinned: opening, isPeeking: false }));
-  }, [applyNativeAnchor, getPeekPosition, resizeNativeWindow, syncNativePosition, windowState.isPanelOpen, windowState.snappedEdge]);
+  }, [applyNativeAnchor, getPeekPosition, resizeNativeWindow, syncNativePosition, windowState.isPanelOpen, windowState.isSnapped, windowState.snappedEdge]);
 
   const closePanel = useCallback(async () => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
@@ -212,7 +245,7 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
     await resizeNativeWindow(CLOSED_SIZE.width, CLOSED_SIZE.height);
     const peek = getPeekPosition(edge);
     await syncNativePosition(peek.x, peek.y);
-    setWindowState(prev => ({ ...prev, isPanelOpen: false, isPinned: false, isPeeking: true, x: 0, y: 0 }));
+    setWindowState(prev => ({ ...prev, isPanelOpen: false, isPinned: false, isPeeking: true, x: 0, y: 0, isSnapped: true }));
   }, [getPeekPosition, resizeNativeWindow, syncNativePosition, windowState.snappedEdge]);
 
   const toggleDisplayMode = useCallback(() => {
@@ -233,10 +266,19 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
         const edge = windowState.snappedEdge;
 
         if (windowState.isPanelOpen) {
-          await applyNativeAnchor(edge, positionRef.current.x, positionRef.current.y, size.width, size.height);
-        } else {
+          if (windowState.isSnapped) {
+            await applyNativeAnchor(edge, positionRef.current.x, positionRef.current.y, size.width, size.height);
+          }
+        } else if (windowState.isSnapped) {
           const peek = getPeekPosition(edge);
           await syncNativePosition(peek.x, peek.y);
+        } else {
+          const maxX = Math.max(0, screenRef.current.width - CLOSED_SIZE.width);
+          const maxY = Math.max(0, screenRef.current.height - CLOSED_SIZE.height);
+          await syncNativePosition(
+            Math.max(0, Math.min(positionRef.current.x, maxX)),
+            Math.max(0, Math.min(positionRef.current.y, maxY)),
+          );
         }
       } catch (error) {
         console.warn('Failed to handle widget resize:', error);
@@ -244,7 +286,7 @@ export function useEdgeSnap(options: EdgeSnapOptions) {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [applyNativeAnchor, getPeekPosition, isTauri, syncNativePosition, windowState.isPanelOpen, windowState.snappedEdge]);
+  }, [applyNativeAnchor, getPeekPosition, isTauri, syncNativePosition, windowState.isPanelOpen, windowState.isSnapped, windowState.snappedEdge]);
 
   useEffect(() => () => {
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
