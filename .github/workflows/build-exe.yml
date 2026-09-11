@@ -2,9 +2,9 @@ name: Build Remember ME V2 Windows EXE
 
 on:
   push:
-    branches: [ v2-rebuild ]
+    branches: [ v3-clean-widget ]
   pull_request:
-    branches: [ v2-rebuild ]
+    branches: [ v3-clean-widget ]
   workflow_dispatch:
 
 jobs:
@@ -20,7 +20,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: npm
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -28,20 +29,20 @@ jobs:
           targets: x86_64-pc-windows-msvc
 
       - name: Install npm dependencies
-        shell: pwsh
-        run: |
-          if (Test-Path node_modules) { Remove-Item -Recurse -Force node_modules }
-          if (Test-Path package-lock.json) { Remove-Item -Force package-lock.json }
-          npm install --legacy-peer-deps --include=optional
+        run: npm ci --include=optional
+
+      - name: TypeScript and Vite build
+        run: npm run build
 
       - name: Build Tauri Desktop App (.exe)
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          args: --bundles nsis
           tagName: v0.1.0-build-${{ github.run_number }}
           releaseName: 'Remember ME V2 Build #${{ github.run_number }}'
-          releaseBody: 'Clean rebuild of the floating mascot widget.'
+          releaseBody: 'Clean native floating mascot widget with separate task panel.'
           releaseDraft: true
           prerelease: true
 
