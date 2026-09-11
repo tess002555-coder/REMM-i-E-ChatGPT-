@@ -1,10 +1,10 @@
-name: Web CI & Build Check
+name: REMM V2 CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, v2-rebuild ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, v2-rebuild ]
   workflow_dispatch:
 
 jobs:
@@ -18,12 +18,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Check TypeScript / Lint
+      - name: Check TypeScript
         run: npm run lint
 
       - name: Build Web App
