@@ -18,8 +18,8 @@
         "height": 180,
         "minWidth": 180,
         "minHeight": 180,
-        "maxWidth": 520,
-        "maxHeight": 720,
+        "maxWidth": 180,
+        "maxHeight": 180,
         "resizable": false,
         "fullscreen": false,
         "transparent": true,
@@ -28,14 +28,19 @@
         "skipTaskbar": true,
         "shadow": false,
         "visible": true,
-        "focus": true
+        "focus": false
       }
     ]
   },
   "bundle": {
     "active": true,
     "targets": ["nsis"],
-    "icon": [],
+    "icon": [
+      "icons/icon.ico",
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png"
+    ],
     "category": "Productivity",
     "shortDescription": "Remember ME floating mascot widget"
   }
