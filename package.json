@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --port 3000",
     "lint": "tsc --noEmit",
-    "build": "tsc --noEmit && vite build",
+    "build": "node scripts/generate-icons.js && tsc --noEmit && vite build",
     "tauri": "tauri",
     "build:exe": "npm run build && tauri build"
   },
