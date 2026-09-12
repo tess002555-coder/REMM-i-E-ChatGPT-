@@ -1,0 +1,258 @@
+<Window x:Class="RemmI.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="520" Height="760"
+        MinWidth="480" MinHeight="650"
+        WindowStyle="None"
+        ResizeMode="CanResizeWithGrip"
+        ShowInTaskbar="False"
+        Topmost="True"
+        Background="Transparent"
+        AllowsTransparency="True"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
+    <Window.Resources>
+        <Style x:Key="TabButton" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#AAB5C0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="#303740" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="Padding" Value="12,7" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border CornerRadius="10" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Foreground" Value="#061015" />
+                    <Setter Property="Background" Value="#22D3EE" />
+                    <Setter Property="BorderBrush" Value="#22D3EE" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="SectionBorder" TargetType="Border">
+            <Setter Property="Background" Value="#171A1F" />
+            <Setter Property="BorderBrush" Value="#303640" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Margin" Value="0,0,0,10" />
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#101216" />
+            <Setter Property="Foreground" Value="#E5F7FF" />
+            <Setter Property="BorderBrush" Value="#343B45" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="FontSize" Value="10" />
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Background" Value="#101216" />
+            <Setter Property="Foreground" Value="#E5F7FF" />
+            <Setter Property="BorderBrush" Value="#343B45" />
+            <Setter Property="FontSize" Value="10" />
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#20242A" />
+            <Setter Property="Foreground" Value="#D8E7EE" />
+            <Setter Property="BorderBrush" Value="#343B45" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+    </Window.Resources>
+
+    <Border Margin="4" CornerRadius="16" Background="#F5111419" BorderBrush="#303944" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Margin="16,12,16,6" MouseLeftButtonDown="Header_MouseLeftButtonDown" Cursor="SizeAll">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Pengaturan Terpusat" Foreground="#F8FAFC" FontSize="16" FontWeight="Bold" />
+                    <TextBlock Text="Konfigurasi Maskot, UI, &amp; Suara Notifikasi" Foreground="#73818D" FontSize="9" Margin="0,2,0,0" />
+                </StackPanel>
+                <Button Grid.Column="1" Content="×" Width="32" Height="32" Click="Close_Click" />
+            </Grid>
+
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="12,0,12,8">
+                <RadioButton x:Name="TabMascot" GroupName="MainTabs" Content="⚙ Maskot &amp; Tampilan" Style="{StaticResource TabButton}" IsChecked="True" Click="MainTab_Click" />
+                <RadioButton x:Name="TabSound" GroupName="MainTabs" Content="♫ Notifikasi &amp; Suara" Style="{StaticResource TabButton}" Click="MainTab_Click" />
+                <RadioButton x:Name="TabData" GroupName="MainTabs" Content="▤ Integrasi &amp; Data" Style="{StaticResource TabButton}" Click="MainTab_Click" />
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="12,0,12,10">
+                    <StackPanel x:Name="MascotSection">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <RadioButton x:Name="SubTheme" GroupName="SubTabs" Content="◉ Warna &amp; Tema" Style="{StaticResource TabButton}" IsChecked="True" Click="SubTab_Click" />
+                            <RadioButton x:Name="SubInteract" GroupName="SubTabs" Content="⚙ Interaksi" Style="{StaticResource TabButton}" Click="SubTab_Click" />
+                            <RadioButton x:Name="SubPose" GroupName="SubTabs" Content="▧ Gambar Pose" Style="{StaticResource TabButton}" Click="SubTab_Click" />
+                        </StackPanel>
+
+                        <StackPanel x:Name="ThemePanel">
+                            <Border Style="{StaticResource SectionBorder}">
+                                <StackPanel>
+                                    <TextBlock Text="Mode Tampilan Floating Widget" Foreground="#22D3EE" FontWeight="Bold" Margin="0,0,0,8" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <RadioButton x:Name="ModeBar" GroupName="PanelMode" Content="Mode Bar (Bilah Sisi)" Margin="0,0,8,0" Padding="10" IsChecked="True" />
+                                        <RadioButton x:Name="ModeFloat" GroupName="PanelMode" Content="Mode Maskot Mengambang" Padding="10" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SectionBorder}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Text="Identitas Header Floating Panel" Foreground="#22D3EE" FontWeight="Bold" Margin="0,0,0,8" />
+                                    <Grid Grid.Row="1">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <StackPanel Margin="0,0,5,0"><TextBlock Text="Nama Project / Judul Panel" Foreground="#8795A1" FontSize="9"/><TextBox x:Name="ProjectNameText" Text="REMM(i)E"/></StackPanel>
+                                        <StackPanel Grid.Column="1" Margin="5,0,0,0"><TextBlock Text="Nama Pengguna / Sub-Judul" Foreground="#8795A1" FontSize="9"/><TextBox x:Name="DisplayNameText" Text="Maskot Denia"/></StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                            <Border Style="{StaticResource SectionBorder}">
+                                <StackPanel>
+                                    <TextBlock Text="Preset Tema 1-Klik (Theme Presets)" Foreground="#22D3EE" FontWeight="Bold" />
+                                    <WrapPanel Margin="0,8,0,0">
+                                        <Button Content="Cyberpunk Neon" Click="Theme_Click" Tag="Cyberpunk Neon" Margin="2" />
+                                        <Button Content="Soft Sakura Pink" Click="Theme_Click" Tag="Soft Sakura Pink" Margin="2" Background="#F7CFDA" Foreground="#35151D" />
+                                        <Button Content="Clean Milk White" Click="Theme_Click" Tag="Clean Milk White" Margin="2" Background="#FAFAFA" Foreground="#222" />
+                                        <Button Content="Minimal Obsidian" Click="Theme_Click" Tag="Minimal Obsidian" Margin="2" />
+                                        <Button Content="Emerald Forest" Click="Theme_Click" Tag="Emerald Forest" Margin="2" />
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SectionBorder}">
+                                <StackPanel>
+                                    <TextBlock Text="Transparansi &amp; Warna Kustom" Foreground="#22D3EE" FontWeight="Bold" />
+                                    <DockPanel Margin="0,8,0,0"><TextBlock Text="Opacity Panel" Foreground="#B8C4CC"/><TextBlock x:Name="OpacityValue" DockPanel.Dock="Right" Foreground="#22D3EE" Text="95%"/></DockPanel>
+                                    <Slider x:Name="OpacitySlider" Minimum="0.65" Maximum="1" Value="0.95" ValueChanged="OpacitySlider_ValueChanged" />
+                                    <Grid Margin="0,8,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <StackPanel><TextBlock Text="Warna Latar Panel" Foreground="#8795A1" FontSize="9"/><TextBox x:Name="BackgroundColorText" Text="#15181D"/></StackPanel>
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0"><TextBlock Text="Warna Border Panel" Foreground="#8795A1" FontSize="9"/><TextBox x:Name="BorderColorText" Text="#22D3EE"/></StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel x:Name="InteractPanel" Visibility="Collapsed">
+                            <Border Style="{StaticResource SectionBorder}">
+                                <StackPanel>
+                                    <TextBlock Text="Perilaku &amp; Interaksi Maskot Denia" Foreground="#22D3EE" FontWeight="Bold" />
+                                    <CheckBox x:Name="DragEnabledCheck" Content="Izinkan drag &amp; pindah widget" IsChecked="True" Margin="0,10,0,5" Foreground="#DDE7ED" />
+                                    <CheckBox x:Name="AutoSnapCheck" Content="Auto snap ke sisi layar terdekat saat dilepas" IsChecked="True" Margin="0,0,0,5" Foreground="#DDE7ED" />
+                                    <CheckBox Content="Tampilkan menu utama sebagai jendela terpisah" IsChecked="True" IsEnabled="False" Foreground="#DDE7ED" />
+                                    <CheckBox Content="Pertahankan mascot selalu di atas desktop" IsChecked="True" IsEnabled="False" Foreground="#DDE7ED" />
+                                    <TextBlock Text="Peek visible (%)" Foreground="#8795A1" FontSize="9" Margin="0,12,0,2" />
+                                    <Slider x:Name="PeekSlider" Minimum="50" Maximum="90" Value="75" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource SectionBorder}">
+                                <StackPanel>
+                                    <TextBlock Text="Mode Window" Foreground="#22D3EE" FontWeight="Bold" />
+                                    <TextBlock Text="Mode Bar menempatkan panel seperti sidebar. Mode Mengambang mempertahankan panel di dekat mascot." Foreground="#8795A1" FontSize="9" Margin="0,6,0,0" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel x:Name="PosePanel" Visibility="Collapsed">
+                            <Border Style="{StaticResource SectionBorder}">
+                                <StackPanel>
+                                    <TextBlock Text="Gambar Pose Maskot" Foreground="#22D3EE" FontWeight="Bold" />
+                                    <TextBlock Text="Untuk sekarang gunakan gambar default. Anda dapat menambahkan aset Idle, Peek, Pointing, dan Alert lewat tombol Browse." Foreground="#8795A1" FontSize="9" Margin="0,4,0,8" TextWrapping="Wrap" />
+                                    <StackPanel Margin="0,3"><TextBlock Text="Idle" Foreground="#DDE7ED" FontSize="9"/><DockPanel><TextBox x:Name="IdlePathText"/><Button Content="Browse" Click="IdleBrowse_Click" DockPanel.Dock="Right" Margin="6,0,0,0"/></DockPanel></StackPanel>
+                                    <StackPanel Margin="0,8,0,3"><TextBlock Text="Peek" Foreground="#DDE7ED" FontSize="9"/><DockPanel><TextBox x:Name="PeekPathText"/><Button Content="Browse" Click="PeekBrowse_Click" DockPanel.Dock="Right" Margin="6,0,0,0"/></DockPanel></StackPanel>
+                                    <StackPanel Margin="0,8,0,3"><TextBlock Text="Pointing" Foreground="#DDE7ED" FontSize="9"/><DockPanel><TextBox x:Name="PointingPathText"/><Button Content="Browse" Click="PointingBrowse_Click" DockPanel.Dock="Right" Margin="6,0,0,0"/></DockPanel></StackPanel>
+                                    <StackPanel Margin="0,8,0,0"><TextBlock Text="Alert" Foreground="#DDE7ED" FontSize="9"/><DockPanel><TextBox x:Name="AlertPathText"/><Button Content="Browse" Click="AlertBrowse_Click" DockPanel.Dock="Right" Margin="6,0,0,0"/></DockPanel></StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel x:Name="SoundSection" Visibility="Collapsed">
+                        <Border Style="{StaticResource SectionBorder}">
+                            <StackPanel>
+                                <TextBlock Text="Suara &amp; Notifikasi" Foreground="#22D3EE" FontWeight="Bold" />
+                                <CheckBox x:Name="NotificationsCheck" Content="Notifikasi Desktop" IsChecked="True" Margin="0,10,0,5" Foreground="#DDE7ED" />
+                                <CheckBox x:Name="NotificationSoundCheck" Content="Aktifkan suara notifikasi" IsChecked="True" Margin="0,0,0,8" Foreground="#DDE7ED" />
+                                <TextBlock Text="Volume" Foreground="#8795A1" FontSize="9" />
+                                <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100" Value="75" />
+                                <TextBlock Text="Notifikasi deadline" Foreground="#8795A1" FontSize="9" Margin="0,8,0,2" />
+                                <TextBox x:Name="LeadMinutesText" Text="5" />
+                                <TextBlock Text="menit sebelum batas waktu" Foreground="#8795A1" FontSize="9" Margin="0,2,0,0" />
+                                <ComboBox x:Name="SoundCombo" Margin="0,10,0,0">
+                                    <ComboBoxItem Content="Synth Chime (Web Audio)" />
+                                    <ComboBoxItem Content="Custom Audio File / URL" />
+                                </ComboBox>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource SectionBorder}">
+                            <StackPanel><TextBlock Text="Popup &amp; Perilaku" Foreground="#22D3EE" FontWeight="Bold"/><CheckBox Content="Popup otomatis ketika ada reminder" IsChecked="True" Margin="0,10,0,5" Foreground="#DDE7ED"/><CheckBox Content="Bunyikan alert saat tugas penting jatuh tempo" IsChecked="True" Foreground="#DDE7ED" /></StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel x:Name="DataSection" Visibility="Collapsed">
+                        <Border Style="{StaticResource SectionBorder}">
+                            <StackPanel>
+                                <TextBlock Text="Integrasi EDLINK / AKUN" Foreground="#22D3EE" FontWeight="Bold" />
+                                <TextBlock Text="Otomasi sinkronisasi tugas, kalender, dan deadline tugas ke layanan eksternal." Foreground="#8795A1" FontSize="9" Margin="0,4,0,8" TextWrapping="Wrap" />
+                                <TextBox x:Name="IntegrationUrlText" Text="https://akundev.local/api" Margin="0,0,0,6" />
+                                <TextBox x:Name="IntegrationTokenText" Text="" />
+                                <Button Content="↻ Uji Sinkronisasi EDLINK" Click="TestIntegration_Click" HorizontalAlignment="Right" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource SectionBorder}">
+                            <StackPanel>
+                                <TextBlock Text="GOOGLE CALENDAR API" Foreground="#22D3EE" FontWeight="Bold" />
+                                <TextBox x:Name="GoogleApiKeyText" Text="" Margin="0,8,0,6" />
+                                <TextBox x:Name="GoogleCalendarIdText" Text="primary" />
+                                <Button Content="↻ Uji Sinkronisasi Calendar" Click="TestCalendar_Click" HorizontalAlignment="Right" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource SectionBorder}">
+                            <StackPanel>
+                                <TextBlock Text="Cadangan &amp; Pemulihan Data (Backup JSON)" Foreground="#22D3EE" FontWeight="Bold" />
+                                <TextBlock Text="Ekspor seluruh data tugas, rutinitas, jadwal kalender, dan preferensi Anda ke file JSON; atau pulihkan data dari file cadangan." Foreground="#8795A1" FontSize="9" Margin="0,4,0,8" TextWrapping="Wrap" />
+                                <WrapPanel><Button Content="Ekspor Data (Backup)" Click="Export_Click" Margin="2"/><Button Content="Impor Data (Restore)" Click="Import_Click" Margin="2"/></WrapPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource SectionBorder}">
+                            <StackPanel>
+                                <TextBlock Text="SQLite Query Simulator" Foreground="#22D3EE" FontWeight="Bold" />
+                                <TextBox x:Name="SqlText" Text="SELECT * FROM tasks" Margin="0,8,0,6" />
+                                <Button Content="Run SQL" Click="RunSql_Click" HorizontalAlignment="Right" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="12,0,12,10">
+                <Button Content="Batal" Click="Close_Click" Margin="2" />
+                <Button Content="Simpan Konfigurasi" Click="Save_Click" Background="#22D3EE" Foreground="#061015" BorderBrush="#22D3EE" FontWeight="Bold" Margin="2" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
