@@ -7,8 +7,8 @@ const MASCOT = 180;
 const PANEL_W = 520;
 const PANEL_H = 720;
 const PEEK = 45; // 75% of the mascot remains visible.
-const SNAP = 160;
 const DRAG_THRESHOLD = 5;
+const SNAP_DELAY = 80;
 
 type Edge = 'left' | 'right' | 'top' | 'bottom';
 interface Bounds {
@@ -94,6 +94,10 @@ export function useMascotWindow() {
     const x = Math.max(b.x, Math.min(currentX, maxX));
     const y = Math.max(b.y, Math.min(currentY, maxY));
 
+    // Always snap to the nearest screen edge on drag release.
+    // There is intentionally no distance threshold: even when the mascot
+    // is released in the middle third of the screen, it moves to whichever
+    // edge is closest.
     const distances: Record<Edge, number> = {
       left: x - b.x,
       right: maxX - x,
@@ -107,13 +111,8 @@ export function useMascotWindow() {
     );
 
     lastPosition.current = { x, y };
-    if (distances[nearest] <= SNAP) {
-      await snapToPeek(nearest);
-    } else {
-      await move(x, y);
-      localStorage.removeItem(EDGE_KEY);
-    }
-  }, [move, readBounds, snapToPeek, win]);
+    await snapToPeek(nearest);
+  }, [readBounds, snapToPeek, win]);
 
   const beginDrag = useCallback(async () => {
     movedDuringDrag.current = false;
@@ -229,7 +228,7 @@ export function useMascotWindow() {
       if (snapTimer.current) clearTimeout(snapTimer.current);
       snapTimer.current = setTimeout(() => {
         void snapAfterDrag();
-      }, 180);
+      }, SNAP_DELAY);
     }).then((fn) => {
       unlisten = fn;
     });
