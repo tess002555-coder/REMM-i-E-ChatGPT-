@@ -31,11 +31,11 @@ public sealed class RemmSchedule
 
 public sealed class RemmSettings
 {
-    public string Theme { get; set; } = "Cyberpunk Neon";
+    public string Theme { get; set; } = "Soft Sakura Pink";
     public string PanelMode { get; set; } = "Mode Bar";
     public double PanelOpacity { get; set; } = 0.95;
-    public string PanelBackground { get; set; } = "#15181D";
-    public string PanelBorder { get; set; } = "#22D3EE";
+    public string PanelBackground { get; set; } = "#21181E";
+    public string PanelBorder { get; set; } = "#F39BB8";
     public bool AutoSnap { get; set; } = true;
     public int PeekVisiblePercent { get; set; } = 75;
     public bool DragEnabled { get; set; } = true;
