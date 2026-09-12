@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Interop;
 using FormsScreen = System.Windows.Forms.Screen;
 
@@ -11,18 +11,21 @@ namespace RemmI;
 
 public partial class MainWindow : Window
 {
-    private const double MascotSize = 150;
-    private double _peekOffset = 37.5;
+    private const double MascotSize = 128;
+    private double _peekOffset = 32;
     private bool _dragging;
     private bool _moved;
-    private System.Windows.Point _mouseDownScreen;
+    private Point _mouseDownScreen;
     private double _dragStartLeft;
     private double _dragStartTop;
     private RemmSettings _settings = new();
+    private TaskWindow? _taskWindow;
 
     public MainWindow()
     {
         InitializeComponent();
+        Width = MascotSize;
+        Height = MascotSize;
         Loaded += (_, _) =>
         {
             _settings = RemmDataService.Load().Settings;
@@ -36,9 +39,7 @@ public partial class MainWindow : Window
         _settings = settings;
         _peekOffset = MascotSize * (1.0 - Math.Clamp(settings.PeekVisiblePercent, 50, 90) / 100.0);
         Topmost = true;
-        if (_settings.PanelMode == "Floating")
-            Topmost = true;
-        SetPose("peek");
+        SetPose(_taskWindow is not null ? "pointing" : "peek");
     }
 
     private void PositionInitial()
@@ -60,9 +61,21 @@ public partial class MainWindow : Window
         }
     }
 
-    private void Mascot_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    private void Mascot_MouseEnter(object sender, MouseEventArgs e)
     {
-        if (e.ChangedButton != System.Windows.Input.MouseButton.Left || !_settings.DragEnabled)
+        if (!_dragging && _taskWindow is null)
+            SetPose("idle");
+    }
+
+    private void Mascot_MouseLeave(object sender, MouseEventArgs e)
+    {
+        if (!_dragging && _taskWindow is null)
+            SetPose("peek");
+    }
+
+    private void Mascot_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Left || !_settings.DragEnabled)
             return;
 
         _dragging = true;
@@ -75,9 +88,9 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    private void Mascot_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    private void Mascot_MouseMove(object sender, MouseEventArgs e)
     {
-        if (!_dragging || e.LeftButton != System.Windows.Input.MouseButtonState.Pressed)
+        if (!_dragging || e.LeftButton != MouseButtonState.Pressed)
             return;
 
         var current = PointToScreen(e.GetPosition(this));
@@ -87,13 +100,14 @@ public partial class MainWindow : Window
             return;
 
         _moved = true;
-        Left = _dragStartLeft + dx;
-        Top = _dragStartTop + dy;
+        var area = GetWorkingAreaInDip();
+        Left = Math.Max(area.Left, Math.Min(_dragStartLeft + dx, area.Right - Width));
+        Top = Math.Max(area.Top, Math.Min(_dragStartTop + dy, area.Bottom - Height));
     }
 
-    private void Mascot_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    private void Mascot_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (!_dragging || e.ChangedButton != System.Windows.Input.MouseButton.Left)
+        if (!_dragging || e.ChangedButton != MouseButton.Left)
             return;
 
         _dragging = false;
@@ -138,25 +152,33 @@ public partial class MainWindow : Window
     private void OpenTaskWindow()
     {
         SetPose("pointing");
-        var existing = Application.Current.Windows.OfType<TaskWindow>().FirstOrDefault();
-        if (existing is not null)
+
+        if (_taskWindow is not null)
         {
-            existing.PositionNearMascot();
-            existing.Show();
-            existing.Activate();
+            _taskWindow.PositionNearMascot();
+            _taskWindow.Show();
+            _taskWindow.Activate();
             return;
         }
 
         var task = new TaskWindow(this);
+        _taskWindow = task;
+        task.Closed += (_, _) =>
+        {
+            _taskWindow = null;
+            SetPose("peek");
+        };
         task.Show();
         task.Activate();
     }
 
+    public bool IsTaskWindowOpen => _taskWindow is not null;
+
     private void SetPose(string mode)
     {
-        if (Content is not Grid grid)
+        if (Content is not System.Windows.Controls.Grid grid)
             return;
-        var image = grid.Children.OfType<Image>().FirstOrDefault();
+        var image = grid.Children.OfType<System.Windows.Controls.Image>().FirstOrDefault();
         if (image is null)
             return;
 
@@ -184,10 +206,18 @@ public partial class MainWindow : Window
             }
             catch
             {
+                // Use the bundled mascot if a custom pose cannot be decoded.
             }
         }
 
-        image.Source = new BitmapImage(new Uri("/Assets/mascot.png", UriKind.Relative));
+        try
+        {
+            image.Source = new BitmapImage(new Uri("/Assets/mascot.png", UriKind.Relative));
+        }
+        catch
+        {
+            image.Source = null;
+        }
     }
 
     public Rect GetWorkingAreaInDip()
