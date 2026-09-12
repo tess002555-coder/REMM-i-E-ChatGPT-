@@ -57,16 +57,8 @@ public partial class TaskWindow : Window
 
     private void PanelDragHandle_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != System.Windows.Input.MouseButton.Left)
-            return;
-        try
-        {
-            DragMove();
-            e.Handled = true;
-        }
-        catch (InvalidOperationException)
-        {
-        }
+        if (e.ChangedButton != System.Windows.Input.MouseButton.Left) return;
+        try { DragMove(); e.Handled = true; } catch (InvalidOperationException) { }
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
@@ -81,17 +73,9 @@ public partial class TaskWindow : Window
 
     private void Settings_Click(object sender, RoutedEventArgs e)
     {
-        var existing = System.Windows.Application.Current.Windows.OfType<SettingsWindow>().FirstOrDefault();
-        if (existing is not null)
-        {
-            existing.Activate();
-            return;
-        }
-
-        var settings = new SettingsWindow(_mascot)
-        {
-            Owner = this
-        };
+        var existing = Application.Current.Windows.OfType<SettingsWindow>().FirstOrDefault();
+        if (existing is not null) { existing.Activate(); return; }
+        var settings = new SettingsWindow(_mascot) { Owner = this };
         settings.Left = Left + Width + 14;
         settings.Top = Top;
         if (settings.Left + settings.Width > SystemParameters.WorkArea.Right)
@@ -101,10 +85,9 @@ public partial class TaskWindow : Window
 
     private void Layout_Click(object sender, RoutedEventArgs e)
     {
-        var settings = RemmDataService.Load().Settings;
-        settings.PanelOpacity = settings.PanelOpacity > 0.88 ? 0.82 : 0.96;
-        RemmDataService.Save(RemmDataService.Load());
-        Opacity = settings.PanelOpacity;
+        _data.Settings.PanelOpacity = _data.Settings.PanelOpacity > 0.88 ? 0.82 : 0.96;
+        RemmDataService.Save(_data);
+        Opacity = _data.Settings.PanelOpacity;
     }
 
     private void Console_Click(object sender, RoutedEventArgs e)
@@ -118,21 +101,15 @@ public partial class TaskWindow : Window
         var title = Prompt("Nama acara:", "", "Tambah Kalender");
         if (string.IsNullOrWhiteSpace(title)) return;
         var dateText = Prompt("Tanggal dan waktu (contoh: 15/09/2026 19:30):", DateTime.Now.AddHours(1).ToString("dd/MM/yyyy HH:mm"), "Tambah Kalender");
-        if (string.IsNullOrWhiteSpace(dateText) || !DateTime.TryParse(dateText, out var date))
-        {
-            Info("Format tanggal tidak valid.", "Calender");
-            return;
-        }
+        if (string.IsNullOrWhiteSpace(dateText) || !DateTime.TryParse(dateText, out var date)) { Info("Format tanggal tidak valid.", "Calender"); return; }
         _data.Schedules.Add(new RemmSchedule { Title = title.Trim(), DateTime = date });
-        RemmDataService.Save(_data);
-        RefreshView();
+        RemmDataService.Save(_data); RefreshView();
     }
 
     private void CalendarDetail_Click(object sender, RoutedEventArgs e)
     {
         var schedules = _data.Schedules.OrderBy(s => s.DateTime).ToList();
-        var text = schedules.Count == 0 ? "Belum ada jadwal." : string.Join("\n", schedules.Select(s => $"• {s.Title} — {s.DateTime:dd MMM yyyy HH:mm}"));
-        Info(text, "Calender — Detail");
+        Info(schedules.Count == 0 ? "Belum ada jadwal." : string.Join("\n", schedules.Select(s => $"• {s.Title} — {s.DateTime:dd MMM yyyy HH:mm}")), "Calender — Detail");
     }
 
     private void AddRoutine_Click(object sender, RoutedEventArgs e)
@@ -140,8 +117,7 @@ public partial class TaskWindow : Window
         var title = Prompt("Nama rutinitas:", "", "Tambah Rutinitas");
         if (string.IsNullOrWhiteSpace(title)) return;
         _data.Routines.Add(new RemmRoutine { Title = title.Trim() });
-        RemmDataService.Save(_data);
-        RefreshView();
+        RemmDataService.Save(_data); RefreshView();
     }
 
     private void AddTask_Click(object sender, RoutedEventArgs e)
@@ -150,8 +126,7 @@ public partial class TaskWindow : Window
         if (string.IsNullOrWhiteSpace(title)) return;
         var priority = NormalizePriority(Prompt("Prioritas (Tinggi / Sedang / Rendah):", "Sedang", "Tambah Tugas") ?? "Sedang");
         _data.Tasks.Add(new RemmTask { Title = title.Trim(), Priority = priority });
-        RemmDataService.Save(_data);
-        RefreshView();
+        RemmDataService.Save(_data); RefreshView();
     }
 
     private void FilterAll_Click(object sender, RoutedEventArgs e) => SetFilter("Semua");
@@ -159,7 +134,6 @@ public partial class TaskWindow : Window
     private void FilterMedium_Click(object sender, RoutedEventArgs e) => SetFilter("Sedang");
     private void FilterLow_Click(object sender, RoutedEventArgs e) => SetFilter("Rendah");
     private void SearchBox_TextChanged(object sender, WpfTextChangedEventArgs e) => RefreshView();
-
     private void SetFilter(string filter) { _filter = filter; RefreshView(); }
 
     private void RefreshView()
@@ -168,13 +142,7 @@ public partial class TaskWindow : Window
         DisplayNameText.Text = _data.DisplayName;
         CalendarPanel.Children.Clear();
         foreach (var schedule in _data.Schedules.OrderBy(s => s.DateTime).Take(3))
-        {
-            CalendarPanel.Children.Add(new WpfTextBlock
-            {
-                Text = $"{schedule.Title}    {schedule.DateTime:dd MMM}", Foreground = WpfBrushes.WhiteSmoke,
-                FontSize = 10, FontWeight = WpfFontWeights.SemiBold, Margin = new Thickness(0, 2, 0, 4), TextTrimming = TextTrimming.CharacterEllipsis
-            });
-        }
+            CalendarPanel.Children.Add(new WpfTextBlock { Text = $"{schedule.Title}    {schedule.DateTime:dd MMM}", Foreground = WpfBrushes.WhiteSmoke, FontSize = 10, FontWeight = WpfFontWeights.SemiBold, Margin = new Thickness(0, 2, 0, 4), TextTrimming = TextTrimming.CharacterEllipsis });
         if (_data.Schedules.Count == 0)
             CalendarPanel.Children.Add(new WpfTextBlock { Text = "Belum ada jadwal.", Foreground = WpfBrushes.Gray, FontStyle = WpfFontStyles.Italic, FontSize = 9 });
 
@@ -186,9 +154,7 @@ public partial class TaskWindow : Window
             var text = new WpfTextBlock { Text = routine.Title, Foreground = WpfBrushes.WhiteSmoke, FontSize = 10, VerticalAlignment = System.Windows.VerticalAlignment.Center };
             WpfDockPanel.SetDock(text, WpfDock.Left);
             var delete = new WpfButton { Content = "×", Width = 24, Height = 22, Tag = routine.Id, Margin = new Thickness(4, 0, 0, 0) };
-            delete.Click += DeleteRoutine_Click;
-            WpfDockPanel.SetDock(delete, WpfDock.Right);
-            row.Children.Add(delete); row.Children.Add(text); RoutinePanel.Children.Add(row);
+            delete.Click += DeleteRoutine_Click; WpfDockPanel.SetDock(delete, WpfDock.Right); row.Children.Add(delete); row.Children.Add(text); RoutinePanel.Children.Add(row);
         }
 
         TasksPanel.Children.Clear();
@@ -206,31 +172,11 @@ public partial class TaskWindow : Window
         }
     }
 
-    private void DeleteRoutine_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is WpfButton button && button.Tag is string id) { _data.Routines.RemoveAll(r => r.Id == id); RemmDataService.Save(_data); RefreshView(); }
-    }
+    private void DeleteRoutine_Click(object sender, RoutedEventArgs e) { if (sender is WpfButton b && b.Tag is string id) { _data.Routines.RemoveAll(r => r.Id == id); RemmDataService.Save(_data); RefreshView(); } }
+    private void TaskCheckChanged(object sender, RoutedEventArgs e) { if (sender is WpfCheckBox b && b.Tag is string id) { var t = _data.Tasks.FirstOrDefault(x => x.Id == id); if (t != null) { t.Completed = b.IsChecked == true; RemmDataService.Save(_data); RefreshView(); } } }
+    private void DeleteTask_Click(object sender, RoutedEventArgs e) { if (sender is WpfButton b && b.Tag is string id) { _data.Tasks.RemoveAll(t => t.Id == id); RemmDataService.Save(_data); RefreshView(); } }
 
-    private void TaskCheckChanged(object sender, RoutedEventArgs e)
-    {
-        if (sender is WpfCheckBox box && box.Tag is string id)
-        {
-            var task = _data.Tasks.FirstOrDefault(t => t.Id == id);
-            if (task != null) { task.Completed = box.IsChecked == true; RemmDataService.Save(_data); RefreshView(); }
-        }
-    }
-
-    private void DeleteTask_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is WpfButton button && button.Tag is string id) { _data.Tasks.RemoveAll(t => t.Id == id); RemmDataService.Save(_data); RefreshView(); }
-    }
-
-    private static string NormalizePriority(string value)
-    {
-        if (value.Contains("tinggi", StringComparison.OrdinalIgnoreCase)) return "Tinggi";
-        if (value.Contains("rendah", StringComparison.OrdinalIgnoreCase)) return "Rendah";
-        return "Sedang";
-    }
+    private static string NormalizePriority(string value) => value.Contains("tinggi", StringComparison.OrdinalIgnoreCase) ? "Tinggi" : value.Contains("rendah", StringComparison.OrdinalIgnoreCase) ? "Rendah" : "Sedang";
 
     private static string? Prompt(string label, string initial, string title)
     {
