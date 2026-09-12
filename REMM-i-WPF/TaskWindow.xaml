@@ -8,10 +8,11 @@
         Topmost="True"
         Background="Transparent"
         AllowsTransparency="True">
-    <Border Margin="4" CornerRadius="24" Background="#F01A1A20" BorderBrush="#663A3A40" BorderThickness="1">
+    <Border Margin="4" CornerRadius="24" Background="#F01A1A20" BorderBrush="#663A3A40" BorderThickness="1"
+            MouseLeftButtonDown="Panel_MouseLeftButtonDown">
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Margin="12">
-                <Grid Margin="2,0,2,8" MouseLeftButtonDown="PanelHeader_MouseLeftButtonDown" Cursor="SizeAll">
+                <Grid Margin="2,0,2,8" Cursor="SizeAll">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
@@ -22,7 +23,7 @@
                         </Border>
                         <StackPanel Margin="8,0,0,0">
                             <TextBlock Text="REMM(i)E" Foreground="White" FontSize="12" FontWeight="Bold" />
-                            <TextBlock Text="Maskot Denia" Foreground="#67E8F9" FontSize="9" />
+                            <TextBlock x:Name="DisplayNameText" Text="Maskot Denia" Foreground="#67E8F9" FontSize="9" />
                         </StackPanel>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
