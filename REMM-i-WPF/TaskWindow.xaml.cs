@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -56,7 +55,6 @@ public partial class TaskWindow : Window
         }
         catch (InvalidOperationException)
         {
-            // Ignore a mouse capture race while closing/opening another window.
         }
     }
 
@@ -99,13 +97,12 @@ public partial class TaskWindow : Window
         if (string.IsNullOrWhiteSpace(_data.DisplayName))
             _data.DisplayName = "Maskot Denia";
         RemmDataService.Save(_data);
-        Info("Pengaturan tersimpan.", "REMM(i)");
+        DisplayNameText.Text = _data.DisplayName;
     }
 
     private void Layout_Click(object sender, RoutedEventArgs e)
     {
         Opacity = Opacity > 0.88 ? 0.82 : 0.96;
-        Info($"Opacity menu: {Opacity:0.00}", "Tampilan");
     }
 
     private void Console_Click(object sender, RoutedEventArgs e)
@@ -183,6 +180,8 @@ public partial class TaskWindow : Window
     {
         if (!IsInitialized)
             return;
+
+        DisplayNameText.Text = _data.DisplayName;
 
         CalendarPanel.Children.Clear();
         foreach (var schedule in _data.Schedules.OrderBy(s => s.DateTime).Take(3))
