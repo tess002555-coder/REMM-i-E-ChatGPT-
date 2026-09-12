@@ -4,7 +4,11 @@ using System.Windows;
 using Microsoft.Win32;
 using WpfButton = System.Windows.Controls.Button;
 using WpfTextBox = System.Windows.Controls.TextBox;
-using WpfRadioButton = System.Windows.Controls.RadioButton;
+using WpfMessageBox = System.Windows.MessageBox;
+using WpfMessageBoxButton = System.Windows.MessageBoxButton;
+using WpfMessageBoxImage = System.Windows.MessageBoxImage;
+using WpfOpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using WpfSaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
 namespace RemmI;
 
@@ -25,6 +29,7 @@ public partial class SettingsWindow : Window
     {
         var s = _data.Settings;
         DisplayNameText.Text = _data.DisplayName;
+        ProjectNameText.Text = string.IsNullOrWhiteSpace(_data.DisplayName) ? "REMM(i)E" : "REMM(i)E";
         OpacitySlider.Value = s.PanelOpacity;
         BackgroundColorText.Text = s.PanelBackground;
         BorderColorText.Text = s.PanelBorder;
@@ -51,7 +56,9 @@ public partial class SettingsWindow : Window
     private void Header_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
-            DragMove();
+        {
+            try { DragMove(); } catch (InvalidOperationException) { }
+        }
     }
 
     private void MainTab_Click(object sender, RoutedEventArgs e)
@@ -132,9 +139,8 @@ public partial class SettingsWindow : Window
             s.GoogleApiKey = GoogleApiKeyText.Text.Trim();
             s.GoogleCalendarId = string.IsNullOrWhiteSpace(GoogleCalendarIdText.Text) ? "primary" : GoogleCalendarIdText.Text.Trim();
 
-            // Copy selected pose files into the application's AppData folder.
-            // This prevents the app from depending on a removable/download folder
-            // and makes the saved configuration stable after restarting the app.
+            // Persist each selected pose inside AppData so the installed app does not
+            // depend on the original Downloads/Desktop path.
             s.IdleImagePath = PersistPose(IdlePathText.Text, "idle", s.IdleImagePath);
             s.PeekImagePath = PersistPose(PeekPathText.Text, "peek", s.PeekImagePath);
             s.PointingImagePath = PersistPose(PointingPathText.Text, "pointing", s.PointingImagePath);
@@ -143,41 +149,33 @@ public partial class SettingsWindow : Window
             s.PanelMode = ModeFloat.IsChecked == true ? "Floating" : "Mode Bar";
             RemmDataService.Save(_data);
             _mascot.ApplySettings(s);
-
-            // Do not set DialogResult here. SettingsWindow is opened modelessly
-            // with Show(), so assigning DialogResult would throw and terminate the app.
             Title = "Pengaturan Terpusat — Tersimpan";
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Pengaturan gagal disimpan:\n{ex.Message}", "REMM(i)", MessageBoxButton.OK, MessageBoxImage.Error);
+            WpfMessageBox.Show($"Pengaturan gagal disimpan:\n{ex.Message}", "REMM(i)", WpfMessageBoxButton.OK, WpfMessageBoxImage.Error);
         }
     }
 
     private static string PersistPose(string source, string mode, string previousPath)
     {
         source = source?.Trim() ?? "";
-        if (string.IsNullOrWhiteSpace(source))
-            return "";
-        if (!File.Exists(source))
-            return previousPath ?? "";
+        if (string.IsNullOrWhiteSpace(source)) return previousPath ?? "";
+        if (!File.Exists(source)) return previousPath ?? "";
 
         var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "REMM-i", "poses");
         Directory.CreateDirectory(folder);
         var extension = Path.GetExtension(source);
         if (string.IsNullOrWhiteSpace(extension)) extension = ".png";
         var destination = Path.Combine(folder, $"{mode}{extension.ToLowerInvariant()}");
-
         var sourceFull = Path.GetFullPath(source);
         var destinationFull = Path.GetFullPath(destination);
         if (!string.Equals(sourceFull, destinationFull, StringComparison.OrdinalIgnoreCase))
             File.Copy(sourceFull, destinationFull, true);
-
         return destinationFull;
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
-
     private void IdleBrowse_Click(object sender, RoutedEventArgs e) => BrowseTo(IdlePathText);
     private void PeekBrowse_Click(object sender, RoutedEventArgs e) => BrowseTo(PeekPathText);
     private void PointingBrowse_Click(object sender, RoutedEventArgs e) => BrowseTo(PointingPathText);
@@ -185,23 +183,18 @@ public partial class SettingsWindow : Window
 
     private static void BrowseTo(WpfTextBox target)
     {
-        var dialog = new OpenFileDialog
+        var dialog = new WpfOpenFileDialog
         {
             Filter = "Gambar PNG/JPG|*.png;*.jpg;*.jpeg|Semua file|*.*",
             CheckFileExists = true,
             Multiselect = false
         };
-        if (dialog.ShowDialog() == true)
-            target.Text = dialog.FileName;
+        if (dialog.ShowDialog() == true) target.Text = dialog.FileName;
     }
 
     private void Export_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new SaveFileDialog
-        {
-            FileName = "remm-backup.json",
-            Filter = "REMM backup (*.json)|*.json"
-        };
+        var dialog = new WpfSaveFileDialog { FileName = "remm-backup.json", Filter = "REMM backup (*.json)|*.json" };
         if (dialog.ShowDialog() != true) return;
         try
         {
@@ -209,31 +202,31 @@ public partial class SettingsWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Backup gagal dibuat:\n{ex.Message}", "REMM(i)", MessageBoxButton.OK, MessageBoxImage.Error);
+            WpfMessageBox.Show($"Backup gagal dibuat:\n{ex.Message}", "REMM(i)", WpfMessageBoxButton.OK, WpfMessageBoxImage.Error);
         }
     }
 
     private void Import_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFileDialog { Filter = "REMM backup (*.json)|*.json" };
+        var dialog = new WpfOpenFileDialog { Filter = "REMM backup (*.json)|*.json" };
         if (dialog.ShowDialog() != true) return;
         try
         {
             RemmDataService.ImportBackup(dialog.FileName);
-            MessageBox.Show("Data berhasil dipulihkan. Buka kembali panel untuk memuat konfigurasi.", "REMM(i)", MessageBoxButton.OK, MessageBoxImage.Information);
+            WpfMessageBox.Show("Data berhasil dipulihkan. Buka kembali panel untuk memuat konfigurasi.", "REMM(i)", WpfMessageBoxButton.OK, WpfMessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Backup tidak valid:\n{ex.Message}", "REMM(i)", MessageBoxButton.OK, MessageBoxImage.Error);
+            WpfMessageBox.Show($"Backup tidak valid:\n{ex.Message}", "REMM(i)", WpfMessageBoxButton.OK, WpfMessageBoxImage.Error);
         }
     }
 
     private void TestIntegration_Click(object sender, RoutedEventArgs e)
-        => MessageBox.Show("Konfigurasi integrasi tersimpan sebagai endpoint lokal. Koneksi nyata akan membutuhkan API yang valid.", "EDLINK", MessageBoxButton.OK, MessageBoxImage.Information);
+        => WpfMessageBox.Show("Konfigurasi integrasi tersimpan sebagai endpoint lokal. Koneksi nyata akan membutuhkan API yang valid.", "EDLINK", WpfMessageBoxButton.OK, WpfMessageBoxImage.Information);
 
     private void TestCalendar_Click(object sender, RoutedEventArgs e)
-        => MessageBox.Show("Konfigurasi Google Calendar siap disimpan. Sinkronisasi nyata membutuhkan kredensial/API Google yang valid.", "Google Calendar", MessageBoxButton.OK, MessageBoxImage.Information);
+        => WpfMessageBox.Show("Konfigurasi Google Calendar siap disimpan. Sinkronisasi nyata membutuhkan kredensial/API Google yang valid.", "Google Calendar", WpfMessageBoxButton.OK, WpfMessageBoxImage.Information);
 
     private void RunSql_Click(object sender, RoutedEventArgs e)
-        => MessageBox.Show("Simulator menerima query teks. Eksekusi SQLite penuh belum diaktifkan pada build WPF ini.", "SQLite Query Simulator", MessageBoxButton.OK, MessageBoxImage.Information);
+        => WpfMessageBox.Show("Simulator menerima query teks. Eksekusi SQLite penuh belum diaktifkan pada build WPF ini.", "SQLite Query Simulator", WpfMessageBoxButton.OK, WpfMessageBoxImage.Information);
 }
