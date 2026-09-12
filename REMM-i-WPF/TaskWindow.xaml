@@ -11,7 +11,7 @@
     <Border Margin="4" CornerRadius="24" Background="#F01A1A20" BorderBrush="#663A3A40" BorderThickness="1">
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Margin="12">
-                <Grid Margin="2,0,2,8">
+                <Grid Margin="2,0,2,8" MouseLeftButtonDown="PanelHeader_MouseLeftButtonDown" Cursor="SizeAll">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
@@ -26,17 +26,17 @@
                         </StackPanel>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="↓" Width="30" Height="30" Margin="2" Click="Download_Click" />
-                        <Button Content="⚙" Width="30" Height="30" Margin="2" Click="Settings_Click" />
-                        <Button Content="▣" Width="30" Height="30" Margin="2" Click="Layout_Click" />
-                        <Button Content=">_" Width="30" Height="30" Margin="2" Click="Console_Click" />
-                        <Button Content="×" Width="30" Height="30" Margin="2" Click="Close_Click" />
+                        <Button Content="↓" Width="30" Height="30" Margin="2" Click="Download_Click" ToolTip="Backup data" />
+                        <Button Content="⚙" Width="30" Height="30" Margin="2" Click="Settings_Click" ToolTip="Pengaturan" />
+                        <Button Content="▣" Width="30" Height="30" Margin="2" Click="Layout_Click" ToolTip="Tampilan" />
+                        <Button Content=">_" Width="30" Height="30" Margin="2" Click="Console_Click" ToolTip="Informasi data" />
+                        <Button Content="×" Width="30" Height="30" Margin="2" Click="Close_Click" ToolTip="Tutup menu" />
                     </StackPanel>
                 </Grid>
 
                 <TextBox x:Name="SearchBox" Height="36" Margin="0,4,0,8" Padding="12,0" VerticalContentAlignment="Center"
                          Background="#222226" Foreground="#E5E7EB" BorderBrush="#3A3A40" BorderThickness="1"
-                         FontSize="11" TextChanged="SearchBox_TextChanged" />
+                         FontSize="11" TextChanged="SearchBox_TextChanged" ToolTip="Cari tugas atau rutinitas" />
 
                 <Border Margin="0,0,0,8" Padding="9" CornerRadius="14" Background="#26262B" BorderBrush="#3A3A40" BorderThickness="1">
                     <StackPanel>
@@ -47,12 +47,7 @@
                                 <Button Content="Detail ›" Width="68" Height="28" Margin="2,0" Click="CalendarDetail_Click" />
                             </StackPanel>
                         </Grid>
-                        <Border Padding="9" CornerRadius="11" Background="#1C1C20" BorderBrush="#34343A" BorderThickness="1">
-                            <StackPanel>
-                                <TextBlock Text="Weekly Standup Meeting" Foreground="#F3F4F6" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBlock Text="Daily Farming &amp; Daily Routine" Foreground="#F3F4F6" FontSize="11" FontWeight="SemiBold" />
-                            </StackPanel>
-                        </Border>
+                        <StackPanel x:Name="CalendarPanel" />
                     </StackPanel>
                 </Border>
 
@@ -62,9 +57,7 @@
                             <TextBlock Text="Rutinitas" Foreground="White" FontSize="15" FontWeight="Bold" VerticalAlignment="Center" />
                             <Button Content="+" Width="28" Height="28" HorizontalAlignment="Right" Click="AddRoutine_Click" />
                         </Grid>
-                        <Border Padding="9" CornerRadius="11" Background="#1C1C20" BorderBrush="#34343A" BorderThickness="1">
-                            <TextBlock Text="REMMIE Project" Foreground="#E5E7EB" FontSize="11" />
-                        </Border>
+                        <StackPanel x:Name="RoutinePanel" />
                     </StackPanel>
                 </Border>
 
@@ -80,7 +73,8 @@
                             <Button Content="● Sedang" Margin="2" Click="FilterMedium_Click" />
                             <Button Content="● Rendah" Margin="2" Click="FilterLow_Click" />
                         </WrapPanel>
-                        <TextBlock Text="Tidak ada tugas terdaftar." Foreground="#6B7280" FontSize="10" FontStyle="Italic" HorizontalAlignment="Center" />
+                        <StackPanel x:Name="TasksPanel" />
+                        <TextBlock x:Name="TaskEmptyText" Text="Tidak ada tugas terdaftar." Foreground="#6B7280" FontSize="10" FontStyle="Italic" HorizontalAlignment="Center" />
                     </StackPanel>
                 </Border>
             </StackPanel>
