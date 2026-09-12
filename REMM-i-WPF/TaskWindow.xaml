@@ -36,7 +36,7 @@
         </Style>
     </Window.Resources>
 
-    <Border Margin="3" CornerRadius="26" Background="#F2151820" BorderBrush="#343C47" BorderThickness="1">
+    <Border Margin="3" CornerRadius="26" Background="#F2151820" BorderBrush="#343C47" BorderThickness="1" PreviewMouseLeftButtonDown="Panel_PreviewMouseLeftButtonDown">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -47,7 +47,7 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" HorizontalAlignment="Center" Margin="0,8,0,4" Padding="13,4" CornerRadius="10" Background="#253042" BorderBrush="#35455C" BorderThickness="1" Cursor="SizeAll" MouseLeftButtonDown="PanelDragHandle_MouseLeftButtonDown">
+            <Border Grid.Row="0" HorizontalAlignment="Center" Margin="0,8,0,4" Padding="13,4" CornerRadius="10" Background="#253042" BorderBrush="#35455C" BorderThickness="1" Cursor="SizeAll">
                 <StackPanel Orientation="Horizontal"><TextBlock Text="•••" Foreground="#22D3EE" FontWeight="Bold"/><TextBlock Text="  Pindah Panel" Foreground="#A9B8C5" FontSize="9" Margin="5,0,0,0"/></StackPanel>
             </Border>
 
