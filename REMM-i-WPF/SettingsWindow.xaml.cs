@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using Microsoft.Win32;
 using WpfButton = System.Windows.Controls.Button;
+using WpfTextBox = System.Windows.Controls.TextBox;
 using WpfRadioButton = System.Windows.Controls.RadioButton;
 
 namespace RemmI;
@@ -111,32 +112,68 @@ public partial class SettingsWindow : Window
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {
-        var s = _data.Settings;
-        _data.DisplayName = string.IsNullOrWhiteSpace(DisplayNameText.Text) ? "Maskot Denia" : DisplayNameText.Text.Trim();
-        s.PanelOpacity = OpacitySlider.Value;
-        s.PanelBackground = BackgroundColorText.Text.Trim();
-        s.PanelBorder = BorderColorText.Text.Trim();
-        s.DragEnabled = DragEnabledCheck.IsChecked == true;
-        s.AutoSnap = AutoSnapCheck.IsChecked == true;
-        s.PeekVisiblePercent = (int)Math.Round(PeekSlider.Value);
-        s.NotificationsEnabled = NotificationsCheck.IsChecked == true;
-        s.NotificationSoundEnabled = NotificationSoundCheck.IsChecked == true;
-        s.NotificationVolume = (int)Math.Round(VolumeSlider.Value);
-        if (!int.TryParse(LeadMinutesText.Text, out var lead)) lead = 5;
-        s.NotificationLeadMinutes = Math.Clamp(lead, 0, 1440);
-        s.IntegrationUrl = IntegrationUrlText.Text.Trim();
-        s.IntegrationToken = IntegrationTokenText.Text.Trim();
-        s.GoogleApiKey = GoogleApiKeyText.Text.Trim();
-        s.GoogleCalendarId = string.IsNullOrWhiteSpace(GoogleCalendarIdText.Text) ? "primary" : GoogleCalendarIdText.Text.Trim();
-        s.IdleImagePath = IdlePathText.Text.Trim();
-        s.PeekImagePath = PeekPathText.Text.Trim();
-        s.PointingImagePath = PointingPathText.Text.Trim();
-        s.AlertImagePath = AlertPathText.Text.Trim();
-        s.PanelMode = ModeFloat.IsChecked == true ? "Floating" : "Mode Bar";
-        RemmDataService.Save(_data);
-        _mascot.ApplySettings(s);
-        DialogResult = true;
-        Close();
+        try
+        {
+            var s = _data.Settings;
+            _data.DisplayName = string.IsNullOrWhiteSpace(DisplayNameText.Text) ? "Maskot Denia" : DisplayNameText.Text.Trim();
+            s.PanelOpacity = Math.Clamp(OpacitySlider.Value, 0.65, 1.0);
+            s.PanelBackground = BackgroundColorText.Text.Trim();
+            s.PanelBorder = BorderColorText.Text.Trim();
+            s.DragEnabled = DragEnabledCheck.IsChecked == true;
+            s.AutoSnap = AutoSnapCheck.IsChecked == true;
+            s.PeekVisiblePercent = (int)Math.Round(Math.Clamp(PeekSlider.Value, 50, 90));
+            s.NotificationsEnabled = NotificationsCheck.IsChecked == true;
+            s.NotificationSoundEnabled = NotificationSoundCheck.IsChecked == true;
+            s.NotificationVolume = (int)Math.Round(Math.Clamp(VolumeSlider.Value, 0, 100));
+            if (!int.TryParse(LeadMinutesText.Text, out var lead)) lead = 5;
+            s.NotificationLeadMinutes = Math.Clamp(lead, 0, 1440);
+            s.IntegrationUrl = IntegrationUrlText.Text.Trim();
+            s.IntegrationToken = IntegrationTokenText.Text.Trim();
+            s.GoogleApiKey = GoogleApiKeyText.Text.Trim();
+            s.GoogleCalendarId = string.IsNullOrWhiteSpace(GoogleCalendarIdText.Text) ? "primary" : GoogleCalendarIdText.Text.Trim();
+
+            // Copy selected pose files into the application's AppData folder.
+            // This prevents the app from depending on a removable/download folder
+            // and makes the saved configuration stable after restarting the app.
+            s.IdleImagePath = PersistPose(IdlePathText.Text, "idle", s.IdleImagePath);
+            s.PeekImagePath = PersistPose(PeekPathText.Text, "peek", s.PeekImagePath);
+            s.PointingImagePath = PersistPose(PointingPathText.Text, "pointing", s.PointingImagePath);
+            s.AlertImagePath = PersistPose(AlertPathText.Text, "alert", s.AlertImagePath);
+
+            s.PanelMode = ModeFloat.IsChecked == true ? "Floating" : "Mode Bar";
+            RemmDataService.Save(_data);
+            _mascot.ApplySettings(s);
+
+            // Do not set DialogResult here. SettingsWindow is opened modelessly
+            // with Show(), so assigning DialogResult would throw and terminate the app.
+            Title = "Pengaturan Terpusat — Tersimpan";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Pengaturan gagal disimpan:\n{ex.Message}", "REMM(i)", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private static string PersistPose(string source, string mode, string previousPath)
+    {
+        source = source?.Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(source))
+            return "";
+        if (!File.Exists(source))
+            return previousPath ?? "";
+
+        var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "REMM-i", "poses");
+        Directory.CreateDirectory(folder);
+        var extension = Path.GetExtension(source);
+        if (string.IsNullOrWhiteSpace(extension)) extension = ".png";
+        var destination = Path.Combine(folder, $"{mode}{extension.ToLowerInvariant()}");
+
+        var sourceFull = Path.GetFullPath(source);
+        var destinationFull = Path.GetFullPath(destination);
+        if (!string.Equals(sourceFull, destinationFull, StringComparison.OrdinalIgnoreCase))
+            File.Copy(sourceFull, destinationFull, true);
+
+        return destinationFull;
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
@@ -146,7 +183,7 @@ public partial class SettingsWindow : Window
     private void PointingBrowse_Click(object sender, RoutedEventArgs e) => BrowseTo(PointingPathText);
     private void AlertBrowse_Click(object sender, RoutedEventArgs e) => BrowseTo(AlertPathText);
 
-    private static void BrowseTo(System.Windows.Controls.TextBox target)
+    private static void BrowseTo(WpfTextBox target)
     {
         var dialog = new OpenFileDialog
         {
@@ -166,7 +203,14 @@ public partial class SettingsWindow : Window
             Filter = "REMM backup (*.json)|*.json"
         };
         if (dialog.ShowDialog() != true) return;
-        File.WriteAllText(dialog.FileName, System.Text.Json.JsonSerializer.Serialize(_data, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+        try
+        {
+            File.WriteAllText(dialog.FileName, System.Text.Json.JsonSerializer.Serialize(_data, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Backup gagal dibuat:\n{ex.Message}", "REMM(i)", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void Import_Click(object sender, RoutedEventArgs e)
