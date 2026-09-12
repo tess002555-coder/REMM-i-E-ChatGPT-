@@ -11,7 +11,9 @@
         ShowActivated="False"
         SnapsToDevicePixels="True"
         UseLayoutRounding="True"
-        MouseLeftButtonDown="Mascot_MouseLeftButtonDown">
+        MouseLeftButtonDown="Mascot_MouseLeftButtonDown"
+        MouseMove="Mascot_MouseMove"
+        MouseLeftButtonUp="Mascot_MouseLeftButtonUp">
     <Grid Background="Transparent">
         <Image Source="/Assets/mascot.png"
                Stretch="Uniform"
