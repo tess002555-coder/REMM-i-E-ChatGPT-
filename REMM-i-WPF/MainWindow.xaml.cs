@@ -1,7 +1,7 @@
 using System;
-using System.Drawing;
 using System.Linq;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
@@ -12,7 +12,7 @@ public partial class MainWindow : Window
 {
     private const double MascotSize = 180;
     private const double Peek = 45;
-    private Point _mouseDownScreen;
+    private System.Windows.Point _mouseDownScreen;
     private double _dragStartLeft;
     private double _dragStartTop;
 
