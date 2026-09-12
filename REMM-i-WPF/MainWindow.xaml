@@ -13,7 +13,7 @@
         UseLayoutRounding="True"
         MouseLeftButtonDown="Mascot_MouseLeftButtonDown">
     <Grid Background="Transparent">
-        <Image Source="/REMM-i-WPF;component/Assets/mascot.png"
+        <Image Source="/Assets/mascot.png"
                Stretch="Uniform"
                Width="180"
                Height="180"
