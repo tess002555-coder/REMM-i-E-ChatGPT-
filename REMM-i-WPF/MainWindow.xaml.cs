@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Interop;
 using FormsScreen = System.Windows.Forms.Screen;
 
@@ -40,9 +39,9 @@ public partial class MainWindow : Window
         }
     }
 
-    private void Mascot_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void Mascot_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != MouseButton.Left)
+        if (e.ChangedButton != System.Windows.Input.MouseButton.Left)
             return;
 
         _dragging = true;
@@ -54,9 +53,9 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    private void Mascot_MouseMove(object sender, MouseEventArgs e)
+    private void Mascot_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
     {
-        if (!_dragging || e.LeftButton != MouseButtonState.Pressed)
+        if (!_dragging || e.LeftButton != System.Windows.Input.MouseButtonState.Pressed)
             return;
 
         var current = PointToScreen(e.GetPosition(this));
@@ -71,22 +70,18 @@ public partial class MainWindow : Window
         Top = _dragStartTop + dy;
     }
 
-    private void Mascot_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    private void Mascot_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        if (!_dragging || e.ChangedButton != MouseButton.Left)
+        if (!_dragging || e.ChangedButton != System.Windows.Input.MouseButton.Left)
             return;
 
         _dragging = false;
         ReleaseMouseCapture();
 
         if (_moved)
-        {
             SnapToNearestEdge();
-        }
         else
-        {
             OpenTaskWindow();
-        }
 
         e.Handled = true;
     }
