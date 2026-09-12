@@ -28,7 +28,7 @@
         "skipTaskbar": true,
         "shadow": false,
         "visible": true,
-        "focus": false
+        "focus": true
       }
     ]
   },
