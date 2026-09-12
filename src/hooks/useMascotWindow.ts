@@ -6,11 +6,18 @@ import { LogicalPosition } from '@tauri-apps/api/dpi';
 const MASCOT = 180;
 const PANEL_W = 520;
 const PANEL_H = 720;
-const PEEK = 90;
-const SNAP = 140;
+const PEEK = 45; // 75% of the mascot remains visible.
+const SNAP = 160;
+const DRAG_THRESHOLD = 5;
 
 type Edge = 'left' | 'right' | 'top' | 'bottom';
-interface Bounds { x: number; y: number; width: number; height: number; scale: number; }
+interface Bounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  scale: number;
+}
 
 const EDGE_KEY = 'rememberme-widget-edge';
 
@@ -18,6 +25,7 @@ export function useMascotWindow() {
   const win = getCurrentWindow();
   const bounds = useRef<Bounds>({ x: 0, y: 0, width: 1920, height: 1080, scale: 1 });
   const lastPosition = useRef({ x: 0, y: 200 });
+  const dragStart = useRef({ x: 0, y: 0 });
   const dragging = useRef(false);
   const movedDuringDrag = useRef(false);
   const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -25,6 +33,7 @@ export function useMascotWindow() {
   const readBounds = useCallback(async () => {
     const monitor = await currentMonitor();
     if (!monitor) return;
+
     const scale = monitor.scaleFactor || 1;
     const work = monitor.workArea;
     bounds.current = {
@@ -55,17 +64,18 @@ export function useMascotWindow() {
     const b = bounds.current;
     const maxX = b.x + b.width - MASCOT;
     const maxY = b.y + b.height - MASCOT;
-    const x = Math.max(b.x, Math.min(lastPosition.current.x, maxX));
-    const y = Math.max(b.y, Math.min(lastPosition.current.y, maxY));
+    const safeX = Math.max(b.x, Math.min(lastPosition.current.x, maxX));
+    const safeY = Math.max(b.y, Math.min(lastPosition.current.y, maxY));
 
-    let px = x;
-    let py = y;
-    if (edge === 'left') px = b.x - PEEK;
-    if (edge === 'right') px = b.x + b.width - MASCOT + PEEK;
-    if (edge === 'top') py = b.y - PEEK;
-    if (edge === 'bottom') py = b.y + b.height - MASCOT + PEEK;
+    let x = safeX;
+    let y = safeY;
 
-    await move(px, py);
+    if (edge === 'left') x = b.x - PEEK;
+    if (edge === 'right') x = b.x + b.width - MASCOT + PEEK;
+    if (edge === 'top') y = b.y - PEEK;
+    if (edge === 'bottom') y = b.y + b.height - MASCOT + PEEK;
+
+    await move(x, y);
     setEdge(edge);
   }, [move, setEdge]);
 
@@ -90,6 +100,7 @@ export function useMascotWindow() {
       top: y - b.y,
       bottom: maxY - y,
     };
+
     const nearest = (Object.keys(distances) as Edge[]).reduce(
       (best, edge) => distances[edge] < distances[best] ? edge : best,
       'left',
@@ -107,6 +118,14 @@ export function useMascotWindow() {
   const beginDrag = useCallback(async () => {
     movedDuringDrag.current = false;
     dragging.current = true;
+
+    const position = await win.outerPosition();
+    const scale = (await win.scaleFactor()) || 1;
+    dragStart.current = {
+      x: position.x / scale,
+      y: position.y / scale,
+    };
+
     await win.startDragging();
   }, [win]);
 
@@ -116,15 +135,21 @@ export function useMascotWindow() {
       return;
     }
 
+    const current = await win.outerPosition();
+    const scale = (await win.scaleFactor()) || 1;
+    const currentX = current.x / scale;
+    const currentY = current.y / scale;
+    const moved = Math.hypot(currentX - dragStart.current.x, currentY - dragStart.current.y) > DRAG_THRESHOLD;
+
+    if (moved) return;
+
     await readBounds();
     const b = bounds.current;
-    const mascotPosition = await win.outerPosition();
-    const scale = (await win.scaleFactor()) || 1;
-    const mascotX = mascotPosition.x / scale;
-    const mascotY = mascotPosition.y / scale;
+    const edge = getEdge();
+    const mascotX = currentX;
+    const mascotY = currentY;
     lastPosition.current = { x: mascotX, y: mascotY };
 
-    const edge = getEdge();
     const maxX = b.x + Math.max(0, b.width - PANEL_W);
     const maxY = b.y + Math.max(0, b.height - PANEL_H);
     let x = Math.max(b.x, Math.min(mascotX, maxX));
@@ -150,7 +175,7 @@ export function useMascotWindow() {
     }
 
     const panel = new WebviewWindow('task-panel', {
-      url: '/?window=panel',
+      url: 'index.html?window=panel',
       title: 'Remember ME - Tasks',
       x,
       y,
@@ -183,6 +208,7 @@ export function useMascotWindow() {
       try {
         await readBounds();
         if (!active) return;
+
         const b = bounds.current;
         const edge = getEdge();
         const startX = b.x + b.width - MASCOT + PEEK;
@@ -199,9 +225,14 @@ export function useMascotWindow() {
     void win.onMoved(() => {
       if (!dragging.current) return;
       movedDuringDrag.current = true;
+
       if (snapTimer.current) clearTimeout(snapTimer.current);
-      snapTimer.current = setTimeout(() => { void snapAfterDrag(); }, 180);
-    }).then((fn) => { unlisten = fn; });
+      snapTimer.current = setTimeout(() => {
+        void snapAfterDrag();
+      }, 180);
+    }).then((fn) => {
+      unlisten = fn;
+    });
 
     return () => {
       active = false;
