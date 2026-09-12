@@ -30,15 +30,18 @@ public partial class TaskWindow : Window
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
-    private void Download_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Fitur unduh akan ditambahkan.", "REMM(i)");
-    private void Settings_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Pengaturan akan ditambahkan.", "REMM(i)");
-    private void Layout_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Pengaturan tampilan akan ditambahkan.", "REMM(i)");
-    private void Console_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Console akan ditambahkan.", "REMM(i)");
+    private static void Info(string message, string title)
+        => System.Windows.MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
 
-    private void AddCalendar_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Tambah kalender akan ditambahkan.", "Calender");
-    private void CalendarDetail_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Detail kalender akan ditambahkan.", "Calender");
-    private void AddRoutine_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Tambah rutinitas akan ditambahkan.", "Rutinitas");
-    private void AddTask_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Tambah tugas akan ditambahkan.", "Tugas");
+    private void Download_Click(object sender, RoutedEventArgs e) => Info("Fitur unduh akan ditambahkan.", "REMM(i)");
+    private void Settings_Click(object sender, RoutedEventArgs e) => Info("Pengaturan akan ditambahkan.", "REMM(i)");
+    private void Layout_Click(object sender, RoutedEventArgs e) => Info("Pengaturan tampilan akan ditambahkan.", "REMM(i)");
+    private void Console_Click(object sender, RoutedEventArgs e) => Info("Console akan ditambahkan.", "REMM(i)");
+
+    private void AddCalendar_Click(object sender, RoutedEventArgs e) => Info("Tambah kalender akan ditambahkan.", "Calender");
+    private void CalendarDetail_Click(object sender, RoutedEventArgs e) => Info("Detail kalender akan ditambahkan.", "Calender");
+    private void AddRoutine_Click(object sender, RoutedEventArgs e) => Info("Tambah rutinitas akan ditambahkan.", "Rutinitas");
+    private void AddTask_Click(object sender, RoutedEventArgs e) => Info("Tambah tugas akan ditambahkan.", "Tugas");
     private void FilterAll_Click(object sender, RoutedEventArgs e) { }
     private void FilterHigh_Click(object sender, RoutedEventArgs e) { }
     private void FilterMedium_Click(object sender, RoutedEventArgs e) { }
