@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using WpfApplication = System.Windows.Application;
 using WpfBrushes = System.Windows.Media.Brushes;
 using WpfButton = System.Windows.Controls.Button;
 using WpfCheckBox = System.Windows.Controls.CheckBox;
@@ -13,8 +14,11 @@ using WpfDock = System.Windows.Controls.Dock;
 using WpfDockPanel = System.Windows.Controls.DockPanel;
 using WpfFontStyles = System.Windows.FontStyles;
 using WpfFontWeights = System.Windows.FontWeights;
+using WpfGrid = System.Windows.Controls.Grid;
+using WpfMessageBox = System.Windows.MessageBox;
+using WpfMessageBoxButton = System.Windows.MessageBoxButton;
+using WpfMessageBoxImage = System.Windows.MessageBoxImage;
 using WpfTextBox = System.Windows.Controls.TextBox;
-using WpfTextBlock = System.Windows.Controls.TextBlock;
 using WpfTextChangedEventArgs = System.Windows.Controls.TextChangedEventArgs;
 using WpfTextDecorations = System.Windows.TextDecorations;
 using WpfSlider = System.Windows.Controls.Slider;
@@ -100,7 +104,7 @@ public partial class TaskWindow : Window
 
     private void Settings_Click(object sender, RoutedEventArgs e)
     {
-        var existing = Application.Current.Windows.OfType<SettingsWindow>().FirstOrDefault();
+        var existing = WpfApplication.Current.Windows.OfType<SettingsWindow>().FirstOrDefault();
         if (existing is not null) { existing.Activate(); return; }
         var settings = new SettingsWindow(_mascot) { Owner = this };
         settings.Left = Left + Width + 12;
@@ -113,18 +117,19 @@ public partial class TaskWindow : Window
     private void Console_Click(object sender, RoutedEventArgs e)
     {
         var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "REMM-i", "remm-data.json");
-        MessageBox.Show($"Data tersimpan di:\n{path}\n\nTugas: {_data.Tasks.Count}\nRutinitas: {_data.Routines.Count}\nJadwal: {_data.Schedules.Count}", "REMM(i) Info", MessageBoxButton.OK, MessageBoxImage.Information);
+        WpfMessageBox.Show($"Data tersimpan di:\n{path}\n\nTugas: {_data.Tasks.Count}\nRutinitas: {_data.Routines.Count}\nJadwal: {_data.Schedules.Count}", "REMM(i) Info", WpfMessageBoxButton.OK, WpfMessageBoxImage.Information);
     }
 
     private void CalendarCard_Click(object sender, MouseButtonEventArgs e) => OpenCalendarWindow();
     private void CalendarDetail_Click(object sender, RoutedEventArgs e) => OpenCalendarWindow();
+
     private void OpenCalendarWindow()
     {
-        var window = new CalendarWindow(this, _data);
-        window.Owner = this;
+        var window = new CalendarWindow(this, _data) { Owner = this };
         window.Left = Left - window.Width - 12;
         window.Top = Math.Max(SystemParameters.WorkArea.Top, Top);
-        if (window.Left < SystemParameters.WorkArea.Left) window.Left = Math.Min(SystemParameters.WorkArea.Right - window.Width, Left + Width + 12);
+        if (window.Left < SystemParameters.WorkArea.Left)
+            window.Left = Math.Min(SystemParameters.WorkArea.Right - window.Width, Left + Width + 12);
         window.Show();
     }
 
@@ -142,7 +147,8 @@ public partial class TaskWindow : Window
         var window = new RoutineWindow(this, _data, routineId);
         window.Left = Left - window.Width - 12;
         window.Top = Math.Max(SystemParameters.WorkArea.Top, Top);
-        if (window.Left < SystemParameters.WorkArea.Left) window.Left = Math.Min(SystemParameters.WorkArea.Right - window.Width, Left + Width + 12);
+        if (window.Left < SystemParameters.WorkArea.Left)
+            window.Left = Math.Min(SystemParameters.WorkArea.Right - window.Width, Left + Width + 12);
         window.Show();
     }
 
@@ -169,13 +175,13 @@ public partial class TaskWindow : Window
     private void SetFilter(string filter)
     {
         _filter = filter;
-        FilterAllButton.Background = filter == "Semua" ? ToBrush("#22D3EE", "#22D3EE") : ToBrush("#20242A", "#20242A");
+        FilterAllButton.Background = filter == "Semua" ? ToBrush("#19CBE8", "#19CBE8") : ToBrush("#20242A", "#20242A");
         FilterAllButton.Foreground = filter == "Semua" ? ToBrush("#061015", "#061015") : ToBrush("#C8D2DA", "#C8D2DA");
-        FilterHighButton.Background = filter == "Tinggi" ? ToBrush("#22D3EE", "#22D3EE") : ToBrush("#20242A", "#20242A");
+        FilterHighButton.Background = filter == "Tinggi" ? ToBrush("#19CBE8", "#19CBE8") : ToBrush("#20242A", "#20242A");
         FilterHighButton.Foreground = filter == "Tinggi" ? ToBrush("#061015", "#061015") : ToBrush("#C8D2DA", "#C8D2DA");
-        FilterMediumButton.Background = filter == "Sedang" ? ToBrush("#22D3EE", "#22D3EE") : ToBrush("#20242A", "#20242A");
+        FilterMediumButton.Background = filter == "Sedang" ? ToBrush("#19CBE8", "#19CBE8") : ToBrush("#20242A", "#20242A");
         FilterMediumButton.Foreground = filter == "Sedang" ? ToBrush("#061015", "#061015") : ToBrush("#C8D2DA", "#C8D2DA");
-        FilterLowButton.Background = filter == "Rendah" ? ToBrush("#22D3EE", "#22D3EE") : ToBrush("#20242A", "#20242A");
+        FilterLowButton.Background = filter == "Rendah" ? ToBrush("#19CBE8", "#19CBE8") : ToBrush("#20242A", "#20242A");
         FilterLowButton.Foreground = filter == "Rendah" ? ToBrush("#061015", "#061015") : ToBrush("#C8D2DA", "#C8D2DA");
         RefreshView();
     }
@@ -194,8 +200,11 @@ public partial class TaskWindow : Window
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             var title = new WpfTextBlock { Text = schedule.Title, Foreground = WpfBrushes.WhiteSmoke, FontSize = 9.5, FontWeight = WpfFontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
-            var date = new WpfTextBlock { Text = schedule.DateTime.ToString("dd MMM"), Foreground = ToBrush("#22D3EE", "#22D3EE"), FontSize = 9, FontWeight = WpfFontWeights.Bold, Margin = new Thickness(7, 0, 0, 0) };
-            Grid.SetColumn(date, 1); row.Children.Add(title); row.Children.Add(date); CalendarPanel.Children.Add(row);
+            var date = new WpfTextBlock { Text = schedule.DateTime.ToString("dd MMM"), Foreground = ToBrush("#19CBE8", "#19CBE8"), FontSize = 9, FontWeight = WpfFontWeights.Bold, Margin = new Thickness(7, 0, 0, 0) };
+            Grid.SetColumn(date, 1);
+            row.Children.Add(title);
+            row.Children.Add(date);
+            CalendarPanel.Children.Add(row);
         }
         if (_data.Schedules.Count == 0) CalendarPanel.Children.Add(new WpfTextBlock { Text = "Belum ada jadwal.", Foreground = WpfBrushes.Gray, FontStyle = WpfFontStyles.Italic, FontSize = 9 });
 
@@ -207,7 +216,11 @@ public partial class TaskWindow : Window
             row.MouseLeftButtonUp += RoutineRow_Click;
             var text = new WpfTextBlock { Text = routine.Title, Foreground = WpfBrushes.WhiteSmoke, FontSize = 9.5, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
             var delete = new WpfButton { Content = "×", Width = 23, Height = 21, Tag = routine.Id, Margin = new Thickness(5, 0, 0, 0), ToolTip = "Hapus rutinitas" };
-            delete.Click += DeleteRoutine_Click; WpfDockPanel.SetDock(delete, WpfDock.Right); row.Children.Add(delete); row.Children.Add(text); RoutinePanel.Children.Add(row);
+            delete.Click += DeleteRoutine_Click;
+            WpfDockPanel.SetDock(delete, WpfDock.Right);
+            row.Children.Add(delete);
+            row.Children.Add(text);
+            RoutinePanel.Children.Add(row);
         }
         if (RoutinePanel.Children.Count == 0) RoutinePanel.Children.Add(new WpfTextBlock { Text = "Belum ada rutinitas.", Foreground = WpfBrushes.Gray, FontStyle = WpfFontStyles.Italic, FontSize = 9 });
 
@@ -218,12 +231,18 @@ public partial class TaskWindow : Window
         {
             var row = new WpfDockPanel { Margin = new Thickness(0, 1, 0, 4), Tag = task.Id };
             var check = new WpfCheckBox { IsChecked = task.Completed, Tag = task.Id, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 5, 0) };
-            check.Checked += TaskCheckChanged; check.Unchecked += TaskCheckChanged; WpfDockPanel.SetDock(check, WpfDock.Left);
+            check.Checked += TaskCheckChanged;
+            check.Unchecked += TaskCheckChanged;
+            WpfDockPanel.SetDock(check, WpfDock.Left);
             var delete = new WpfButton { Content = "×", Width = 23, Height = 21, Tag = task.Id, Margin = new Thickness(5, 0, 0, 0), ToolTip = "Hapus tugas" };
-            delete.Click += DeleteTask_Click; WpfDockPanel.SetDock(delete, WpfDock.Right);
+            delete.Click += DeleteTask_Click;
+            WpfDockPanel.SetDock(delete, WpfDock.Right);
             var deadline = task.Deadline.HasValue ? $" · {task.Deadline.Value:dd MMM}" : "";
             var text = new WpfTextBlock { Text = $"{task.Title}  ·  {task.Priority}{deadline}", Foreground = task.Completed ? WpfBrushes.Gray : WpfBrushes.WhiteSmoke, TextDecorations = task.Completed ? WpfTextDecorations.Strikethrough : null, FontSize = 9, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
-            row.Children.Add(check); row.Children.Add(delete); row.Children.Add(text); TasksPanel.Children.Add(row);
+            row.Children.Add(check);
+            row.Children.Add(delete);
+            row.Children.Add(text);
+            TasksPanel.Children.Add(row);
         }
     }
 
@@ -235,7 +254,12 @@ public partial class TaskWindow : Window
 
     private void DeleteRoutine_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is WpfButton b && b.Tag is string id) { _data.Routines.RemoveAll(r => r.Id == id); RemmDataService.Save(_data); RefreshView(); }
+        if (sender is WpfButton b && b.Tag is string id)
+        {
+            _data.Routines.RemoveAll(r => r.Id == id);
+            RemmDataService.Save(_data);
+            RefreshView();
+        }
     }
 
     private void TaskCheckChanged(object sender, RoutedEventArgs e)
@@ -252,6 +276,11 @@ public partial class TaskWindow : Window
 
     private void DeleteTask_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is WpfButton b && b.Tag is string id) { _data.Tasks.RemoveAll(t => t.Id == id); RemmDataService.Save(_data); RefreshView(); }
+        if (sender is WpfButton b && b.Tag is string id)
+        {
+            _data.Tasks.RemoveAll(t => t.Id == id);
+            RemmDataService.Save(_data);
+            RefreshView();
+        }
     }
 }
