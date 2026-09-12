@@ -2,10 +2,22 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Input;
 using System.Windows.Media;
+using WpfButton = System.Windows.Controls.Button;
+using WpfButtonBase = System.Windows.Controls.Primitives.ButtonBase;
+using WpfCheckBox = System.Windows.Controls.CheckBox;
+using WpfOrientation = System.Windows.Controls.Orientation;
+using WpfScrollBar = System.Windows.Controls.Primitives.ScrollBar;
+using WpfTextBox = System.Windows.Controls.TextBox;
+using WpfTextChangedEventArgs = System.Windows.Controls.TextChangedEventArgs;
+using WpfTextBlock = System.Windows.Controls.TextBlock;
+using WpfDockPanel = System.Windows.Controls.DockPanel;
+using WpfGrid = System.Windows.Controls.Grid;
+using WpfRowDefinition = System.Windows.Controls.RowDefinition;
+using WpfStackPanel = System.Windows.Controls.StackPanel;
+using WpfWrapPanel = System.Windows.Controls.WrapPanel;
+using WpfFontWeights = System.Windows.FontWeights;
+using WpfTextDecorations = System.Windows.TextDecorations;
 using Microsoft.Win32;
 
 namespace RemmI;
@@ -40,13 +52,13 @@ public partial class TaskWindow : Window
         Top = y;
     }
 
-    private void Panel_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void Panel_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != MouseButton.Left)
+        if (e.ChangedButton != System.Windows.Input.MouseButton.Left)
             return;
 
         if (e.OriginalSource is DependencyObject source &&
-            (FindParent<ButtonBase>(source) != null || FindParent<TextBox>(source) != null || FindParent<ScrollBar>(source) != null))
+            (FindParent<WpfButtonBase>(source) != null || FindParent<WpfTextBox>(source) != null || FindParent<WpfScrollBar>(source) != null))
             return;
 
         try
@@ -74,7 +86,7 @@ public partial class TaskWindow : Window
 
     private void Download_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new SaveFileDialog
+        var dialog = new Microsoft.Win32.SaveFileDialog
         {
             FileName = "remm-backup.json",
             Filter = "REMM data (*.json)|*.json|All files (*.*)|*.*"
@@ -168,7 +180,7 @@ public partial class TaskWindow : Window
     private void FilterMedium_Click(object sender, RoutedEventArgs e) => SetFilter("Sedang");
     private void FilterLow_Click(object sender, RoutedEventArgs e) => SetFilter("Rendah");
 
-    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e) => RefreshView();
+    private void SearchBox_TextChanged(object sender, WpfTextChangedEventArgs e) => RefreshView();
 
     private void SetFilter(string filter)
     {
@@ -186,12 +198,12 @@ public partial class TaskWindow : Window
         CalendarPanel.Children.Clear();
         foreach (var schedule in _data.Schedules.OrderBy(s => s.DateTime).Take(3))
         {
-            var row = new TextBlock
+            var row = new WpfTextBlock
             {
                 Text = $"{schedule.Title}    {schedule.DateTime:dd MMM}",
                 Foreground = Brushes.WhiteSmoke,
                 FontSize = 11,
-                FontWeight = FontWeights.SemiBold,
+                FontWeight = WpfFontWeights.SemiBold,
                 Margin = new Thickness(0, 2, 0, 4),
                 TextTrimming = TextTrimming.CharacterEllipsis
             };
@@ -199,18 +211,18 @@ public partial class TaskWindow : Window
         }
 
         if (_data.Schedules.Count == 0)
-            CalendarPanel.Children.Add(new TextBlock { Text = "Belum ada jadwal.", Foreground = Brushes.Gray, FontStyle = FontStyles.Italic, FontSize = 10 });
+            CalendarPanel.Children.Add(new WpfTextBlock { Text = "Belum ada jadwal.", Foreground = Brushes.Gray, FontStyle = FontStyles.Italic, FontSize = 10 });
 
         RoutinePanel.Children.Clear();
         var search = SearchBox.Text?.Trim() ?? "";
         foreach (var routine in _data.Routines.Where(r => string.IsNullOrWhiteSpace(search) || r.Title.Contains(search, StringComparison.OrdinalIgnoreCase)))
         {
-            var row = new DockPanel { Margin = new Thickness(0, 2, 0, 4) };
-            var text = new TextBlock { Text = routine.Title, Foreground = Brushes.WhiteSmoke, FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
-            DockPanel.SetDock(text, Dock.Left);
-            var delete = new Button { Content = "×", Width = 24, Height = 22, Tag = routine.Id, Margin = new Thickness(4, 0, 0, 0) };
+            var row = new WpfDockPanel { Margin = new Thickness(0, 2, 0, 4) };
+            var text = new WpfTextBlock { Text = routine.Title, Foreground = Brushes.WhiteSmoke, FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
+            WpfDockPanel.SetDock(text, Dock.Left);
+            var delete = new WpfButton { Content = "×", Width = 24, Height = 22, Tag = routine.Id, Margin = new Thickness(4, 0, 0, 0) };
             delete.Click += DeleteRoutine_Click;
-            DockPanel.SetDock(delete, Dock.Right);
+            WpfDockPanel.SetDock(delete, Dock.Right);
             row.Children.Add(delete);
             row.Children.Add(text);
             RoutinePanel.Children.Add(row);
@@ -223,17 +235,17 @@ public partial class TaskWindow : Window
 
         foreach (var task in tasks)
         {
-            var row = new DockPanel { Margin = new Thickness(0, 1, 0, 4) };
-            var check = new CheckBox { IsChecked = task.Completed, Tag = task.Id, VerticalAlignment = VerticalAlignment.Center };
+            var row = new WpfDockPanel { Margin = new Thickness(0, 1, 0, 4) };
+            var check = new WpfCheckBox { IsChecked = task.Completed, Tag = task.Id, VerticalAlignment = VerticalAlignment.Center };
             check.Checked += TaskCheckChanged;
             check.Unchecked += TaskCheckChanged;
-            DockPanel.SetDock(check, Dock.Left);
+            WpfDockPanel.SetDock(check, Dock.Left);
 
-            var delete = new Button { Content = "×", Width = 24, Height = 22, Tag = task.Id, Margin = new Thickness(4, 0, 0, 0) };
+            var delete = new WpfButton { Content = "×", Width = 24, Height = 22, Tag = task.Id, Margin = new Thickness(4, 0, 0, 0) };
             delete.Click += DeleteTask_Click;
-            DockPanel.SetDock(delete, Dock.Right);
+            WpfDockPanel.SetDock(delete, Dock.Right);
 
-            var text = new TextBlock
+            var text = new WpfTextBlock
             {
                 Text = $"{task.Title}  [{task.Priority}]",
                 Foreground = task.Completed ? Brushes.Gray : Brushes.WhiteSmoke,
@@ -252,7 +264,7 @@ public partial class TaskWindow : Window
 
     private void DeleteRoutine_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button button && button.Tag is string id)
+        if (sender is WpfButton button && button.Tag is string id)
         {
             _data.Routines.RemoveAll(r => r.Id == id);
             RemmDataService.Save(_data);
@@ -262,7 +274,7 @@ public partial class TaskWindow : Window
 
     private void TaskCheckChanged(object sender, RoutedEventArgs e)
     {
-        if (sender is CheckBox box && box.Tag is string id)
+        if (sender is WpfCheckBox box && box.Tag is string id)
         {
             var task = _data.Tasks.FirstOrDefault(t => t.Id == id);
             if (task != null)
@@ -276,7 +288,7 @@ public partial class TaskWindow : Window
 
     private void DeleteTask_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button button && button.Tag is string id)
+        if (sender is WpfButton button && button.Tag is string id)
         {
             _data.Tasks.RemoveAll(t => t.Id == id);
             RemmDataService.Save(_data);
@@ -305,23 +317,23 @@ public partial class TaskWindow : Window
             Background = Brushes.White
         };
 
-        var grid = new Grid { Margin = new Thickness(14) };
-        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        var grid = new WpfGrid { Margin = new Thickness(14) };
+        grid.RowDefinitions.Add(new WpfRowDefinition { Height = GridLength.Auto });
+        grid.RowDefinitions.Add(new WpfRowDefinition { Height = GridLength.Auto });
+        grid.RowDefinitions.Add(new WpfRowDefinition { Height = GridLength.Auto });
 
-        var labelBlock = new TextBlock { Text = label, Foreground = Brushes.Black, Margin = new Thickness(0, 0, 0, 8) };
-        Grid.SetRow(labelBlock, 0);
-        var input = new TextBox { Text = initial, Height = 32, Padding = new Thickness(8) };
-        Grid.SetRow(input, 1);
-        var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 10, 0, 0) };
-        var cancel = new Button { Content = "Batal", Width = 70, Margin = new Thickness(4) };
-        var ok = new Button { Content = "OK", Width = 70, Margin = new Thickness(4) };
+        var labelBlock = new WpfTextBlock { Text = label, Foreground = Brushes.Black, Margin = new Thickness(0, 0, 0, 8) };
+        System.Windows.Controls.Grid.SetRow(labelBlock, 0);
+        var input = new WpfTextBox { Text = initial, Height = 32, Padding = new Thickness(8) };
+        System.Windows.Controls.Grid.SetRow(input, 1);
+        var buttons = new WpfStackPanel { Orientation = WpfOrientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 10, 0, 0) };
+        var cancel = new WpfButton { Content = "Batal", Width = 70, Margin = new Thickness(4) };
+        var ok = new WpfButton { Content = "OK", Width = 70, Margin = new Thickness(4) };
         cancel.Click += (_, _) => dialog.DialogResult = false;
         ok.Click += (_, _) => dialog.DialogResult = true;
         buttons.Children.Add(cancel);
         buttons.Children.Add(ok);
-        Grid.SetRow(buttons, 2);
+        System.Windows.Controls.Grid.SetRow(buttons, 2);
 
         grid.Children.Add(labelBlock);
         grid.Children.Add(input);
