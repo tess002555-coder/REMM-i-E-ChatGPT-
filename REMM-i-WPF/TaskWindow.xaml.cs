@@ -1,6 +1,4 @@
-using System;
 using System.Windows;
-using System.Windows.Interop;
 
 namespace RemmI;
 
@@ -24,14 +22,26 @@ public partial class TaskWindow : Window
         var x = centerX >= area.Left + area.Width / 2
             ? area.Right - Width
             : area.Left;
-        var y = Math.Max(area.Top, Math.Min(centerY - Height / 2, area.Bottom - Height));
+        var y = System.Math.Max(area.Top, System.Math.Min(centerY - Height / 2, area.Bottom - Height));
 
         Left = x;
         Top = y;
     }
 
-    private void Close_Click(object sender, RoutedEventArgs e)
-    {
-        Close();
-    }
+    private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
+    private void Download_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Fitur unduh akan ditambahkan.", "REMM(i)");
+    private void Settings_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Pengaturan akan ditambahkan.", "REMM(i)");
+    private void Layout_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Pengaturan tampilan akan ditambahkan.", "REMM(i)");
+    private void Console_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Console akan ditambahkan.", "REMM(i)");
+
+    private void AddCalendar_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Tambah kalender akan ditambahkan.", "Calender");
+    private void CalendarDetail_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Detail kalender akan ditambahkan.", "Calender");
+    private void AddRoutine_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Tambah rutinitas akan ditambahkan.", "Rutinitas");
+    private void AddTask_Click(object sender, RoutedEventArgs e) => MessageBox.Show("Tambah tugas akan ditambahkan.", "Tugas");
+    private void FilterAll_Click(object sender, RoutedEventArgs e) { }
+    private void FilterHigh_Click(object sender, RoutedEventArgs e) { }
+    private void FilterMedium_Click(object sender, RoutedEventArgs e) { }
+    private void FilterLow_Click(object sender, RoutedEventArgs e) { }
+    private void SearchBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) { }
 }
