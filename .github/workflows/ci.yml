@@ -2,9 +2,9 @@ name: REMM V2 CI
 
 on:
   push:
-    branches: [ main, master, v2-rebuild, v3-clean-widget ]
+    branches: [ main, master, v2-rebuild, v3-clean-widget, csharp-wpf ]
   pull_request:
-    branches: [ main, master, v2-rebuild, v3-clean-widget ]
+    branches: [ main, master, v2-rebuild, v3-clean-widget, csharp-wpf ]
   workflow_dispatch:
 
 jobs:
@@ -27,3 +27,20 @@ jobs:
 
       - name: Build Web App
         run: npm run build
+
+  build-csharp:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore WPF project
+        run: dotnet restore .\REMM-i-WPF\REMM-i-WPF.csproj
+
+      - name: Build WPF project
+        run: dotnet build .\REMM-i-WPF\REMM-i-WPF.csproj -c Release --no-restore
