@@ -20,7 +20,6 @@ using WpfTextBox = System.Windows.Controls.TextBox;
 using WpfTextBlock = System.Windows.Controls.TextBlock;
 using WpfTextChangedEventArgs = System.Windows.Controls.TextChangedEventArgs;
 using WpfTextDecorations = System.Windows.TextDecorations;
-using Microsoft.Win32;
 
 namespace RemmI;
 
@@ -45,30 +44,47 @@ public partial class TaskWindow : Window
     public void PositionNearMascot()
     {
         var area = _mascot.GetWorkingAreaInDip();
-        var centerX = _mascot.Left + (_mascot.Width / 2);
-        var centerY = _mascot.Top + (_mascot.Height / 2);
-        var placeLeft = centerX >= area.Left + area.Width / 2;
-        var x = placeLeft ? area.Left : area.Right - Width;
-        var y = Math.Max(area.Top, Math.Min(centerY - Height / 2, area.Bottom - Height));
+        var mascotLeft = _mascot.Left;
+        var mascotRight = _mascot.Left + _mascot.Width;
+        var mascotCenterX = mascotLeft + (_mascot.Width / 2);
+        var mascotCenterY = _mascot.Top + (_mascot.Height / 2);
+        const double gap = 12;
+
+        var placeLeft = mascotCenterX >= area.Left + area.Width / 2;
+        var x = placeLeft
+            ? mascotLeft - Width - gap
+            : mascotRight + gap;
+
+        var y = mascotCenterY - (Height / 2);
+        x = Math.Max(area.Left, Math.Min(x, area.Right - Width));
+        y = Math.Max(area.Top, Math.Min(y, area.Bottom - Height));
+
         Left = x;
         Top = y;
     }
 
-    private void Panel_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    private void Panel_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (e.ChangedButton != System.Windows.Input.MouseButton.Left)
             return;
 
         if (e.OriginalSource is DependencyObject source &&
-            (FindParent<WpfButtonBase>(source) != null || FindParent<WpfTextBox>(source) != null || FindParent<WpfScrollBar>(source) != null))
+            (FindParent<WpfButtonBase>(source) != null ||
+             FindParent<WpfTextBox>(source) != null ||
+             FindParent<WpfScrollBar>(source) != null ||
+             FindParent<WpfCheckBox>(source) != null))
+        {
             return;
+        }
 
         try
         {
             DragMove();
+            e.Handled = true;
         }
         catch (InvalidOperationException)
         {
+            // Window may be closing while the mouse event arrives.
         }
     }
 
@@ -204,7 +220,7 @@ public partial class TaskWindow : Window
             {
                 Text = $"{schedule.Title}    {schedule.DateTime:dd MMM}",
                 Foreground = WpfBrushes.WhiteSmoke,
-                FontSize = 11,
+                FontSize = 10,
                 FontWeight = WpfFontWeights.SemiBold,
                 Margin = new Thickness(0, 2, 0, 4),
                 TextTrimming = TextTrimming.CharacterEllipsis
@@ -213,14 +229,14 @@ public partial class TaskWindow : Window
         }
 
         if (_data.Schedules.Count == 0)
-            CalendarPanel.Children.Add(new WpfTextBlock { Text = "Belum ada jadwal.", Foreground = WpfBrushes.Gray, FontStyle = WpfFontStyles.Italic, FontSize = 10 });
+            CalendarPanel.Children.Add(new WpfTextBlock { Text = "Belum ada jadwal.", Foreground = WpfBrushes.Gray, FontStyle = WpfFontStyles.Italic, FontSize = 9 });
 
         RoutinePanel.Children.Clear();
         var search = SearchBox.Text?.Trim() ?? "";
         foreach (var routine in _data.Routines.Where(r => string.IsNullOrWhiteSpace(search) || r.Title.Contains(search, StringComparison.OrdinalIgnoreCase)))
         {
             var row = new WpfDockPanel { Margin = new Thickness(0, 2, 0, 4) };
-            var text = new WpfTextBlock { Text = routine.Title, Foreground = WpfBrushes.WhiteSmoke, FontSize = 11, VerticalAlignment = System.Windows.VerticalAlignment.Center };
+            var text = new WpfTextBlock { Text = routine.Title, Foreground = WpfBrushes.WhiteSmoke, FontSize = 10, VerticalAlignment = System.Windows.VerticalAlignment.Center };
             WpfDockPanel.SetDock(text, WpfDock.Left);
             var delete = new WpfButton { Content = "×", Width = 24, Height = 22, Tag = routine.Id, Margin = new Thickness(4, 0, 0, 0) };
             delete.Click += DeleteRoutine_Click;
@@ -252,7 +268,7 @@ public partial class TaskWindow : Window
                 Text = $"{task.Title}  [{task.Priority}]",
                 Foreground = task.Completed ? WpfBrushes.Gray : WpfBrushes.WhiteSmoke,
                 TextDecorations = task.Completed ? WpfTextDecorations.Strikethrough : null,
-                FontSize = 10,
+                FontSize = 9,
                 VerticalAlignment = System.Windows.VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis
             };
