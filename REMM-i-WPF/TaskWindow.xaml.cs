@@ -2,9 +2,12 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 using WpfBrushes = System.Windows.Media.Brushes;
 using WpfButton = System.Windows.Controls.Button;
 using WpfCheckBox = System.Windows.Controls.CheckBox;
+using WpfComboBox = System.Windows.Controls.ComboBox;
+using WpfControl = System.Windows.Controls.Control;
 using WpfDock = System.Windows.Controls.Dock;
 using WpfDockPanel = System.Windows.Controls.DockPanel;
 using WpfFontStyles = System.Windows.FontStyles;
@@ -13,6 +16,8 @@ using WpfGrid = System.Windows.Controls.Grid;
 using WpfHorizontalAlignment = System.Windows.HorizontalAlignment;
 using WpfOrientation = System.Windows.Controls.Orientation;
 using WpfRowDefinition = System.Windows.Controls.RowDefinition;
+using WpfScrollBar = System.Windows.Controls.Primitives.ScrollBar;
+using WpfSlider = System.Windows.Controls.Slider;
 using WpfStackPanel = System.Windows.Controls.StackPanel;
 using WpfTextBox = System.Windows.Controls.TextBox;
 using WpfTextBlock = System.Windows.Controls.TextBlock;
@@ -47,7 +52,7 @@ public partial class TaskWindow : Window
         var mascotRight = _mascot.Left + _mascot.Width;
         var mascotCenterX = mascotLeft + (_mascot.Width / 2);
         var mascotCenterY = _mascot.Top + (_mascot.Height / 2);
-        const double gap = 12;
+        const double gap = 10;
         var placeLeft = mascotCenterX >= area.Left + area.Width / 2;
         var x = placeLeft ? mascotLeft - Width - gap : mascotRight + gap;
         var y = mascotCenterY - (Height / 2);
@@ -55,10 +60,38 @@ public partial class TaskWindow : Window
         Top = Math.Max(area.Top, Math.Min(y, area.Bottom - Height));
     }
 
-    private void PanelDragHandle_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    private void Panel_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != System.Windows.Input.MouseButton.Left) return;
-        try { DragMove(); e.Handled = true; } catch (InvalidOperationException) { }
+        if (e.ChangedButton != System.Windows.Input.MouseButton.Left)
+            return;
+
+        // The panel can be dragged from its background/cards/header, while
+        // normal controls remain clickable and keep their own behavior.
+        if (IsInteractiveSource(e.OriginalSource as DependencyObject))
+            return;
+
+        try
+        {
+            DragMove();
+            e.Handled = true;
+        }
+        catch (InvalidOperationException)
+        {
+            // Ignore a mouse capture race while opening/closing controls.
+        }
+    }
+
+    private static bool IsInteractiveSource(DependencyObject? source)
+    {
+        var current = source;
+        while (current is not null)
+        {
+            if (current is WpfButton || current is WpfTextBox || current is WpfCheckBox ||
+                current is WpfSlider || current is WpfComboBox || current is WpfScrollBar)
+                return true;
+            current = VisualTreeHelper.GetParent(current);
+        }
+        return false;
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
@@ -67,8 +100,15 @@ public partial class TaskWindow : Window
     {
         var dialog = new Microsoft.Win32.SaveFileDialog { FileName = "remm-backup.json", Filter = "REMM data (*.json)|*.json|All files (*.*)|*.*" };
         if (dialog.ShowDialog() != true) return;
-        File.WriteAllText(dialog.FileName, System.Text.Json.JsonSerializer.Serialize(_data, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
-        Info($"Backup berhasil disimpan ke:\n{dialog.FileName}", "REMM(i)");
+        try
+        {
+            File.WriteAllText(dialog.FileName, System.Text.Json.JsonSerializer.Serialize(_data, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+            Info($"Backup berhasil disimpan ke:\n{dialog.FileName}", "REMM(i)");
+        }
+        catch (Exception ex)
+        {
+            Info($"Backup gagal:\n{ex.Message}", "REMM(i)");
+        }
     }
 
     private void Settings_Click(object sender, RoutedEventArgs e)
@@ -86,7 +126,7 @@ public partial class TaskWindow : Window
     private void Layout_Click(object sender, RoutedEventArgs e)
     {
         _data.Settings.PanelOpacity = _data.Settings.PanelOpacity > 0.88 ? 0.82 : 0.96;
-        RemmDataService.Save(_data);
+        try { RemmDataService.Save(_data); } catch (Exception ex) { Info($"Gagal menyimpan tampilan:\n{ex.Message}", "REMM(i)"); }
         Opacity = _data.Settings.PanelOpacity;
     }
 
