@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
 
 namespace RemmI;
@@ -24,7 +23,32 @@ public sealed class RemmSchedule
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Title { get; set; } = "";
-    public DateTime DateTime { get; set; } = System.DateTime.Now;
+    public DateTime DateTime { get; set; } = DateTime.Now;
+}
+
+public sealed class RemmSettings
+{
+    public string Theme { get; set; } = "Cyberpunk Neon";
+    public string PanelMode { get; set; } = "Mode Bar";
+    public double PanelOpacity { get; set; } = 0.95;
+    public string PanelBackground { get; set; } = "#15181D";
+    public string PanelBorder { get; set; } = "#22D3EE";
+    public bool AutoSnap { get; set; } = true;
+    public int PeekVisiblePercent { get; set; } = 75;
+    public bool DragEnabled { get; set; } = true;
+    public bool NotificationsEnabled { get; set; } = true;
+    public bool NotificationSoundEnabled { get; set; } = true;
+    public int NotificationLeadMinutes { get; set; } = 5;
+    public int NotificationVolume { get; set; } = 75;
+    public string NotificationSound { get; set; } = "Synth Chime (Web Audio)";
+    public string IntegrationUrl { get; set; } = "";
+    public string IntegrationToken { get; set; } = "";
+    public string GoogleApiKey { get; set; } = "";
+    public string GoogleCalendarId { get; set; } = "primary";
+    public string IdleImagePath { get; set; } = "";
+    public string PeekImagePath { get; set; } = "";
+    public string PointingImagePath { get; set; } = "";
+    public string AlertImagePath { get; set; } = "";
 }
 
 public sealed class RemmData
@@ -33,6 +57,7 @@ public sealed class RemmData
     public List<RemmRoutine> Routines { get; set; } = new();
     public List<RemmSchedule> Schedules { get; set; } = new();
     public string DisplayName { get; set; } = "Maskot Denia";
+    public RemmSettings Settings { get; set; } = new();
 }
 
 public static class RemmDataService
@@ -54,7 +79,9 @@ public static class RemmDataService
             }
 
             var json = File.ReadAllText(FilePath);
-            return JsonSerializer.Deserialize<RemmData>(json, Options) ?? CreateDefault();
+            var dataLoaded = JsonSerializer.Deserialize<RemmData>(json, Options) ?? CreateDefault();
+            dataLoaded.Settings ??= new RemmSettings();
+            return dataLoaded;
         }
         catch
         {
@@ -76,6 +103,14 @@ public static class RemmDataService
         return backup;
     }
 
+    public static void ImportBackup(string path)
+    {
+        var json = File.ReadAllText(path);
+        var data = JsonSerializer.Deserialize<RemmData>(json, Options) ?? throw new InvalidDataException("File backup REMM tidak valid.");
+        data.Settings ??= new RemmSettings();
+        Save(data);
+    }
+
     private static RemmData CreateDefault()
     {
         return new RemmData
@@ -86,7 +121,8 @@ public static class RemmDataService
             {
                 new() { Title = "Weekly Standup Meeting", DateTime = DateTime.Now.Date.AddDays(1).AddHours(9) },
                 new() { Title = "Daily Farming & Daily Routine", DateTime = DateTime.Now.Date.AddDays(2).AddHours(18) }
-            }
+            },
+            Settings = new RemmSettings()
         };
     }
 }
