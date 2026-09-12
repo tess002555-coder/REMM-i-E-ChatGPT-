@@ -18,6 +18,7 @@ using WpfGrid = System.Windows.Controls.Grid;
 using WpfMessageBox = System.Windows.MessageBox;
 using WpfMessageBoxButton = System.Windows.MessageBoxButton;
 using WpfMessageBoxImage = System.Windows.MessageBoxImage;
+using WpfTextBlock = System.Windows.Controls.TextBlock;
 using WpfTextBox = System.Windows.Controls.TextBox;
 using WpfTextChangedEventArgs = System.Windows.Controls.TextChangedEventArgs;
 using WpfTextDecorations = System.Windows.TextDecorations;
