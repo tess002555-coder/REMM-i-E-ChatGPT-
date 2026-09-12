@@ -3,15 +3,16 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Threading;
 using FormsScreen = System.Windows.Forms.Screen;
 
 namespace RemmI;
 
 public partial class MainWindow : Window
 {
-    private const double MascotSize = 180;
-    private const double Peek = 45;
+    private const double MascotSize = 150;
+    private const double Peek = 37.5; // 75% of the mascot remains visible.
+    private bool _dragging;
+    private bool _moved;
     private System.Windows.Point _mouseDownScreen;
     private double _dragStartLeft;
     private double _dragStartTop;
@@ -44,28 +45,50 @@ public partial class MainWindow : Window
         if (e.ChangedButton != MouseButton.Left)
             return;
 
-        var start = PointToScreen(e.GetPosition(this));
-        _mouseDownScreen = start;
+        _dragging = true;
+        _moved = false;
+        _mouseDownScreen = PointToScreen(e.GetPosition(this));
         _dragStartLeft = Left;
         _dragStartTop = Top;
+        CaptureMouse();
+        e.Handled = true;
+    }
 
-        try
-        {
-            DragMove();
-        }
-        finally
-        {
-            var end = PointToScreen(e.GetPosition(this));
-            var moved = Math.Abs(end.X - _mouseDownScreen.X) > 6 ||
-                        Math.Abs(end.Y - _mouseDownScreen.Y) > 6 ||
-                        Math.Abs(Left - _dragStartLeft) > 6 ||
-                        Math.Abs(Top - _dragStartTop) > 6;
+    private void Mascot_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (!_dragging || e.LeftButton != MouseButtonState.Pressed)
+            return;
 
+        var current = PointToScreen(e.GetPosition(this));
+        var dx = current.X - _mouseDownScreen.X;
+        var dy = current.Y - _mouseDownScreen.Y;
+
+        if (!_moved && Math.Abs(dx) < 5 && Math.Abs(dy) < 5)
+            return;
+
+        _moved = true;
+        Left = _dragStartLeft + dx;
+        Top = _dragStartTop + dy;
+    }
+
+    private void Mascot_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (!_dragging || e.ChangedButton != MouseButton.Left)
+            return;
+
+        _dragging = false;
+        ReleaseMouseCapture();
+
+        if (_moved)
+        {
             SnapToNearestEdge();
-
-            if (!moved)
-                Dispatcher.BeginInvoke(new Action(OpenTaskWindow), DispatcherPriority.Background);
         }
+        else
+        {
+            OpenTaskWindow();
+        }
+
+        e.Handled = true;
     }
 
     private void SnapToNearestEdge()
