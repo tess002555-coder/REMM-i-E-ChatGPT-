@@ -6,79 +6,174 @@
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         Topmost="True"
+        ShowActivated="True"
         Background="Transparent"
-        AllowsTransparency="True">
-    <Border Margin="4" CornerRadius="24" Background="#F01A1A20" BorderBrush="#663A3A40" BorderThickness="1"
-            MouseLeftButtonDown="Panel_MouseLeftButtonDown">
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <StackPanel Margin="12">
-                <Grid Margin="2,0,2,8" Cursor="SizeAll">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Width="32" Height="32" CornerRadius="16" Background="#16161A" BorderBrush="#22D3EE" BorderThickness="1">
-                            <TextBlock Text="◌" Foreground="#22D3EE" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        AllowsTransparency="True"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
+    <Window.Resources>
+        <Style x:Key="IconButton" TargetType="Button">
+            <Setter Property="Width" Value="30" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="Foreground" Value="#D9F7FF" />
+            <Setter Property="Background" Value="#202329" />
+            <Setter Property="BorderBrush" Value="#343B45" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="10" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
-                        <StackPanel Margin="8,0,0,0">
-                            <TextBlock Text="REMM(i)E" Foreground="White" FontSize="12" FontWeight="Bold" />
-                            <TextBlock x:Name="DisplayNameText" Text="Maskot Denia" Foreground="#67E8F9" FontSize="9" />
-                        </StackPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="AccentButton" TargetType="Button">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="Foreground" Value="#071014" />
+            <Setter Property="Background" Value="#22D3EE" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="9" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="GhostButton" TargetType="Button">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="9,0" />
+            <Setter Property="Margin" Value="2,0" />
+            <Setter Property="Foreground" Value="#C7D2DA" />
+            <Setter Property="Background" Value="#202329" />
+            <Setter Property="BorderBrush" Value="#3A414C" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="9" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="FilterButton" TargetType="Button" BasedOn="{StaticResource GhostButton}">
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Padding" Value="8,0" />
+            <Setter Property="FontSize" Value="9" />
+            <Setter Property="Margin" Value="2,0,3,0" />
+        </Style>
+    </Window.Resources>
+
+    <Border Margin="3" CornerRadius="24" Background="#F20F1217" BorderBrush="#333A4450" BorderThickness="1"
+            PreviewMouseLeftButtonDown="Panel_PreviewMouseLeftButtonDown">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="12,10,12,8" Cursor="SizeAll">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="34" Height="34" CornerRadius="17" Background="#11151A" BorderBrush="#22D3EE" BorderThickness="1">
+                        <Image Source="/Assets/mascot.png" Width="32" Height="32" Stretch="Uniform" IsHitTestVisible="False" />
+                    </Border>
+                    <StackPanel Margin="8,0,0,0">
+                        <TextBlock Text="REMM(i)E" Foreground="#F8FAFC" FontSize="12" FontWeight="Bold" />
+                        <TextBlock x:Name="DisplayNameText" Text="Maskot Denia" Foreground="#67E8F9" FontSize="9" />
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="↓" Width="30" Height="30" Margin="2" Click="Download_Click" ToolTip="Backup data" />
-                        <Button Content="⚙" Width="30" Height="30" Margin="2" Click="Settings_Click" ToolTip="Pengaturan" />
-                        <Button Content="▣" Width="30" Height="30" Margin="2" Click="Layout_Click" ToolTip="Tampilan" />
-                        <Button Content=">_" Width="30" Height="30" Margin="2" Click="Console_Click" ToolTip="Informasi data" />
-                        <Button Content="×" Width="30" Height="30" Margin="2" Click="Close_Click" ToolTip="Tutup menu" />
-                    </StackPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource IconButton}" Content="↓" Click="Download_Click" ToolTip="Backup data" />
+                    <Button Style="{StaticResource IconButton}" Content="⚙" Click="Settings_Click" ToolTip="Pengaturan" />
+                    <Button Style="{StaticResource IconButton}" Content="▣" Click="Layout_Click" ToolTip="Tampilan" />
+                    <Button Style="{StaticResource IconButton}" Content=">_" Click="Console_Click" ToolTip="Informasi data" />
+                    <Button Style="{StaticResource IconButton}" Content="×" Click="Close_Click" ToolTip="Tutup menu" />
+                </StackPanel>
+            </Grid>
+
+            <Border Grid.Row="1" Margin="12,0,12,9" Height="36" CornerRadius="11" Background="#181C22" BorderBrush="#303742" BorderThickness="1">
+                <Grid>
+                    <TextBlock Text="⌕" Foreground="#71808E" FontSize="15" Margin="11,0,0,0" VerticalAlignment="Center" />
+                    <TextBox x:Name="SearchBox" Margin="30,0,8,0" Padding="0" VerticalContentAlignment="Center"
+                             Background="Transparent" Foreground="#E5E7EB" BorderThickness="0"
+                             FontSize="10.5" TextChanged="SearchBox_TextChanged" ToolTip="Cari tugas atau rutinitas" />
                 </Grid>
+            </Border>
 
-                <TextBox x:Name="SearchBox" Height="36" Margin="0,4,0,8" Padding="12,0" VerticalContentAlignment="Center"
-                         Background="#222226" Foreground="#E5E7EB" BorderBrush="#3A3A40" BorderThickness="1"
-                         FontSize="11" TextChanged="SearchBox_TextChanged" ToolTip="Cari tugas atau rutinitas" />
-
-                <Border Margin="0,0,0,8" Padding="9" CornerRadius="14" Background="#26262B" BorderBrush="#3A3A40" BorderThickness="1">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,7">
-                            <TextBlock Text="Calender" Foreground="White" FontSize="15" FontWeight="Bold" VerticalAlignment="Center" />
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Content="+" Width="28" Height="28" Margin="2,0" Click="AddCalendar_Click" />
-                                <Button Content="Detail ›" Width="68" Height="28" Margin="2,0" Click="CalendarDetail_Click" />
-                            </StackPanel>
-                        </Grid>
+            <Border Grid.Row="2" Margin="12,0,12,8" Padding="10" CornerRadius="15" Background="#22262C" BorderBrush="#343C47" BorderThickness="1">
+                <StackPanel>
+                    <Grid Margin="0,0,0,7">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="◫" Foreground="#22D3EE" FontSize="16" Margin="0,0,7,0" />
+                            <TextBlock Text="Calender" Foreground="#F8FAFC" FontSize="14" FontWeight="Bold" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource AccentButton}" Width="30" Content="+" Click="AddCalendar_Click" />
+                            <Button Style="{StaticResource GhostButton}" Width="68" Content="Detail  ›" Click="CalendarDetail_Click" />
+                        </StackPanel>
+                    </Grid>
+                    <Border Padding="9" CornerRadius="11" Background="#171A1F" BorderBrush="#303742" BorderThickness="1">
                         <StackPanel x:Name="CalendarPanel" />
-                    </StackPanel>
-                </Border>
+                    </Border>
+                </StackPanel>
+            </Border>
 
-                <Border Margin="0,0,0,8" Padding="9" CornerRadius="14" Background="#26262B" BorderBrush="#3A3A40" BorderThickness="1">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,7">
-                            <TextBlock Text="Rutinitas" Foreground="White" FontSize="15" FontWeight="Bold" VerticalAlignment="Center" />
-                            <Button Content="+" Width="28" Height="28" HorizontalAlignment="Right" Click="AddRoutine_Click" />
-                        </Grid>
+            <Border Grid.Row="3" Margin="12,0,12,8" Padding="10" CornerRadius="15" Background="#22262C" BorderBrush="#343C47" BorderThickness="1">
+                <StackPanel>
+                    <Grid Margin="0,0,0,7">
+                        <TextBlock Text="Rutinitas" Foreground="#F8FAFC" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" />
+                        <Button Style="{StaticResource AccentButton}" Width="30" Content="+" HorizontalAlignment="Right" Click="AddRoutine_Click" />
+                    </Grid>
+                    <Border Padding="9" CornerRadius="11" Background="#171A1F" BorderBrush="#303742" BorderThickness="1">
                         <StackPanel x:Name="RoutinePanel" />
-                    </StackPanel>
-                </Border>
+                    </Border>
+                </StackPanel>
+            </Border>
 
-                <Border Padding="9" CornerRadius="14" Background="#26262B" BorderBrush="#3A3A40" BorderThickness="1">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,7">
-                            <TextBlock Text="Tugas" Foreground="White" FontSize="15" FontWeight="Bold" VerticalAlignment="Center" />
-                            <Button Content="+" Width="28" Height="28" HorizontalAlignment="Right" Click="AddTask_Click" />
-                        </Grid>
-                        <WrapPanel Margin="0,0,0,8">
-                            <Button Content="Semua" Margin="2" Click="FilterAll_Click" />
-                            <Button Content="● Tinggi" Margin="2" Click="FilterHigh_Click" />
-                            <Button Content="● Sedang" Margin="2" Click="FilterMedium_Click" />
-                            <Button Content="● Rendah" Margin="2" Click="FilterLow_Click" />
-                        </WrapPanel>
-                        <StackPanel x:Name="TasksPanel" />
-                        <TextBlock x:Name="TaskEmptyText" Text="Tidak ada tugas terdaftar." Foreground="#6B7280" FontSize="10" FontStyle="Italic" HorizontalAlignment="Center" />
+            <Border Grid.Row="4" Margin="12,0,12,8" Padding="10" CornerRadius="15" Background="#22262C" BorderBrush="#343C47" BorderThickness="1">
+                <StackPanel>
+                    <Grid Margin="0,0,0,7">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Tugas" Foreground="#F8FAFC" FontSize="14" FontWeight="Bold" />
+                            <Border Margin="6,0,0,0" Padding="5,1" CornerRadius="7" Background="#12343B">
+                                <TextBlock Text="0" Foreground="#22D3EE" FontSize="8" />
+                            </Border>
+                        </StackPanel>
+                        <Button Style="{StaticResource AccentButton}" Width="30" Content="+" HorizontalAlignment="Right" Click="AddTask_Click" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,7">
+                        <Button Style="{StaticResource FilterButton}" Content="Semua" Click="FilterAll_Click" Background="#22D3EE" Foreground="#071014" />
+                        <Button Style="{StaticResource FilterButton}" Content="● Tinggi" Click="FilterHigh_Click" />
+                        <Button Style="{StaticResource FilterButton}" Content="● Sedang" Click="FilterMedium_Click" />
+                        <Button Style="{StaticResource FilterButton}" Content="● Rendah" Click="FilterLow_Click" />
                     </StackPanel>
-                </Border>
-            </StackPanel>
-        </ScrollViewer>
+                    <StackPanel x:Name="TasksPanel" />
+                    <TextBlock x:Name="TaskEmptyText" Text="Tidak ada tugas terdaftar." Foreground="#64707C" FontSize="10" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,10,0,2" />
+                </StackPanel>
+            </Border>
+        </Grid>
     </Border>
 </Window>
