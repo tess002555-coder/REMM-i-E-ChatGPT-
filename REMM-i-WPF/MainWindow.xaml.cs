@@ -9,7 +9,7 @@ namespace RemmI;
 public partial class MainWindow : Window
 {
     private const double MascotSize = 150;
-    private const double Peek = 37.5; // 75% of the mascot remains visible.
+    private const double Peek = 37.5;
     private bool _dragging;
     private bool _moved;
     private System.Windows.Point _mouseDownScreen;
@@ -134,10 +134,10 @@ public partial class MainWindow : Window
         }
 
         var task = new TaskWindow(this);
-        task.Closed += (_, _) => Show();
+        task.Closed += (_, _) => { };
         task.Show();
         task.Activate();
-        Hide();
+        // The mascot stays visible. The menu is an additional floating window.
     }
 
     public Rect GetWorkingAreaInDip()
