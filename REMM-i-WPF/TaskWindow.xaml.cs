@@ -2,21 +2,23 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Windows;
-using System.Windows.Media;
+using WpfBrushes = System.Windows.Media.Brushes;
 using WpfButton = System.Windows.Controls.Button;
 using WpfButtonBase = System.Windows.Controls.Primitives.ButtonBase;
 using WpfCheckBox = System.Windows.Controls.CheckBox;
-using WpfOrientation = System.Windows.Controls.Orientation;
-using WpfScrollBar = System.Windows.Controls.Primitives.ScrollBar;
-using WpfTextBox = System.Windows.Controls.TextBox;
-using WpfTextChangedEventArgs = System.Windows.Controls.TextChangedEventArgs;
-using WpfTextBlock = System.Windows.Controls.TextBlock;
+using WpfDock = System.Windows.Controls.Dock;
 using WpfDockPanel = System.Windows.Controls.DockPanel;
-using WpfGrid = System.Windows.Controls.Grid;
-using WpfRowDefinition = System.Windows.Controls.RowDefinition;
-using WpfStackPanel = System.Windows.Controls.StackPanel;
-using WpfWrapPanel = System.Windows.Controls.WrapPanel;
+using WpfFontStyles = System.Windows.FontStyles;
 using WpfFontWeights = System.Windows.FontWeights;
+using WpfGrid = System.Windows.Controls.Grid;
+using WpfHorizontalAlignment = System.Windows.HorizontalAlignment;
+using WpfOrientation = System.Windows.Controls.Orientation;
+using WpfRowDefinition = System.Windows.Controls.RowDefinition;
+using WpfScrollBar = System.Windows.Controls.Primitives.ScrollBar;
+using WpfStackPanel = System.Windows.Controls.StackPanel;
+using WpfTextBox = System.Windows.Controls.TextBox;
+using WpfTextBlock = System.Windows.Controls.TextBlock;
+using WpfTextChangedEventArgs = System.Windows.Controls.TextChangedEventArgs;
 using WpfTextDecorations = System.Windows.TextDecorations;
 using Microsoft.Win32;
 
@@ -77,7 +79,7 @@ public partial class TaskWindow : Window
         {
             if (current is T match)
                 return match;
-            current = VisualTreeHelper.GetParent(current);
+            current = System.Windows.Media.VisualTreeHelper.GetParent(current);
         }
         return null;
     }
@@ -201,7 +203,7 @@ public partial class TaskWindow : Window
             var row = new WpfTextBlock
             {
                 Text = $"{schedule.Title}    {schedule.DateTime:dd MMM}",
-                Foreground = Brushes.WhiteSmoke,
+                Foreground = WpfBrushes.WhiteSmoke,
                 FontSize = 11,
                 FontWeight = WpfFontWeights.SemiBold,
                 Margin = new Thickness(0, 2, 0, 4),
@@ -211,18 +213,18 @@ public partial class TaskWindow : Window
         }
 
         if (_data.Schedules.Count == 0)
-            CalendarPanel.Children.Add(new WpfTextBlock { Text = "Belum ada jadwal.", Foreground = Brushes.Gray, FontStyle = FontStyles.Italic, FontSize = 10 });
+            CalendarPanel.Children.Add(new WpfTextBlock { Text = "Belum ada jadwal.", Foreground = WpfBrushes.Gray, FontStyle = WpfFontStyles.Italic, FontSize = 10 });
 
         RoutinePanel.Children.Clear();
         var search = SearchBox.Text?.Trim() ?? "";
         foreach (var routine in _data.Routines.Where(r => string.IsNullOrWhiteSpace(search) || r.Title.Contains(search, StringComparison.OrdinalIgnoreCase)))
         {
             var row = new WpfDockPanel { Margin = new Thickness(0, 2, 0, 4) };
-            var text = new WpfTextBlock { Text = routine.Title, Foreground = Brushes.WhiteSmoke, FontSize = 11, VerticalAlignment = VerticalAlignment.Center };
-            WpfDockPanel.SetDock(text, Dock.Left);
+            var text = new WpfTextBlock { Text = routine.Title, Foreground = WpfBrushes.WhiteSmoke, FontSize = 11, VerticalAlignment = System.Windows.VerticalAlignment.Center };
+            WpfDockPanel.SetDock(text, WpfDock.Left);
             var delete = new WpfButton { Content = "×", Width = 24, Height = 22, Tag = routine.Id, Margin = new Thickness(4, 0, 0, 0) };
             delete.Click += DeleteRoutine_Click;
-            WpfDockPanel.SetDock(delete, Dock.Right);
+            WpfDockPanel.SetDock(delete, WpfDock.Right);
             row.Children.Add(delete);
             row.Children.Add(text);
             RoutinePanel.Children.Add(row);
@@ -236,22 +238,22 @@ public partial class TaskWindow : Window
         foreach (var task in tasks)
         {
             var row = new WpfDockPanel { Margin = new Thickness(0, 1, 0, 4) };
-            var check = new WpfCheckBox { IsChecked = task.Completed, Tag = task.Id, VerticalAlignment = VerticalAlignment.Center };
+            var check = new WpfCheckBox { IsChecked = task.Completed, Tag = task.Id, VerticalAlignment = System.Windows.VerticalAlignment.Center };
             check.Checked += TaskCheckChanged;
             check.Unchecked += TaskCheckChanged;
-            WpfDockPanel.SetDock(check, Dock.Left);
+            WpfDockPanel.SetDock(check, WpfDock.Left);
 
             var delete = new WpfButton { Content = "×", Width = 24, Height = 22, Tag = task.Id, Margin = new Thickness(4, 0, 0, 0) };
             delete.Click += DeleteTask_Click;
-            WpfDockPanel.SetDock(delete, Dock.Right);
+            WpfDockPanel.SetDock(delete, WpfDock.Right);
 
             var text = new WpfTextBlock
             {
                 Text = $"{task.Title}  [{task.Priority}]",
-                Foreground = task.Completed ? Brushes.Gray : Brushes.WhiteSmoke,
-                TextDecorations = task.Completed ? TextDecorations.Strikethrough : null,
+                Foreground = task.Completed ? WpfBrushes.Gray : WpfBrushes.WhiteSmoke,
+                TextDecorations = task.Completed ? WpfTextDecorations.Strikethrough : null,
                 FontSize = 10,
-                VerticalAlignment = VerticalAlignment.Center,
+                VerticalAlignment = System.Windows.VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis
             };
 
@@ -314,7 +316,7 @@ public partial class TaskWindow : Window
             ResizeMode = ResizeMode.NoResize,
             ShowInTaskbar = false,
             Topmost = true,
-            Background = Brushes.White
+            Background = WpfBrushes.White
         };
 
         var grid = new WpfGrid { Margin = new Thickness(14) };
@@ -322,18 +324,18 @@ public partial class TaskWindow : Window
         grid.RowDefinitions.Add(new WpfRowDefinition { Height = GridLength.Auto });
         grid.RowDefinitions.Add(new WpfRowDefinition { Height = GridLength.Auto });
 
-        var labelBlock = new WpfTextBlock { Text = label, Foreground = Brushes.Black, Margin = new Thickness(0, 0, 0, 8) };
-        System.Windows.Controls.Grid.SetRow(labelBlock, 0);
+        var labelBlock = new WpfTextBlock { Text = label, Foreground = WpfBrushes.Black, Margin = new Thickness(0, 0, 0, 8) };
+        WpfGrid.SetRow(labelBlock, 0);
         var input = new WpfTextBox { Text = initial, Height = 32, Padding = new Thickness(8) };
-        System.Windows.Controls.Grid.SetRow(input, 1);
-        var buttons = new WpfStackPanel { Orientation = WpfOrientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 10, 0, 0) };
+        WpfGrid.SetRow(input, 1);
+        var buttons = new WpfStackPanel { Orientation = WpfOrientation.Horizontal, HorizontalAlignment = WpfHorizontalAlignment.Right, Margin = new Thickness(0, 10, 0, 0) };
         var cancel = new WpfButton { Content = "Batal", Width = 70, Margin = new Thickness(4) };
         var ok = new WpfButton { Content = "OK", Width = 70, Margin = new Thickness(4) };
         cancel.Click += (_, _) => dialog.DialogResult = false;
         ok.Click += (_, _) => dialog.DialogResult = true;
         buttons.Children.Add(cancel);
         buttons.Children.Add(ok);
-        System.Windows.Controls.Grid.SetRow(buttons, 2);
+        WpfGrid.SetRow(buttons, 2);
 
         grid.Children.Add(labelBlock);
         grid.Children.Add(input);
