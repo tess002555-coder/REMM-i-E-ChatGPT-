@@ -40,6 +40,7 @@ public partial class MainWindow : Window
         _peekOffset = MascotSize * (1.0 - Math.Clamp(settings.PeekVisiblePercent, 50, 90) / 100.0);
         Topmost = true;
         SetPose(_taskWindow is not null ? "pointing" : "peek");
+        _taskWindow?.ApplySettings(settings);
     }
 
     private void PositionInitial()
