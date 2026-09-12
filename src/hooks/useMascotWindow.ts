@@ -7,8 +7,8 @@ const MASCOT = 180;
 const PANEL_W = 520;
 const PANEL_H = 720;
 const PEEK = 45; // 75% of the mascot remains visible.
+const SNAP_DELAY = 180; // idle period after the last native move event
 const DRAG_THRESHOLD = 5;
-const SNAP_DELAY = 80;
 
 type Edge = 'left' | 'right' | 'top' | 'bottom';
 interface Bounds {
@@ -24,15 +24,15 @@ const EDGE_KEY = 'rememberme-widget-edge';
 export function useMascotWindow() {
   const win = getCurrentWindow();
   const bounds = useRef<Bounds>({ x: 0, y: 0, width: 1920, height: 1080, scale: 1 });
-  const lastPosition = useRef({ x: 0, y: 200 });
-  const dragStart = useRef({ x: 0, y: 0 });
+  const lastPosition = useRef({ x: 300, y: 300 });
+  const dragStart = useRef({ x: 300, y: 300 });
   const dragging = useRef(false);
   const movedDuringDrag = useRef(false);
   const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const readBounds = useCallback(async () => {
     const monitor = await currentMonitor();
-    if (!monitor) return;
+    if (!monitor) return false;
 
     const scale = monitor.scaleFactor || 1;
     const work = monitor.workArea;
@@ -43,6 +43,7 @@ export function useMascotWindow() {
       height: work.size.height / scale,
       scale,
     };
+    return true;
   }, []);
 
   const move = useCallback(async (x: number, y: number) => {
@@ -52,7 +53,9 @@ export function useMascotWindow() {
 
   const getEdge = useCallback((): Edge => {
     const saved = localStorage.getItem(EDGE_KEY);
-    if (saved === 'left' || saved === 'right' || saved === 'top' || saved === 'bottom') return saved;
+    if (saved === 'left' || saved === 'right' || saved === 'top' || saved === 'bottom') {
+      return saved;
+    }
     return 'right';
   }, []);
 
@@ -64,11 +67,9 @@ export function useMascotWindow() {
     const b = bounds.current;
     const maxX = b.x + b.width - MASCOT;
     const maxY = b.y + b.height - MASCOT;
-    const safeX = Math.max(b.x, Math.min(lastPosition.current.x, maxX));
-    const safeY = Math.max(b.y, Math.min(lastPosition.current.y, maxY));
 
-    let x = safeX;
-    let y = safeY;
+    let x = Math.max(b.x, Math.min(lastPosition.current.x, maxX));
+    let y = Math.max(b.y, Math.min(lastPosition.current.y, maxY));
 
     if (edge === 'left') x = b.x - PEEK;
     if (edge === 'right') x = b.x + b.width - MASCOT + PEEK;
@@ -81,37 +82,39 @@ export function useMascotWindow() {
 
   const snapAfterDrag = useCallback(async () => {
     if (!dragging.current) return;
+
     dragging.current = false;
-    await readBounds();
+    movedDuringDrag.current = true;
 
-    const position = await win.outerPosition();
-    const scale = (await win.scaleFactor()) || 1;
-    const currentX = position.x / scale;
-    const currentY = position.y / scale;
-    const b = bounds.current;
-    const maxX = b.x + Math.max(0, b.width - MASCOT);
-    const maxY = b.y + Math.max(0, b.height - MASCOT);
-    const x = Math.max(b.x, Math.min(currentX, maxX));
-    const y = Math.max(b.y, Math.min(currentY, maxY));
+    try {
+      await readBounds();
+      const position = await win.outerPosition();
+      const scale = (await win.scaleFactor()) || 1;
+      const currentX = position.x / scale;
+      const currentY = position.y / scale;
+      const b = bounds.current;
+      const maxX = b.x + Math.max(0, b.width - MASCOT);
+      const maxY = b.y + Math.max(0, b.height - MASCOT);
+      const x = Math.max(b.x, Math.min(currentX, maxX));
+      const y = Math.max(b.y, Math.min(currentY, maxY));
 
-    // Always snap to the nearest screen edge on drag release.
-    // There is intentionally no distance threshold: even when the mascot
-    // is released in the middle third of the screen, it moves to whichever
-    // edge is closest.
-    const distances: Record<Edge, number> = {
-      left: x - b.x,
-      right: maxX - x,
-      top: y - b.y,
-      bottom: maxY - y,
-    };
+      const distances: Record<Edge, number> = {
+        left: x - b.x,
+        right: maxX - x,
+        top: y - b.y,
+        bottom: maxY - y,
+      };
 
-    const nearest = (Object.keys(distances) as Edge[]).reduce(
-      (best, edge) => distances[edge] < distances[best] ? edge : best,
-      'left',
-    );
+      const nearest = (Object.keys(distances) as Edge[]).reduce(
+        (best, edge) => distances[edge] < distances[best] ? edge : best,
+        'left',
+      );
 
-    lastPosition.current = { x, y };
-    await snapToPeek(nearest);
+      lastPosition.current = { x, y };
+      await snapToPeek(nearest);
+    } catch (error) {
+      console.warn('Mascot snap failed:', error);
+    }
   }, [readBounds, snapToPeek, win]);
 
   const beginDrag = useCallback(async () => {
@@ -139,7 +142,6 @@ export function useMascotWindow() {
     const currentX = current.x / scale;
     const currentY = current.y / scale;
     const moved = Math.hypot(currentX - dragStart.current.x, currentY - dragStart.current.y) > DRAG_THRESHOLD;
-
     if (moved) return;
 
     await readBounds();
@@ -205,18 +207,32 @@ export function useMascotWindow() {
 
     void (async () => {
       try {
-        await readBounds();
+        const hasMonitor = await readBounds();
         if (!active) return;
 
         const b = bounds.current;
         const edge = getEdge();
-        const startX = b.x + b.width - MASCOT + PEEK;
-        const startY = b.y + (b.height - MASCOT) / 2;
+        const startX = b.x + Math.max(20, b.width - MASCOT - 20);
+        const startY = b.y + Math.max(20, (b.height - MASCOT) / 2);
+
+        // Always establish a valid on-screen location before peeking.
         lastPosition.current = { x: startX, y: startY };
         await move(startX, startY);
-        await snapToPeek(edge);
+        await win.show();
+        await win.setFocus();
+
+        if (hasMonitor) {
+          await snapToPeek(edge);
+        }
       } catch (error) {
         console.warn('Mascot initialization failed:', error);
+        try {
+          await move(300, 300);
+          await win.show();
+          await win.setFocus();
+        } catch (fallbackError) {
+          console.error('Mascot fallback initialization failed:', fallbackError);
+        }
       }
     })();
 
