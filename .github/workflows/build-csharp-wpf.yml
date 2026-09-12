@@ -19,6 +19,9 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Restore
+        run: dotnet restore .\REMM-i-WPF\REMM-i-WPF.csproj
+
       - name: Build
         run: dotnet build .\REMM-i-WPF\REMM-i-WPF.csproj -c Release --no-restore
 
