@@ -1,86 +1,86 @@
 <Window x:Class="RemmI.TaskWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Width="340" Height="620"
+        Width="320" Height="560"
         WindowStyle="None"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         Topmost="True"
         Background="Transparent"
         AllowsTransparency="True">
-    <Border Margin="4" CornerRadius="28" Background="#F01A1A20" BorderBrush="#663A3A40" BorderThickness="1">
+    <Border Margin="4" CornerRadius="24" Background="#F01A1A20" BorderBrush="#663A3A40" BorderThickness="1">
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <StackPanel Margin="14">
+            <StackPanel Margin="12">
                 <Grid Margin="2,0,2,8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Width="34" Height="34" CornerRadius="17" Background="#16161A" BorderBrush="#22D3EE" BorderThickness="1">
-                            <TextBlock Text="◌" Foreground="#22D3EE" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Border Width="32" Height="32" CornerRadius="16" Background="#16161A" BorderBrush="#22D3EE" BorderThickness="1">
+                            <TextBlock Text="◌" Foreground="#22D3EE" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <StackPanel Margin="8,0,0,0">
-                            <TextBlock Text="REMM(i)E" Foreground="White" FontSize="13" FontWeight="Bold" />
-                            <TextBlock Text="Maskot Denia" Foreground="#67E8F9" FontSize="10" />
+                            <TextBlock Text="REMM(i)E" Foreground="White" FontSize="12" FontWeight="Bold" />
+                            <TextBlock Text="Maskot Denia" Foreground="#67E8F9" FontSize="9" />
                         </StackPanel>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="↓" Width="34" Height="34" Margin="3" Click="Download_Click" />
-                        <Button Content="⚙" Width="34" Height="34" Margin="3" Click="Settings_Click" />
-                        <Button Content="▣" Width="34" Height="34" Margin="3" Click="Layout_Click" />
-                        <Button Content=">_" Width="34" Height="34" Margin="3" Click="Console_Click" />
-                        <Button Content="×" Width="34" Height="34" Margin="3" Click="Close_Click" />
+                        <Button Content="↓" Width="30" Height="30" Margin="2" Click="Download_Click" />
+                        <Button Content="⚙" Width="30" Height="30" Margin="2" Click="Settings_Click" />
+                        <Button Content="▣" Width="30" Height="30" Margin="2" Click="Layout_Click" />
+                        <Button Content=">_" Width="30" Height="30" Margin="2" Click="Console_Click" />
+                        <Button Content="×" Width="30" Height="30" Margin="2" Click="Close_Click" />
                     </StackPanel>
                 </Grid>
 
-                <TextBox x:Name="SearchBox" Height="40" Margin="0,4,0,10" Padding="14,0" VerticalContentAlignment="Center"
+                <TextBox x:Name="SearchBox" Height="36" Margin="0,4,0,8" Padding="12,0" VerticalContentAlignment="Center"
                          Background="#222226" Foreground="#E5E7EB" BorderBrush="#3A3A40" BorderThickness="1"
-                         FontSize="12" TextChanged="SearchBox_TextChanged" />
+                         FontSize="11" TextChanged="SearchBox_TextChanged" />
 
-                <Border Margin="0,0,0,10" Padding="10" CornerRadius="16" Background="#26262B" BorderBrush="#3A3A40" BorderThickness="1">
+                <Border Margin="0,0,0,8" Padding="9" CornerRadius="14" Background="#26262B" BorderBrush="#3A3A40" BorderThickness="1">
                     <StackPanel>
-                        <Grid Margin="0,0,0,8">
-                            <TextBlock Text="Calender" Foreground="White" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" />
+                        <Grid Margin="0,0,0,7">
+                            <TextBlock Text="Calender" Foreground="White" FontSize="15" FontWeight="Bold" VerticalAlignment="Center" />
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Content="+" Width="30" Height="30" Margin="3,0" Click="AddCalendar_Click" />
-                                <Button Content="Detail  ›" Width="72" Height="30" Margin="3,0" Click="CalendarDetail_Click" />
+                                <Button Content="+" Width="28" Height="28" Margin="2,0" Click="AddCalendar_Click" />
+                                <Button Content="Detail ›" Width="68" Height="28" Margin="2,0" Click="CalendarDetail_Click" />
                             </StackPanel>
                         </Grid>
-                        <Border Padding="10" CornerRadius="12" Background="#1C1C20" BorderBrush="#34343A" BorderThickness="1">
+                        <Border Padding="9" CornerRadius="11" Background="#1C1C20" BorderBrush="#34343A" BorderThickness="1">
                             <StackPanel>
-                                <TextBlock Text="Weekly Standup Meeting" Foreground="#F3F4F6" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,6" />
-                                <TextBlock Text="Daily Farming &amp; Daily Routine" Foreground="#F3F4F6" FontSize="12" FontWeight="SemiBold" />
+                                <TextBlock Text="Weekly Standup Meeting" Foreground="#F3F4F6" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,5" />
+                                <TextBlock Text="Daily Farming &amp; Daily Routine" Foreground="#F3F4F6" FontSize="11" FontWeight="SemiBold" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
                 </Border>
 
-                <Border Margin="0,0,0,10" Padding="10" CornerRadius="16" Background="#26262B" BorderBrush="#3A3A40" BorderThickness="1">
+                <Border Margin="0,0,0,8" Padding="9" CornerRadius="14" Background="#26262B" BorderBrush="#3A3A40" BorderThickness="1">
                     <StackPanel>
-                        <Grid Margin="0,0,0,8">
-                            <TextBlock Text="Rutinitas" Foreground="White" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" />
-                            <Button Content="+" Width="30" Height="30" HorizontalAlignment="Right" Click="AddRoutine_Click" />
+                        <Grid Margin="0,0,0,7">
+                            <TextBlock Text="Rutinitas" Foreground="White" FontSize="15" FontWeight="Bold" VerticalAlignment="Center" />
+                            <Button Content="+" Width="28" Height="28" HorizontalAlignment="Right" Click="AddRoutine_Click" />
                         </Grid>
-                        <Border Padding="10" CornerRadius="12" Background="#1C1C20" BorderBrush="#34343A" BorderThickness="1">
-                            <TextBlock Text="REMMIE Project" Foreground="#E5E7EB" FontSize="12" />
+                        <Border Padding="9" CornerRadius="11" Background="#1C1C20" BorderBrush="#34343A" BorderThickness="1">
+                            <TextBlock Text="REMMIE Project" Foreground="#E5E7EB" FontSize="11" />
                         </Border>
                     </StackPanel>
                 </Border>
 
-                <Border Padding="10" CornerRadius="16" Background="#26262B" BorderBrush="#3A3A40" BorderThickness="1">
+                <Border Padding="9" CornerRadius="14" Background="#26262B" BorderBrush="#3A3A40" BorderThickness="1">
                     <StackPanel>
-                        <Grid Margin="0,0,0,8">
-                            <TextBlock Text="Tugas" Foreground="White" FontSize="16" FontWeight="Bold" VerticalAlignment="Center" />
-                            <Button Content="+" Width="30" Height="30" HorizontalAlignment="Right" Click="AddTask_Click" />
+                        <Grid Margin="0,0,0,7">
+                            <TextBlock Text="Tugas" Foreground="White" FontSize="15" FontWeight="Bold" VerticalAlignment="Center" />
+                            <Button Content="+" Width="28" Height="28" HorizontalAlignment="Right" Click="AddTask_Click" />
                         </Grid>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <WrapPanel Margin="0,0,0,8">
                             <Button Content="Semua" Margin="2" Click="FilterAll_Click" />
                             <Button Content="● Tinggi" Margin="2" Click="FilterHigh_Click" />
                             <Button Content="● Sedang" Margin="2" Click="FilterMedium_Click" />
                             <Button Content="● Rendah" Margin="2" Click="FilterLow_Click" />
-                        </StackPanel>
-                        <TextBlock Text="Tidak ada tugas terdaftar." Foreground="#6B7280" FontSize="11" FontStyle="Italic" HorizontalAlignment="Center" />
+                        </WrapPanel>
+                        <TextBlock Text="Tidak ada tugas terdaftar." Foreground="#6B7280" FontSize="10" FontStyle="Italic" HorizontalAlignment="Center" />
                     </StackPanel>
                 </Border>
             </StackPanel>
