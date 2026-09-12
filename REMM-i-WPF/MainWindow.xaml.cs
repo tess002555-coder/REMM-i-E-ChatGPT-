@@ -1,10 +1,10 @@
 using System;
 using System.Linq;
 using System.Windows;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
+using FormsScreen = System.Windows.Forms.Screen;
 
 namespace RemmI;
 
@@ -106,7 +106,7 @@ public partial class MainWindow : Window
 
     private void OpenTaskWindow()
     {
-        var existing = Application.Current.Windows.OfType<TaskWindow>().FirstOrDefault();
+        var existing = System.Windows.Application.Current.Windows.OfType<TaskWindow>().FirstOrDefault();
         if (existing is not null)
         {
             existing.PositionNearMascot();
@@ -125,7 +125,7 @@ public partial class MainWindow : Window
     public Rect GetWorkingAreaInDip()
     {
         var handle = new WindowInteropHelper(this).Handle;
-        var screen = Screen.FromHandle(handle);
+        var screen = FormsScreen.FromHandle(handle);
         var transform = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice;
         var sx = transform?.M11 ?? 1.0;
         var sy = transform?.M22 ?? 1.0;
