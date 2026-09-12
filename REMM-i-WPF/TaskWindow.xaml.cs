@@ -7,7 +7,6 @@ using WpfBrushes = System.Windows.Media.Brushes;
 using WpfButton = System.Windows.Controls.Button;
 using WpfCheckBox = System.Windows.Controls.CheckBox;
 using WpfComboBox = System.Windows.Controls.ComboBox;
-using WpfControl = System.Windows.Controls.Control;
 using WpfDock = System.Windows.Controls.Dock;
 using WpfDockPanel = System.Windows.Controls.DockPanel;
 using WpfFontStyles = System.Windows.FontStyles;
@@ -39,10 +38,29 @@ public partial class TaskWindow : Window
         _data = RemmDataService.Load();
         Loaded += (_, _) =>
         {
-            Opacity = _data.Settings.PanelOpacity;
+            ApplySettings(_data.Settings);
             PositionNearMascot();
             RefreshView();
         };
+    }
+
+    public void ApplySettings(RemmSettings settings)
+    {
+        if (settings is null) return;
+        Opacity = Math.Clamp(settings.PanelOpacity, 0.65, 1.0);
+        PanelRoot.Background = ToBrush(settings.PanelBackground, "#15181D");
+        PanelRoot.BorderBrush = ToBrush(settings.PanelBorder, "#22D3EE");
+    }
+
+    private static Brush ToBrush(string value, string fallback)
+    {
+        try
+        {
+            var converted = new BrushConverter().ConvertFromString(value);
+            if (converted is Brush brush) return brush;
+        }
+        catch { }
+        return (Brush)new BrushConverter().ConvertFromString(fallback)!;
     }
 
     public void PositionNearMascot()
@@ -62,23 +80,9 @@ public partial class TaskWindow : Window
 
     private void Panel_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != System.Windows.Input.MouseButton.Left)
-            return;
-
-        // The panel can be dragged from its background/cards/header, while
-        // normal controls remain clickable and keep their own behavior.
-        if (IsInteractiveSource(e.OriginalSource as DependencyObject))
-            return;
-
-        try
-        {
-            DragMove();
-            e.Handled = true;
-        }
-        catch (InvalidOperationException)
-        {
-            // Ignore a mouse capture race while opening/closing controls.
-        }
+        if (e.ChangedButton != System.Windows.Input.MouseButton.Left) return;
+        if (IsInteractiveSource(e.OriginalSource as DependencyObject)) return;
+        try { DragMove(); e.Handled = true; } catch (InvalidOperationException) { }
     }
 
     private static bool IsInteractiveSource(DependencyObject? source)
@@ -96,38 +100,16 @@ public partial class TaskWindow : Window
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
-    private void Download_Click(object sender, RoutedEventArgs e)
-    {
-        var dialog = new Microsoft.Win32.SaveFileDialog { FileName = "remm-backup.json", Filter = "REMM data (*.json)|*.json|All files (*.*)|*.*" };
-        if (dialog.ShowDialog() != true) return;
-        try
-        {
-            File.WriteAllText(dialog.FileName, System.Text.Json.JsonSerializer.Serialize(_data, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
-            Info($"Backup berhasil disimpan ke:\n{dialog.FileName}", "REMM(i)");
-        }
-        catch (Exception ex)
-        {
-            Info($"Backup gagal:\n{ex.Message}", "REMM(i)");
-        }
-    }
-
     private void Settings_Click(object sender, RoutedEventArgs e)
     {
         var existing = Application.Current.Windows.OfType<SettingsWindow>().FirstOrDefault();
         if (existing is not null) { existing.Activate(); return; }
         var settings = new SettingsWindow(_mascot) { Owner = this };
-        settings.Left = Left + Width + 14;
-        settings.Top = Top;
+        settings.Left = Left + Width + 12;
+        settings.Top = Math.Max(SystemParameters.WorkArea.Top, Top);
         if (settings.Left + settings.Width > SystemParameters.WorkArea.Right)
-            settings.Left = Math.Max(SystemParameters.WorkArea.Left, Left - settings.Width - 14);
+            settings.Left = Math.Max(SystemParameters.WorkArea.Left, Left - settings.Width - 12);
         settings.Show();
-    }
-
-    private void Layout_Click(object sender, RoutedEventArgs e)
-    {
-        _data.Settings.PanelOpacity = _data.Settings.PanelOpacity > 0.88 ? 0.82 : 0.96;
-        try { RemmDataService.Save(_data); } catch (Exception ex) { Info($"Gagal menyimpan tampilan:\n{ex.Message}", "REMM(i)"); }
-        Opacity = _data.Settings.PanelOpacity;
     }
 
     private void Console_Click(object sender, RoutedEventArgs e)
@@ -138,12 +120,13 @@ public partial class TaskWindow : Window
 
     private void AddCalendar_Click(object sender, RoutedEventArgs e)
     {
-        var title = Prompt("Nama acara:", "", "Tambah Kalender");
+        var title = Prompt("Nama acara", "", "Tambah Kalender");
         if (string.IsNullOrWhiteSpace(title)) return;
-        var dateText = Prompt("Tanggal dan waktu (contoh: 15/09/2026 19:30):", DateTime.Now.AddHours(1).ToString("dd/MM/yyyy HH:mm"), "Tambah Kalender");
-        if (string.IsNullOrWhiteSpace(dateText) || !DateTime.TryParse(dateText, out var date)) { Info("Format tanggal tidak valid.", "Calender"); return; }
+        var dateText = Prompt("Tanggal & waktu (contoh: 15/09/2026 19:30)", DateTime.Now.AddHours(1).ToString("dd/MM/yyyy HH:mm"), "Tambah Kalender");
+        if (string.IsNullOrWhiteSpace(dateText)) return;
+        if (!DateTime.TryParse(dateText, out var date)) { Info("Format tanggal tidak valid.", "Calender"); return; }
         _data.Schedules.Add(new RemmSchedule { Title = title.Trim(), DateTime = date });
-        RemmDataService.Save(_data); RefreshView();
+        SaveAndRefresh();
     }
 
     private void CalendarDetail_Click(object sender, RoutedEventArgs e)
@@ -154,19 +137,19 @@ public partial class TaskWindow : Window
 
     private void AddRoutine_Click(object sender, RoutedEventArgs e)
     {
-        var title = Prompt("Nama rutinitas:", "", "Tambah Rutinitas");
+        var title = Prompt("Nama rutinitas", "", "Tambah Rutinitas");
         if (string.IsNullOrWhiteSpace(title)) return;
         _data.Routines.Add(new RemmRoutine { Title = title.Trim() });
-        RemmDataService.Save(_data); RefreshView();
+        SaveAndRefresh();
     }
 
     private void AddTask_Click(object sender, RoutedEventArgs e)
     {
-        var title = Prompt("Nama tugas:", "", "Tambah Tugas");
+        var title = Prompt("Nama tugas", "", "Tambah Tugas");
         if (string.IsNullOrWhiteSpace(title)) return;
-        var priority = NormalizePriority(Prompt("Prioritas (Tinggi / Sedang / Rendah):", "Sedang", "Tambah Tugas") ?? "Sedang");
+        var priority = NormalizePriority(Prompt("Prioritas: Tinggi / Sedang / Rendah", "Sedang", "Tambah Tugas") ?? "Sedang");
         _data.Tasks.Add(new RemmTask { Title = title.Trim(), Priority = priority });
-        RemmDataService.Save(_data); RefreshView();
+        SaveAndRefresh();
     }
 
     private void FilterAll_Click(object sender, RoutedEventArgs e) => SetFilter("Semua");
@@ -174,15 +157,37 @@ public partial class TaskWindow : Window
     private void FilterMedium_Click(object sender, RoutedEventArgs e) => SetFilter("Sedang");
     private void FilterLow_Click(object sender, RoutedEventArgs e) => SetFilter("Rendah");
     private void SearchBox_TextChanged(object sender, WpfTextChangedEventArgs e) => RefreshView();
-    private void SetFilter(string filter) { _filter = filter; RefreshView(); }
+
+    private void SetFilter(string filter)
+    {
+        _filter = filter;
+        FilterAllButton.Background = filter == "Semua" ? ToBrush("#22D3EE", "#22D3EE") : ToBrush("#20242A", "#20242A");
+        FilterAllButton.Foreground = filter == "Semua" ? ToBrush("#061015", "#061015") : ToBrush("#C8D2DA", "#C8D2DA");
+        FilterHighButton.Background = filter == "Tinggi" ? ToBrush("#22D3EE", "#22D3EE") : ToBrush("#20242A", "#20242A");
+        FilterHighButton.Foreground = filter == "Tinggi" ? ToBrush("#061015", "#061015") : ToBrush("#C8D2DA", "#C8D2DA");
+        FilterMediumButton.Background = filter == "Sedang" ? ToBrush("#22D3EE", "#22D3EE") : ToBrush("#20242A", "#20242A");
+        FilterMediumButton.Foreground = filter == "Sedang" ? ToBrush("#061015", "#061015") : ToBrush("#C8D2DA", "#C8D2DA");
+        FilterLowButton.Background = filter == "Rendah" ? ToBrush("#22D3EE", "#22D3EE") : ToBrush("#20242A", "#20242A");
+        FilterLowButton.Foreground = filter == "Rendah" ? ToBrush("#061015", "#061015") : ToBrush("#C8D2DA", "#C8D2DA");
+        RefreshView();
+    }
 
     private void RefreshView()
     {
         if (!IsInitialized) return;
         DisplayNameText.Text = _data.DisplayName;
+        TaskCountText.Text = _data.Tasks.Count(t => !t.Completed).ToString();
+
         CalendarPanel.Children.Clear();
         foreach (var schedule in _data.Schedules.OrderBy(s => s.DateTime).Take(3))
-            CalendarPanel.Children.Add(new WpfTextBlock { Text = $"{schedule.Title}    {schedule.DateTime:dd MMM}", Foreground = WpfBrushes.WhiteSmoke, FontSize = 10, FontWeight = WpfFontWeights.SemiBold, Margin = new Thickness(0, 2, 0, 4), TextTrimming = TextTrimming.CharacterEllipsis });
+        {
+            var row = new WpfGrid { Margin = new Thickness(0, 2, 0, 5) };
+            row.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
+            row.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = System.Windows.GridLength.Auto });
+            var title = new WpfTextBlock { Text = schedule.Title, Foreground = WpfBrushes.WhiteSmoke, FontSize = 9.5, FontWeight = WpfFontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
+            var date = new WpfTextBlock { Text = schedule.DateTime.ToString("dd MMM"), Foreground = ToBrush("#22D3EE", "#22D3EE"), FontSize = 9, FontWeight = WpfFontWeights.Bold, Margin = new Thickness(7, 0, 0, 0) };
+            WpfGrid.SetColumn(date, 1); row.Children.Add(title); row.Children.Add(date); CalendarPanel.Children.Add(row);
+        }
         if (_data.Schedules.Count == 0)
             CalendarPanel.Children.Add(new WpfTextBlock { Text = "Belum ada jadwal.", Foreground = WpfBrushes.Gray, FontStyle = WpfFontStyles.Italic, FontSize = 9 });
 
@@ -190,12 +195,14 @@ public partial class TaskWindow : Window
         var search = SearchBox.Text?.Trim() ?? "";
         foreach (var routine in _data.Routines.Where(r => string.IsNullOrWhiteSpace(search) || r.Title.Contains(search, StringComparison.OrdinalIgnoreCase)))
         {
-            var row = new WpfDockPanel { Margin = new Thickness(0, 2, 0, 4) };
-            var text = new WpfTextBlock { Text = routine.Title, Foreground = WpfBrushes.WhiteSmoke, FontSize = 10, VerticalAlignment = System.Windows.VerticalAlignment.Center };
+            var row = new WpfDockPanel { Margin = new Thickness(0, 2, 0, 3) };
+            var text = new WpfTextBlock { Text = routine.Title, Foreground = WpfBrushes.WhiteSmoke, FontSize = 9.5, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
             WpfDockPanel.SetDock(text, WpfDock.Left);
-            var delete = new WpfButton { Content = "×", Width = 24, Height = 22, Tag = routine.Id, Margin = new Thickness(4, 0, 0, 0) };
+            var delete = new WpfButton { Content = "×", Width = 23, Height = 21, Tag = routine.Id, Margin = new Thickness(5, 0, 0, 0), ToolTip = "Hapus rutinitas" };
             delete.Click += DeleteRoutine_Click; WpfDockPanel.SetDock(delete, WpfDock.Right); row.Children.Add(delete); row.Children.Add(text); RoutinePanel.Children.Add(row);
         }
+        if (RoutinePanel.Children.Count == 0)
+            RoutinePanel.Children.Add(new WpfTextBlock { Text = "Belum ada rutinitas.", Foreground = WpfBrushes.Gray, FontStyle = WpfFontStyles.Italic, FontSize = 9 });
 
         TasksPanel.Children.Clear();
         var tasks = _data.Tasks.Where(t => (_filter == "Semua" || t.Priority == _filter) && (string.IsNullOrWhiteSpace(search) || t.Title.Contains(search, StringComparison.OrdinalIgnoreCase))).ToList();
@@ -203,32 +210,71 @@ public partial class TaskWindow : Window
         foreach (var task in tasks)
         {
             var row = new WpfDockPanel { Margin = new Thickness(0, 1, 0, 4) };
-            var check = new WpfCheckBox { IsChecked = task.Completed, Tag = task.Id, VerticalAlignment = System.Windows.VerticalAlignment.Center };
+            var check = new WpfCheckBox { IsChecked = task.Completed, Tag = task.Id, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 5, 0) };
             check.Checked += TaskCheckChanged; check.Unchecked += TaskCheckChanged; WpfDockPanel.SetDock(check, WpfDock.Left);
-            var delete = new WpfButton { Content = "×", Width = 24, Height = 22, Tag = task.Id, Margin = new Thickness(4, 0, 0, 0) };
+            var delete = new WpfButton { Content = "×", Width = 23, Height = 21, Tag = task.Id, Margin = new Thickness(5, 0, 0, 0), ToolTip = "Hapus tugas" };
             delete.Click += DeleteTask_Click; WpfDockPanel.SetDock(delete, WpfDock.Right);
-            var text = new WpfTextBlock { Text = $"{task.Title}  [{task.Priority}]", Foreground = task.Completed ? WpfBrushes.Gray : WpfBrushes.WhiteSmoke, TextDecorations = task.Completed ? WpfTextDecorations.Strikethrough : null, FontSize = 9, VerticalAlignment = System.Windows.VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
+            var text = new WpfTextBlock { Text = $"{task.Title}  ·  {task.Priority}", Foreground = task.Completed ? WpfBrushes.Gray : WpfBrushes.WhiteSmoke, TextDecorations = task.Completed ? WpfTextDecorations.Strikethrough : null, FontSize = 9, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
             row.Children.Add(check); row.Children.Add(delete); row.Children.Add(text); TasksPanel.Children.Add(row);
         }
     }
 
-    private void DeleteRoutine_Click(object sender, RoutedEventArgs e) { if (sender is WpfButton b && b.Tag is string id) { _data.Routines.RemoveAll(r => r.Id == id); RemmDataService.Save(_data); RefreshView(); } }
-    private void TaskCheckChanged(object sender, RoutedEventArgs e) { if (sender is WpfCheckBox b && b.Tag is string id) { var t = _data.Tasks.FirstOrDefault(x => x.Id == id); if (t != null) { t.Completed = b.IsChecked == true; RemmDataService.Save(_data); RefreshView(); } } }
-    private void DeleteTask_Click(object sender, RoutedEventArgs e) { if (sender is WpfButton b && b.Tag is string id) { _data.Tasks.RemoveAll(t => t.Id == id); RemmDataService.Save(_data); RefreshView(); } }
+    private void DeleteRoutine_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is WpfButton b && b.Tag is string id) { _data.Routines.RemoveAll(r => r.Id == id); SaveAndRefresh(); }
+    }
+
+    private void TaskCheckChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is WpfCheckBox b && b.Tag is string id)
+        {
+            var task = _data.Tasks.FirstOrDefault(x => x.Id == id);
+            if (task is null) return;
+            task.Completed = b.IsChecked == true;
+            SaveAndRefresh();
+        }
+    }
+
+    private void DeleteTask_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is WpfButton b && b.Tag is string id) { _data.Tasks.RemoveAll(t => t.Id == id); SaveAndRefresh(); }
+    }
+
+    private void SaveAndRefresh()
+    {
+        try
+        {
+            RemmDataService.Save(_data);
+            RefreshView();
+        }
+        catch (Exception ex)
+        {
+            Info($"Data tidak dapat disimpan:\n{ex.Message}", "REMM(i)");
+        }
+    }
 
     private static string NormalizePriority(string value) => value.Contains("tinggi", StringComparison.OrdinalIgnoreCase) ? "Tinggi" : value.Contains("rendah", StringComparison.OrdinalIgnoreCase) ? "Rendah" : "Sedang";
 
     private static string? Prompt(string label, string initial, string title)
     {
-        var dialog = new Window { Title = title, Width = 340, Height = 170, WindowStartupLocation = WindowStartupLocation.CenterScreen, ResizeMode = ResizeMode.NoResize, ShowInTaskbar = false, Topmost = true, Background = WpfBrushes.White };
-        var grid = new WpfGrid { Margin = new Thickness(14) };
-        grid.RowDefinitions.Add(new WpfRowDefinition { Height = GridLength.Auto }); grid.RowDefinitions.Add(new WpfRowDefinition { Height = GridLength.Auto }); grid.RowDefinitions.Add(new WpfRowDefinition { Height = GridLength.Auto });
-        var labelBlock = new WpfTextBlock { Text = label, Foreground = WpfBrushes.Black, Margin = new Thickness(0, 0, 0, 8) }; WpfGrid.SetRow(labelBlock, 0);
-        var input = new WpfTextBox { Text = initial, Height = 32, Padding = new Thickness(8) }; WpfGrid.SetRow(input, 1);
-        var buttons = new WpfStackPanel { Orientation = WpfOrientation.Horizontal, HorizontalAlignment = WpfHorizontalAlignment.Right, Margin = new Thickness(0, 10, 0, 0) };
-        var cancel = new WpfButton { Content = "Batal", Width = 70, Margin = new Thickness(4) }; var ok = new WpfButton { Content = "OK", Width = 70, Margin = new Thickness(4) };
+        var dialog = new Window
+        {
+            Title = title, Width = 360, Height = 185, WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            ResizeMode = ResizeMode.NoResize, ShowInTaskbar = false, Topmost = true, Background = ToBrush("#171A1F", "#171A1F")
+        };
+        var grid = new WpfGrid { Margin = new Thickness(16) };
+        grid.RowDefinitions.Add(new WpfRowDefinition { Height = GridLength.Auto });
+        grid.RowDefinitions.Add(new WpfRowDefinition { Height = GridLength.Auto });
+        grid.RowDefinitions.Add(new WpfRowDefinition { Height = GridLength.Auto });
+        var labelBlock = new WpfTextBlock { Text = label, Foreground = WpfBrushes.WhiteSmoke, FontSize = 11, Margin = new Thickness(0, 0, 0, 9) }; WpfGrid.SetRow(labelBlock, 0);
+        var input = new WpfTextBox { Text = initial, Height = 34, Padding = new Thickness(8), Background = ToBrush("#101216", "#101216"), Foreground = WpfBrushes.WhiteSmoke, BorderBrush = ToBrush("#343B45", "#343B45") }; WpfGrid.SetRow(input, 1);
+        var buttons = new WpfStackPanel { Orientation = WpfOrientation.Horizontal, HorizontalAlignment = WpfHorizontalAlignment.Right, Margin = new Thickness(0, 12, 0, 0) };
+        var cancel = new WpfButton { Content = "Batal", Width = 75, Height = 30, Margin = new Thickness(4), Background = ToBrush("#20242A", "#20242A"), Foreground = WpfBrushes.WhiteSmoke };
+        var ok = new WpfButton { Content = "OK", Width = 75, Height = 30, Margin = new Thickness(4), Background = ToBrush("#22D3EE", "#22D3EE"), Foreground = ToBrush("#061015", "#061015"), FontWeight = WpfFontWeights.Bold };
         cancel.Click += (_, _) => dialog.DialogResult = false; ok.Click += (_, _) => dialog.DialogResult = true;
-        buttons.Children.Add(cancel); buttons.Children.Add(ok); WpfGrid.SetRow(buttons, 2); grid.Children.Add(labelBlock); grid.Children.Add(input); grid.Children.Add(buttons); dialog.Content = grid; dialog.Loaded += (_, _) => input.Focus();
+        buttons.Children.Add(cancel); buttons.Children.Add(ok); WpfGrid.SetRow(buttons, 2);
+        grid.Children.Add(labelBlock); grid.Children.Add(input); grid.Children.Add(buttons); dialog.Content = grid;
+        dialog.Loaded += (_, _) => { input.Focus(); input.SelectAll(); };
         return dialog.ShowDialog() == true ? input.Text : null;
     }
 
