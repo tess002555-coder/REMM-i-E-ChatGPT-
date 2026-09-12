@@ -4,6 +4,11 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using WpfBrushes = System.Windows.Media.Brushes;
+using WpfFontStyles = System.Windows.FontStyles;
+using WpfMessageBox = System.Windows.MessageBox;
+using WpfMessageBoxButton = System.Windows.MessageBoxButton;
+using WpfMessageBoxImage = System.Windows.MessageBoxImage;
+using WpfMessageBoxResult = System.Windows.MessageBoxResult;
 
 namespace RemmI;
 
@@ -31,7 +36,7 @@ public partial class RoutineWindow : Window
         MonthText.Text = DateTime.Today.ToString("MMMM yyyy", CultureInfo.GetCultureInfo("id-ID"));
         CalendarGrid.Children.Clear();
         foreach (var name in new[] { "Mg", "Sn", "Sl", "Rb", "Km", "Jm", "Sb" })
-            CalendarGrid.Children.Add(new TextBlock { Text = name, Foreground = WpfBrushes.Gray, FontSize = 7.5, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 2) });
+            CalendarGrid.Children.Add(new TextBlock { Text = name, Foreground = WpfBrushes.Gray, FontSize = 7.5, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 2, 0, 2) });
         var first = (int)new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1).DayOfWeek;
         for (var i = 0; i < first; i++) CalendarGrid.Children.Add(new Border { Height = 27 });
         for (var day = 1; day <= DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month); day++)
@@ -44,7 +49,18 @@ public partial class RoutineWindow : Window
 
     private static System.Windows.Media.Brush Brush(string hex) => (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString(hex)!;
     private void Save_Click(object sender, RoutedEventArgs e) { var routine = Routine; if (routine is null) return; routine.Notes = NotesBox.Text.Trim(); RemmDataService.Save(_data); Close(); }
-    private void Delete_Click(object sender, RoutedEventArgs e) { var routine = Routine; if (routine is null) return; if (MessageBox.Show($"Hapus rutinitas '{routine.Title}'?", "REMM(i)", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes) { _data.Routines.Remove(routine); RemmDataService.Save(_data); Close(); } }
-    private void Export_Click(object sender, RoutedEventArgs e) { var routine = Routine; if (routine is null) return; MessageBox.Show($"Kartu pencapaian untuk '{routine.Title}' siap dibuat.\n\nDibuat: {routine.CreatedDate:dd MMM yyyy}\nCatatan: {routine.Notes}", "Ekspor Kartu", MessageBoxButton.OK, MessageBoxImage.Information); }
+    private void Delete_Click(object sender, RoutedEventArgs e)
+    {
+        var routine = Routine;
+        if (routine is null) return;
+        if (WpfMessageBox.Show($"Hapus rutinitas '{routine.Title}'?", "REMM(i)", WpfMessageBoxButton.YesNo, WpfMessageBoxImage.Warning) == WpfMessageBoxResult.Yes)
+        { _data.Routines.Remove(routine); RemmDataService.Save(_data); Close(); }
+    }
+    private void Export_Click(object sender, RoutedEventArgs e)
+    {
+        var routine = Routine;
+        if (routine is null) return;
+        WpfMessageBox.Show($"Kartu pencapaian untuk '{routine.Title}' siap dibuat.\n\nDibuat: {routine.CreatedDate:dd MMM yyyy}\nCatatan: {routine.Notes}", "Ekspor Kartu", WpfMessageBoxButton.OK, WpfMessageBoxImage.Information);
+    }
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 }
