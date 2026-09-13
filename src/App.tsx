@@ -25,7 +25,14 @@ const MascotApp: React.FC = () => {
   const [characterState, setCharacterState] = useState<CharacterState>('peek');
 
   const { playNotification, speakText, sendPushNotification } = useAudio(audioConfig);
-  const { windowState, handleDragStart, handleDragEnd, handleMouseEnter, handleMouseLeave } = useEdgeSnap({
+  const {
+    windowState,
+    handleDragStart,
+    handleDragEnd,
+    handleMouseEnter,
+    handleMouseLeave,
+    openMainPanel,
+  } = useEdgeSnap({
     autoHideSeconds: characterConfig.autoHideSeconds,
     hoverDelayMs: characterConfig.hoverDelayMs ?? 0,
     closeDelayMs: characterConfig.closeDelayMs ?? 0,
@@ -90,7 +97,7 @@ const MascotApp: React.FC = () => {
         pendingDeadlines={pendingDeadlines}
         position={{ x: 0, y: 0 }}
         screenWidth={typeof window !== 'undefined' ? window.innerWidth : 1200}
-        onClick={() => undefined}
+        onClick={() => { void openMainPanel(); }}
         onDragStart={handleDragStart}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
