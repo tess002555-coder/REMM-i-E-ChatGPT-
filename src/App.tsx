@@ -35,7 +35,6 @@ const MascotApp: React.FC = () => {
     handleDragEnd,
     handleMouseEnter,
     handleMouseLeave,
-    openMainPanel,
   } = useEdgeSnap({
     autoHideSeconds: characterConfig.autoHideSeconds,
     hoverDelayMs: characterConfig.hoverDelayMs ?? 0,
@@ -101,7 +100,9 @@ const MascotApp: React.FC = () => {
         pendingDeadlines={pendingDeadlines}
         position={{ x: 0, y: 0 }}
         screenWidth={typeof window !== 'undefined' ? window.innerWidth : 1200}
-        onClick={() => { void openMainPanel(); }}
+        // Click is resolved by useEdgeSnap after native drag detection.
+        // Keeping this empty prevents a drag-release from also opening the panel.
+        onClick={() => undefined}
         onDragStart={handleDragStart}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
