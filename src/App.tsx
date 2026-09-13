@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { CharacterState, CharacterConfig, AudioConfig, TaskItem } from './types';
 import { LocalDataService } from './utils/db';
 import { initCursorEvents, addInteraction, removeInteraction } from './utils/cursorEvents';
@@ -13,6 +13,19 @@ const nativeWindowMode = typeof window !== 'undefined'
   : null;
 
 export default function App() {
+  useLayoutEffect(() => {
+    const native = nativeWindowMode === 'panel' || nativeWindowMode === 'settings';
+    document.documentElement.classList.toggle('native-window-page', native);
+    document.body.classList.toggle('native-window-page', native);
+    document.documentElement.classList.toggle('mascot-window-page', !native);
+    document.body.classList.toggle('mascot-window-page', !native);
+
+    return () => {
+      document.documentElement.classList.remove('native-window-page', 'mascot-window-page');
+      document.body.classList.remove('native-window-page', 'mascot-window-page');
+    };
+  }, []);
+
   if (nativeWindowMode === 'panel') {
     return <div className="native-window-root min-h-screen w-full bg-slate-950 text-slate-100"><NativeMainPanel /></div>;
   }
@@ -57,7 +70,7 @@ const MascotApp: React.FC = () => {
         const topTask = pendingDeadlines[0];
         void sendPushNotification(
           `⚠️ Peringatan H-Jam (${characterConfig.projectName || 'REMM(i)E'})`,
-          `Deadline "${topTask?.title || 'Tugas'}" mendekati batas waktu! Segera periksa.`,
+          `Deadline \"${topTask?.title || 'Tugas'}\" mendekati batas waktu! Segera periksa.`,
           'remmie-deadline'
         );
       }
