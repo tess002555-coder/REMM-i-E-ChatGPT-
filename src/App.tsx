@@ -13,8 +13,12 @@ const nativeWindowMode = typeof window !== 'undefined'
   : null;
 
 export default function App() {
-  if (nativeWindowMode === 'panel') return <NativeMainPanel />;
-  if (nativeWindowMode === 'settings') return <NativeSettingsWindow />;
+  if (nativeWindowMode === 'panel') {
+    return <div className="native-window-root min-h-screen w-full bg-slate-950 text-slate-100"><NativeMainPanel /></div>;
+  }
+  if (nativeWindowMode === 'settings') {
+    return <div className="native-window-root min-h-screen w-full bg-slate-950 text-slate-100"><NativeSettingsWindow /></div>;
+  }
   return <MascotApp />;
 }
 
