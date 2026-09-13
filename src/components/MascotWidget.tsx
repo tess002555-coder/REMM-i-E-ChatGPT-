@@ -40,8 +40,8 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
   const lastQuoteRef = useRef<string | null>(null);
   const dragActiveRef = useRef(false);
 
-  // Relative asset path is required for the Tauri/Vite production bundle.
-  const imageSrc = './mascot.png';
+  // Assets in /public are served from the webview root in the production bundle.
+  const imageSrc = '/mascot.png';
 
   useEffect(() => {
     if (!config.speechEnabled) {
@@ -54,7 +54,7 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
     if (pendingDeadlines.length > 0 || state === 'alert') {
       const topTask = pendingDeadlines[0];
       quote = topTask
-        ? `⚠️ Pengingat H-Jam: "${topTask.title}" mendekati batas waktu!`
+        ? `⚠️ Pengingat H-Jam: \"${topTask.title}\" mendekati batas waktu!`
         : '⚠️ Ada tugas atau jadwal yang perlu segera diselesaikan!';
     } else if (state === 'pointing' || isPanelOpen) {
       quote = '👉 Denia menunjuk tabel jadwal & tugasmu di samping!';
