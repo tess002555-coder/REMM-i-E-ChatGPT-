@@ -1,0 +1,26 @@
+<Window x:Class="RemmI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Width="128" Height="128"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True"
+        ShowActivated="True"
+        SnapsToDevicePixels="True"
+        UseLayoutRounding="True"
+        MouseEnter="Mascot_MouseEnter"
+        MouseLeave="Mascot_MouseLeave">
+    <Grid Background="#01000000"
+          MouseLeftButtonDown="Mascot_MouseLeftButtonDown"
+          MouseMove="Mascot_MouseMove"
+          MouseLeftButtonUp="Mascot_MouseLeftButtonUp">
+        <Image Source="/Assets/mascot.png"
+               Stretch="Uniform"
+               Width="128"
+               Height="128"
+               IsHitTestVisible="False" />
+    </Grid>
+</Window>

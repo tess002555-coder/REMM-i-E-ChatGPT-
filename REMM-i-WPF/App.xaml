@@ -1,0 +1,11 @@
+<Application x:Class="RemmI.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <SolidColorBrush x:Key="PanelBackground" Color="#F0151725" />
+        <SolidColorBrush x:Key="PanelCard" Color="#E61E293B" />
+        <SolidColorBrush x:Key="PanelText" Color="#FFF1F5F9" />
+        <SolidColorBrush x:Key="PanelMuted" Color="#FF94A3B8" />
+    </Application.Resources>
+</Application>

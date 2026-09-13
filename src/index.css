@@ -1,26 +1,107 @@
-@import "tailwindcss";
+* { box-sizing: border-box; }
 
-html, body, #root, .widget-wrapper {
-  background: transparent !important;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none !important;
-  overflow: visible;
+html, body, #root {
+  width: 100%;
+  height: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+}
+
+html, body {
+  background: transparent;
+  font-family: Arial, sans-serif;
+}
+
+body {
   -webkit-user-select: none;
   user-select: none;
 }
 
-.interactive-element {
-  pointer-events: auto !important;
-}
+button { font: inherit; }
 
-.interactive-widget {
-  pointer-events: auto !important;
+.mascot-hitbox {
+  width: 180px;
+  height: 180px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: transparent;
   cursor: grab;
 }
 
-.interactive-widget:active {
-  cursor: grabbing;
+.mascot-hitbox:active { cursor: grabbing; }
+
+.mascot-hitbox img {
+  display: block;
+  width: 180px;
+  height: 180px;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
+
+.panel {
+  width: 520px;
+  height: 720px;
+  margin: 0;
+  padding: 24px;
+  overflow: hidden;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.97);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  cursor: grab;
+}
+
+.panel-header:active { cursor: grabbing; }
+
+.panel-kicker {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: #67e8f9;
+  font-weight: 700;
+}
+
+.panel h1 { margin: 6px 0 0; font-size: 28px; }
+
+.close-button {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.close-button:hover { background: rgba(255, 255, 255, 0.16); }
+
+.welcome-card,
+.task-card {
+  margin-top: 22px;
+  padding: 18px;
+  border-radius: 16px;
+  background: rgba(30, 41, 59, 0.9);
+}
+
+.welcome-card { display: flex; gap: 12px; align-items: flex-start; }
+.status-dot { width: 10px; height: 10px; margin-top: 5px; border-radius: 50%; background: #22c55e; }
+.welcome-card p { margin: 5px 0 0; color: #94a3b8; font-size: 13px; line-height: 1.5; }
+.task-card h2 { margin: 0 0 14px; font-size: 18px; }
+.empty-task { padding: 16px; border-radius: 12px; color: #94a3b8; background: rgba(15, 23, 42, 0.7); font-size: 13px; line-height: 1.5; }
