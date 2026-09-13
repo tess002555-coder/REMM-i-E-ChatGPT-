@@ -15,7 +15,10 @@ const nativeWindowMode = typeof window !== 'undefined'
 export default function App() {
   if (nativeWindowMode === 'panel') return <NativeMainPanel />;
   if (nativeWindowMode === 'settings') return <NativeSettingsWindow />;
+  return <MascotApp />;
+}
 
+const MascotApp: React.FC = () => {
   const [characterConfig] = useState<CharacterConfig>(() => LocalDataService.getCharacterConfig());
   const [audioConfig] = useState<AudioConfig>(() => LocalDataService.getAudioConfig());
   const [tasks, setTasks] = useState<TaskItem[]>(() => LocalDataService.getTasks());
@@ -96,4 +99,4 @@ export default function App() {
       />
     </div>
   );
-}
+};
