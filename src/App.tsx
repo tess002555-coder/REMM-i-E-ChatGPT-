@@ -1,32 +1,28 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CharacterState, CharacterConfig, AudioConfig, SyncConfig, TaskItem } from './types';
+import { CharacterState, CharacterConfig, AudioConfig, TaskItem } from './types';
 import { LocalDataService } from './utils/db';
 import { initCursorEvents, addInteraction, removeInteraction } from './utils/cursorEvents';
 import { useAudio } from './hooks/useAudio';
 import { useEdgeSnap } from './hooks/useEdgeSnap';
 import { MascotWidget } from './components/MascotWidget';
 import { NativeMainPanel } from './components/NativeMainPanel';
+import { NativeSettingsWindow } from './components/NativeSettingsWindow';
 
-const isNativePanelWindow = typeof window !== 'undefined' &&
-  new URLSearchParams(window.location.search).get('window') === 'panel';
+const nativeWindowMode = typeof window !== 'undefined'
+  ? new URLSearchParams(window.location.search).get('window')
+  : null;
 
 export default function App() {
-  if (isNativePanelWindow) return <NativeMainPanel />;
+  if (nativeWindowMode === 'panel') return <NativeMainPanel />;
+  if (nativeWindowMode === 'settings') return <NativeSettingsWindow />;
 
-  const [characterConfig, setCharacterConfig] = useState<CharacterConfig>(() => LocalDataService.getCharacterConfig());
+  const [characterConfig] = useState<CharacterConfig>(() => LocalDataService.getCharacterConfig());
   const [audioConfig] = useState<AudioConfig>(() => LocalDataService.getAudioConfig());
-  const [_syncConfig] = useState<SyncConfig>(() => LocalDataService.getSyncConfig());
   const [tasks, setTasks] = useState<TaskItem[]>(() => LocalDataService.getTasks());
   const [characterState, setCharacterState] = useState<CharacterState>('peek');
 
   const { playNotification, speakText, sendPushNotification } = useAudio(audioConfig);
-  const {
-    windowState,
-    handleDragStart,
-    handleDragEnd,
-    handleMouseEnter,
-    handleMouseLeave,
-  } = useEdgeSnap({
+  const { windowState, handleDragStart, handleDragEnd, handleMouseEnter, handleMouseLeave } = useEdgeSnap({
     autoHideSeconds: characterConfig.autoHideSeconds,
     hoverDelayMs: characterConfig.hoverDelayMs ?? 0,
     closeDelayMs: characterConfig.closeDelayMs ?? 0,
@@ -91,8 +87,6 @@ export default function App() {
         pendingDeadlines={pendingDeadlines}
         position={{ x: 0, y: 0 }}
         screenWidth={typeof window !== 'undefined' ? window.innerWidth : 1200}
-        // The native controller opens the panel after it has classified the press
-        // as a click. Keeping this callback inert prevents duplicate windows.
         onClick={() => undefined}
         onDragStart={handleDragStart}
         onMouseEnter={handleMouseEnter}
