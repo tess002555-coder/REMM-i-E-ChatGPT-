@@ -12,6 +12,18 @@ html, body, #root, .widget-wrapper {
   user-select: none;
 }
 
+/* Native Tauri windows must remain fully interactive. */
+.native-window-root {
+  pointer-events: auto !important;
+  width: 100%;
+  min-height: 100%;
+  user-select: auto;
+}
+
+.native-window-root * {
+  pointer-events: auto;
+}
+
 .interactive-element {
   pointer-events: auto !important;
 }
