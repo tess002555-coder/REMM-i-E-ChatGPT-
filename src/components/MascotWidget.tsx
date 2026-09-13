@@ -40,7 +40,8 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
   const lastQuoteRef = useRef<string | null>(null);
   const dragActiveRef = useRef(false);
 
-  const imageSrc = '/mascot.png';
+  // Relative asset path is required for the Tauri/Vite production bundle.
+  const imageSrc = './mascot.png';
 
   useEffect(() => {
     if (!config.speechEnabled) {
@@ -121,6 +122,10 @@ export const MascotWidget: React.FC<MascotWidgetProps> = ({
           alt="Mascot Character"
           className="w-[180px] h-[180px] object-contain select-none pointer-events-none"
           draggable={false}
+          onError={(event) => {
+            const target = event.currentTarget;
+            target.style.display = 'none';
+          }}
         />
         {(state === 'alert' || pendingDeadlines.length > 0) && (
           <div className="absolute top-3 right-3 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-slate-900 animate-pulse pointer-events-none" />
