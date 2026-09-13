@@ -2,7 +2,7 @@ name: Build Windows EXE (Tauri)
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, 'fix/**' ]
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
@@ -36,10 +36,6 @@ jobs:
       - name: Install npm dependencies
         shell: pwsh
         run: |
-          # Tailwind CSS v4 uses @tailwindcss/oxide with platform-specific
-          # optional native packages. npm ci can fail to restore these optional
-          # dependencies on the Windows runner, so rebuild node_modules from
-          # package.json instead of using the existing lockfile.
           if (Test-Path node_modules) { Remove-Item -Recurse -Force node_modules }
           if (Test-Path package-lock.json) { Remove-Item -Force package-lock.json }
           npm install --legacy-peer-deps --include=optional
