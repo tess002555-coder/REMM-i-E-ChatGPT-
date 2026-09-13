@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { emit } from '@tauri-apps/api/event';
 import { LocalDataService } from '../utils/db';
 import { AudioConfig, CharacterConfig, PriorityLevel, RoutineItem, ScheduleItem, SyncConfig, TaskItem } from '../types';
 import { TaskPanel } from './TaskPanel';
 import { DetailModal, DetailModalType } from './DetailModal';
-import { SoundSettings } from './SoundSettings';
 import { SyncModal } from './SyncModal';
 import { TauriConfigModal } from './TauriConfigModal';
 import { InstallAppModal } from './InstallAppModal';
@@ -19,7 +19,6 @@ export const NativeMainPanel: React.FC = () => {
   const [audioConfig, setAudioConfig] = useState<AudioConfig>(() => LocalDataService.getAudioConfig());
   const [syncConfig, setSyncConfig] = useState<SyncConfig>(() => LocalDataService.getSyncConfig());
   const [activeModal, setActiveModal] = useState<DetailModalType | null>(null);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSyncOpen, setIsSyncOpen] = useState(false);
   const [isTauriOpen, setIsTauriOpen] = useState(false);
   const [isInstallOpen, setIsInstallOpen] = useState(false);
@@ -29,6 +28,39 @@ export const NativeMainPanel: React.FC = () => {
   const closeWindow = useCallback(async () => {
     await emit('main-panel-closed');
     await getCurrentWindow().close();
+  }, []);
+
+  const openSettingsWindow = useCallback(async () => {
+    try {
+      const existing = await WebviewWindow.getByLabel('settings');
+      if (existing) {
+        await existing.show();
+        await existing.setFocus();
+        return;
+      }
+      const settings = new WebviewWindow('settings', {
+        url: 'index.html?window=settings',
+        title: 'REMM(i) - Pengaturan',
+        width: 760,
+        height: 720,
+        minWidth: 680,
+        minHeight: 620,
+        resizable: true,
+        fullscreen: false,
+        decorations: false,
+        transparent: false,
+        alwaysOnTop: false,
+        skipTaskbar: false,
+        visible: false,
+        focus: true,
+      });
+      settings.once('tauri://created', async () => {
+        await settings.show();
+        await settings.setFocus();
+      });
+    } catch (e) {
+      console.error('[REMM] Failed to open settings:', e);
+    }
   }, []);
 
   useEffect(() => {
@@ -71,10 +103,6 @@ export const NativeMainPanel: React.FC = () => {
   const handleToggleSchedule = useCallback((id: string) => setSchedules(LocalDataService.toggleSchedule(id)), []);
   const handleDeleteSchedule = useCallback((id: string) => setSchedules(LocalDataService.deleteSchedule(id)), []);
 
-  const handleSaveAudio = useCallback((config: AudioConfig) => { setAudioConfig(config); LocalDataService.saveAudioConfig(config); }, []);
-  const handleSaveCharacter = useCallback((config: CharacterConfig) => { setCharacterConfig(config); LocalDataService.saveCharacterConfig(config); }, []);
-  const handleSaveSync = useCallback((config: SyncConfig) => { setSyncConfig(config); LocalDataService.saveSyncConfig(config); }, []);
-
   return (
     <div className="w-full h-full min-h-screen bg-slate-950 text-slate-100 p-3 overflow-hidden">
       <TaskPanel
@@ -90,7 +118,7 @@ export const NativeMainPanel: React.FC = () => {
         onToggleRoutine={handleToggleRoutine}
         onDeleteSchedule={handleDeleteSchedule}
         onOpenModal={setActiveModal}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenSettings={openSettingsWindow}
         onOpenInstallModal={() => setIsInstallOpen(true)}
         onClose={closeWindow}
       />
@@ -108,12 +136,8 @@ export const NativeMainPanel: React.FC = () => {
             onToggleSchedule={handleToggleSchedule}
             onDeleteSchedule={handleDeleteSchedule}
             onAddRoutine={handleAddRoutine}
-            onSaveRoutineLog={(id, dateStr, content) => {
-              setRoutines(LocalDataService.updateRoutineDailyLog(id, dateStr, content));
-            }}
-            onDeleteRoutineLog={(id, dateStr) => {
-              setRoutines(LocalDataService.deleteRoutineDailyLog(id, dateStr));
-            }}
+            onSaveRoutineLog={(id, dateStr, content) => setRoutines(LocalDataService.updateRoutineDailyLog(id, dateStr, content))}
+            onDeleteRoutineLog={(id, dateStr) => setRoutines(LocalDataService.deleteRoutineDailyLog(id, dateStr))}
             onDeleteRoutine={handleDeleteRoutine}
             onAddTask={handleAddTask}
             onToggleTask={handleToggleTask}
@@ -123,23 +147,11 @@ export const NativeMainPanel: React.FC = () => {
         </div>
       )}
 
-      <SoundSettings
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        audioConfig={audioConfig}
-        characterConfig={characterConfig}
-        syncConfig={syncConfig}
-        onSaveAudio={handleSaveAudio}
-        onSaveCharacter={handleSaveCharacter}
-        onSaveSync={handleSaveSync}
-        onTestSound={playNotification}
-        onRefreshData={refreshData}
-      />
       <SyncModal
         isOpen={isSyncOpen}
         onClose={() => setIsSyncOpen(false)}
         syncConfig={syncConfig}
-        onSaveSyncConfig={handleSaveSync}
+        onSaveSyncConfig={(config) => { setSyncConfig(config); LocalDataService.saveSyncConfig(config); }}
         onRefreshData={refreshData}
       />
       {isTauriOpen && <TauriConfigModal isOpen onClose={() => setIsTauriOpen(false)} />}
