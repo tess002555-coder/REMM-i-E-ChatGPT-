@@ -38,7 +38,7 @@ public partial class MainWindow : Window
     {
         _settings = settings;
         _peekOffset = MascotSize * (1.0 - Math.Clamp(settings.PeekVisiblePercent, 50, 90) / 100.0);
-        Topmost = true;
+        Topmost = false;
         SetPose(_taskWindow is not null ? "pointing" : "peek");
         _taskWindow?.ApplySettings(settings);
     }
@@ -95,15 +95,21 @@ public partial class MainWindow : Window
             return;
 
         var current = PointToScreen(e.GetPosition(this));
-        var dx = current.X - _mouseDownScreen.X;
-        var dy = current.Y - _mouseDownScreen.Y;
+        var transform = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice;
+        var sx = transform?.M11 ?? 1.0;
+        var sy = transform?.M22 ?? 1.0;
+        var dx = (current.X - _mouseDownScreen.X) / sx;
+        var dy = (current.Y - _mouseDownScreen.Y) / sy;
+
         if (!_moved && Math.Abs(dx) < 5 && Math.Abs(dy) < 5)
             return;
 
         _moved = true;
-        var area = GetWorkingAreaInDip();
-        Left = Math.Max(area.Left, Math.Min(_dragStartLeft + dx, area.Right - Width));
-        Top = Math.Max(area.Top, Math.Min(_dragStartTop + dy, area.Bottom - Height));
+
+        // Do not clamp the mascot while dragging. The user can move it freely;
+        // snapping is applied only after the mouse button is released.
+        Left = _dragStartLeft + dx;
+        Top = _dragStartTop + dy;
     }
 
     private void Mascot_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -117,7 +123,7 @@ public partial class MainWindow : Window
         if (_moved)
         {
             if (_settings.AutoSnap)
-                SnapToNearestEdge();
+                SnapToNearestSide();
             else
                 SetPose("idle");
         }
@@ -129,24 +135,28 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    private void SnapToNearestEdge()
+    private void SnapToNearestSide()
     {
         var area = GetWorkingAreaInDip();
-        var maxLeft = area.Right - Width;
         var maxTop = area.Bottom - Height;
-        var x = Math.Max(area.Left, Math.Min(Left, maxLeft));
+
+        // Keep the final vertical position on the current monitor, but choose
+        // only between the left and right edges. Top/bottom are never used.
         var y = Math.Max(area.Top, Math.Min(Top, maxTop));
-        var left = x - area.Left;
-        var right = maxLeft - x;
-        var top = y - area.Top;
-        var bottom = maxTop - y;
-        var min = Math.Min(Math.Min(left, right), Math.Min(top, bottom));
+        var mascotCenterX = Left + Width / 2.0;
+        var distanceToLeft = Math.Abs(mascotCenterX - area.Left);
+        var distanceToRight = Math.Abs(mascotCenterX - area.Right);
 
-        if (min == left) { Left = area.Left - _peekOffset; Top = y; }
-        else if (min == right) { Left = maxLeft + _peekOffset; Top = y; }
-        else if (min == top) { Left = x; Top = area.Top - _peekOffset; }
-        else { Left = x; Top = maxTop + _peekOffset; }
+        if (distanceToLeft <= distanceToRight)
+        {
+            Left = area.Left - _peekOffset;
+        }
+        else
+        {
+            Left = area.Right - Width + _peekOffset;
+        }
 
+        Top = y;
         SetPose("peek");
     }
 
