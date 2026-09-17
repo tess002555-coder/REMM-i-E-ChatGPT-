@@ -20,6 +20,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow(MainWindow mascot)
     {
         InitializeComponent();
+        Topmost = false;
         _mascot = mascot;
         _data = RemmDataService.Load();
         LoadSettings();
