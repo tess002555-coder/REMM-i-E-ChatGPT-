@@ -4,7 +4,7 @@
         Width="300" Height="510"
         MinWidth="300" MinHeight="510" MaxWidth="300" MaxHeight="510"
         WindowStyle="None" ResizeMode="NoResize"
-        ShowInTaskbar="False" Topmost="True" ShowActivated="True"
+        ShowInTaskbar="False" Topmost="False" ShowActivated="True"
         Background="Transparent" AllowsTransparency="True"
         UseLayoutRounding="True" SnapsToDevicePixels="True"
         FontFamily="Segoe UI">
@@ -42,7 +42,8 @@
         </Style>
     </Window.Resources>
 
-    <Border x:Name="PanelRoot" Margin="2" CornerRadius="22" Background="#F521181E" BorderBrush="#F39BB8" BorderThickness="1">
+    <Border x:Name="PanelRoot" Margin="2" CornerRadius="22" Background="#F521181E" BorderBrush="#F39BB8" BorderThickness="1"
+            PreviewMouseLeftButtonDown="Panel_PreviewMouseLeftButtonDown">
         <Grid Margin="10">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
 

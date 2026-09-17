@@ -38,7 +38,11 @@ public partial class MainWindow : Window
     {
         _settings = settings;
         _peekOffset = MascotSize * (1.0 - Math.Clamp(settings.PeekVisiblePercent, 50, 90) / 100.0);
+
+        // REMM(i)E is not a global always-on-top overlay. Other applications may
+        // appear above it normally, matching a desktop widget rather than a modal UI.
         Topmost = false;
+
         SetPose(_taskWindow is not null ? "pointing" : "peek");
         _taskWindow?.ApplySettings(settings);
     }
@@ -85,6 +89,8 @@ public partial class MainWindow : Window
         _dragStartLeft = Left;
         _dragStartTop = Top;
         CaptureMouse();
+        if (Content is System.Windows.Controls.Grid grid)
+            grid.Cursor = Cursors.SizeAll;
         SetPose("idle");
         e.Handled = true;
     }
@@ -106,8 +112,9 @@ public partial class MainWindow : Window
 
         _moved = true;
 
-        // Do not clamp the mascot while dragging. The user can move it freely;
-        // snapping is applied only after the mouse button is released.
+        // Free drag: do not clamp to the working area while the pointer is held.
+        // Snapping happens only after release, so there is no invisible boundary
+        // that prevents the widget from being dragged across the desktop.
         Left = _dragStartLeft + dx;
         Top = _dragStartTop + dy;
     }
@@ -119,6 +126,8 @@ public partial class MainWindow : Window
 
         _dragging = false;
         ReleaseMouseCapture();
+        if (Content is System.Windows.Controls.Grid grid)
+            grid.Cursor = Cursors.Hand;
 
         if (_moved)
         {
@@ -140,21 +149,17 @@ public partial class MainWindow : Window
         var area = GetWorkingAreaInDip();
         var maxTop = area.Bottom - Height;
 
-        // Keep the final vertical position on the current monitor, but choose
-        // only between the left and right edges. Top/bottom are never used.
+        // Only left/right are valid snap destinations. Vertical position is kept,
+        // with a final safety clamp so the mascot remains reachable on-screen.
         var y = Math.Max(area.Top, Math.Min(Top, maxTop));
         var mascotCenterX = Left + Width / 2.0;
         var distanceToLeft = Math.Abs(mascotCenterX - area.Left);
         var distanceToRight = Math.Abs(mascotCenterX - area.Right);
 
         if (distanceToLeft <= distanceToRight)
-        {
             Left = area.Left - _peekOffset;
-        }
         else
-        {
             Left = area.Right - Width + _peekOffset;
-        }
 
         Top = y;
         SetPose("peek");
