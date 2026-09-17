@@ -44,3 +44,32 @@ jobs:
 
       - name: Build WPF project
         run: dotnet build .\REMM-i-WPF\REMM-i-WPF.csproj -c Release --no-restore
+
+      - name: Publish portable WPF EXE
+        run: >-
+          dotnet publish .\REMM-i-WPF\REMM-i-WPF.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          /p:PublishSingleFile=true
+          /p:IncludeNativeLibrariesForSelfExtract=true
+          /p:DebugType=None
+          /p:DebugSymbols=false
+          -o .\publish
+
+      - name: Verify published EXE
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem .\publish\*.exe | Select-Object -First 1
+          if (-not $exe) {
+            throw 'Portable EXE was not produced.'
+          }
+          Write-Host "Published EXE: $($exe.FullName)"
+
+      - name: Upload portable EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: REMM-i-WPF-portable-win-x64
+          path: .\publish\*.exe
+          if-no-files-found: error
+          retention-days: 14
