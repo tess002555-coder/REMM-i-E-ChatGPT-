@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -26,11 +27,18 @@ public partial class MainWindow : Window
         InitializeComponent();
         Width = MascotSize;
         Height = MascotSize;
+
         Loaded += (_, _) =>
         {
             _settings = RemmDataService.Load().Settings;
             ApplySettings(_settings);
             PositionInitial();
+        };
+
+        Closed += (_, _) =>
+        {
+            if (MascotSurface.IsMouseCaptured)
+                MascotSurface.ReleaseMouseCapture();
         };
     }
 
@@ -39,8 +47,7 @@ public partial class MainWindow : Window
         _settings = settings;
         _peekOffset = MascotSize * (1.0 - Math.Clamp(settings.PeekVisiblePercent, 50, 90) / 100.0);
 
-        // REMM(i)E is not a global always-on-top overlay. Other applications may
-        // appear above it normally, matching a desktop widget rather than a modal UI.
+        // The mascot is a normal desktop widget, not an always-on-top overlay.
         Topmost = false;
 
         SetPose(_taskWindow is not null ? "pointing" : "peek");
@@ -80,17 +87,29 @@ public partial class MainWindow : Window
 
     private void Mascot_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != MouseButton.Left || !_settings.DragEnabled)
+        if (e.ChangedButton != MouseButton.Left)
             return;
+
+        // Drag can be disabled independently from clicking the mascot.
+        if (!_settings.DragEnabled)
+        {
+            OpenTaskWindow();
+            e.Handled = true;
+            return;
+        }
 
         _dragging = true;
         _moved = false;
         _mouseDownScreen = PointToScreen(e.GetPosition(this));
         _dragStartLeft = Left;
         _dragStartTop = Top;
-        CaptureMouse();
-        if (Content is System.Windows.Controls.Grid grid)
-            grid.Cursor = Cursors.SizeAll;
+
+        // IMPORTANT: capture the same element that owns MouseMove/MouseUp.
+        // Capturing the Window while handling the Grid event prevents the Grid
+        // handlers from receiving the release event and leaves the mascot stuck.
+        MascotSurface.CaptureMouse();
+
+        MascotSurface.Cursor = Cursors.SizeAll;
         SetPose("idle");
         e.Handled = true;
     }
@@ -112,11 +131,11 @@ public partial class MainWindow : Window
 
         _moved = true;
 
-        // Free drag: do not clamp to the working area while the pointer is held.
-        // Snapping happens only after release, so there is no invisible boundary
-        // that prevents the widget from being dragged across the desktop.
+        // Free drag: no working-area clamp while the pointer is held.
         Left = _dragStartLeft + dx;
         Top = _dragStartTop + dy;
+
+        e.Handled = true;
     }
 
     private void Mascot_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -125,9 +144,11 @@ public partial class MainWindow : Window
             return;
 
         _dragging = false;
-        ReleaseMouseCapture();
-        if (Content is System.Windows.Controls.Grid grid)
-            grid.Cursor = Cursors.Hand;
+
+        if (MascotSurface.IsMouseCaptured)
+            MascotSurface.ReleaseMouseCapture();
+
+        MascotSurface.Cursor = Cursors.Hand;
 
         if (_moved)
         {
@@ -149,8 +170,7 @@ public partial class MainWindow : Window
         var area = GetWorkingAreaInDip();
         var maxTop = area.Bottom - Height;
 
-        // Only left/right are valid snap destinations. Vertical position is kept,
-        // with a final safety clamp so the mascot remains reachable on-screen.
+        // Only left/right are valid snap destinations. Vertical position is kept.
         var y = Math.Max(area.Top, Math.Min(Top, maxTop));
         var mascotCenterX = Left + Width / 2.0;
         var distanceToLeft = Math.Abs(mascotCenterX - area.Left);
@@ -192,10 +212,7 @@ public partial class MainWindow : Window
 
     private void SetPose(string mode)
     {
-        if (Content is not System.Windows.Controls.Grid grid)
-            return;
-        var image = grid.Children.OfType<System.Windows.Controls.Image>().FirstOrDefault();
-        if (image is null)
+        if (MascotSurface.Children.OfType<Image>().FirstOrDefault() is not Image image)
             return;
 
         var path = mode switch
@@ -222,7 +239,7 @@ public partial class MainWindow : Window
             }
             catch
             {
-                // Use the bundled mascot if a custom pose cannot be decoded.
+                // Fall through to the bundled mascot.
             }
         }
 
