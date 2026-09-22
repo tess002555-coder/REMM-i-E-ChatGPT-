@@ -9,75 +9,100 @@
         UseLayoutRounding="True" SnapsToDevicePixels="True"
         FontFamily="Segoe UI">
     <Window.Resources>
-        <DropShadowEffect x:Key="PanelShadow" BlurRadius="18" ShadowDepth="3" Direction="270" Opacity="0.38" Color="#000000"/>
+        <DropShadowEffect x:Key="PanelShadow" BlurRadius="20" ShadowDepth="3" Direction="270" Opacity="0.42" Color="#000000"/>
 
         <Style x:Key="IconButton" TargetType="Button">
             <Setter Property="Width" Value="28"/><Setter Property="Height" Value="28"/>
             <Setter Property="Margin" Value="3,0,0,0"/><Setter Property="Padding" Value="0"/>
             <Setter Property="Foreground" Value="#DDEAF0"/><Setter Property="FontSize" Value="11"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="#20252C"/><Setter Property="BorderBrush" Value="#3B4650"/><Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Template">
                 <Setter.Value><ControlTemplate TargetType="Button">
-                    <Border CornerRadius="8" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                    <Border CornerRadius="9" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                 </ControlTemplate></Setter.Value>
             </Setter>
-            <Setter Property="Background" Value="#20252C"/><Setter Property="BorderBrush" Value="#39414B"/><Setter Property="BorderThickness" Value="1"/>
         </Style>
+
         <Style x:Key="AccentButton" TargetType="Button">
-            <Setter Property="Height" Value="27"/><Setter Property="MinWidth" Value="27"/>
-            <Setter Property="Padding" Value="6,0"/><Setter Property="Foreground" Value="#061015"/>
-            <Setter Property="Background" Value="#19CBE8"/><Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="FontSize" Value="10"/><Setter Property="FontWeight" Value="Bold"/><Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Width" Value="28"/><Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="0"/><Setter Property="Foreground" Value="#061015"/>
+            <Setter Property="Background" Value="#16C9E5"/><Setter Property="BorderBrush" Value="#00A8B5"/><Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="12"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value><ControlTemplate TargetType="Button">
-                    <Border CornerRadius="8" Background="{TemplateBinding Background}">
+                    <Border CornerRadius="9" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                 </ControlTemplate></Setter.Value>
             </Setter>
         </Style>
+
         <Style x:Key="GhostButton" TargetType="Button">
-            <Setter Property="Height" Value="27"/><Setter Property="Padding" Value="6,0"/>
-            <Setter Property="Margin" Value="4,0,0,0"/><Setter Property="Foreground" Value="#C7D2DA"/>
-            <Setter Property="Background" Value="#20242A"/><Setter Property="BorderBrush" Value="#3A424C"/>
+            <Setter Property="Height" Value="26"/><Setter Property="Padding" Value="8,0"/>
+            <Setter Property="Margin" Value="4,0,0,0"/><Setter Property="Foreground" Value="#6BE7F2"/>
+            <Setter Property="Background" Value="#16323A"/><Setter Property="BorderBrush" Value="#00A8B5"/>
             <Setter Property="BorderThickness" Value="1"/><Setter Property="FontSize" Value="7.5"/><Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value><ControlTemplate TargetType="Button">
-                    <Border CornerRadius="8" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                    <Border CornerRadius="13" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                 </ControlTemplate></Setter.Value>
             </Setter>
         </Style>
+
         <Style x:Key="FilterButton" TargetType="Button">
-            <Setter Property="Height" Value="21"/><Setter Property="Padding" Value="5,0"/>
+            <Setter Property="Height" Value="20"/><Setter Property="Padding" Value="5,0"/>
             <Setter Property="Margin" Value="0,0,4,0"/><Setter Property="Foreground" Value="#C8D2DA"/>
-            <Setter Property="Background" Value="#20242A"/><Setter Property="BorderBrush" Value="#353D47"/>
-            <Setter Property="BorderThickness" Value="1"/><Setter Property="FontSize" Value="8"/><Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="#20242A"/><Setter Property="BorderBrush" Value="#35404A"/>
+            <Setter Property="BorderThickness" Value="1"/><Setter Property="FontSize" Value="7.2"/><Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value><ControlTemplate TargetType="Button">
-                    <Border CornerRadius="7" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                    <Border CornerRadius="9" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                 </ControlTemplate></Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Width" Value="21"/><Setter Property="Height" Value="21"/>
+            <Setter Property="Padding" Value="0"/><Setter Property="Foreground" Value="#84929E"/>
+            <Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="9"/><Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value><ControlTemplate TargetType="Button">
+                    <Border CornerRadius="7" Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate></Setter.Value>
+            </Setter>
+        </Style>
+
         <Style TargetType="TextBox">
-            <Setter Property="Background" Value="#171B21"/><Setter Property="Foreground" Value="#E8F6FA"/>
-            <Setter Property="BorderBrush" Value="#303842"/><Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="5,0"/><Setter Property="FontSize" Value="8.5"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="#E8F6FA"/>
+            <Setter Property="BorderThickness" Value="0"/><Setter Property="Padding" Value="0"/>
+            <Setter Property="FontSize" Value="8.5"/><Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
     </Window.Resources>
 
-    <Border x:Name="PanelRoot" Margin="2" CornerRadius="22" Background="#F0181D24" BorderBrush="#C879A0" BorderThickness="1.2" Effect="{DynamicResource PanelShadow}"
+    <Border x:Name="PanelRoot" Margin="2" CornerRadius="22"
+            Background="#F0181D24" BorderBrush="#00A8B5" BorderThickness="1"
+            Effect="{DynamicResource PanelShadow}"
             PreviewMouseLeftButtonDown="Panel_PreviewMouseLeftButtonDown">
         <Grid Margin="8,6,8,6">
-            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" HorizontalAlignment="Center" Padding="8,2" Margin="0,0,0,4" CornerRadius="9" Background="#263447" BorderBrush="#42556B" BorderThickness="1" Cursor="SizeAll">
+            <Border Grid.Row="0" HorizontalAlignment="Center" Padding="8,2" Margin="0,0,0,4"
+                    CornerRadius="9" Background="#263447" BorderBrush="#42556B" BorderThickness="1" Cursor="SizeAll">
                 <TextBlock Text="•••  Pindah Panel" Foreground="#AFC0CF" FontSize="7" FontWeight="SemiBold"/>
             </Border>
 
@@ -99,48 +124,84 @@
             </Grid>
 
             <Border Grid.Row="2" Height="30" CornerRadius="9" Background="#171B21" BorderBrush="#303842" BorderThickness="1" Margin="1,0,1,5">
-                <Grid><TextBlock Text="⌕" Foreground="#758290" FontSize="13" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                    <TextBox x:Name="SearchBox" Margin="24,0,4,0" BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center" TextChanged="SearchBox_TextChanged" ToolTip="Cari tugas atau rutinitas"/>
+                <Grid>
+                    <TextBlock Text="⌕" Foreground="#758290" FontSize="13" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="SearchPlaceholder" Text="Cari tugas / rutinitas..." Foreground="#71808C" FontSize="8.5"
+                               Margin="25,0,4,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                    <TextBox x:Name="SearchBox" Margin="25,0,4,0" VerticalContentAlignment="Center"
+                             TextChanged="SearchBox_TextChanged" ToolTip="Cari tugas atau rutinitas"/>
                 </Grid>
             </Border>
 
-            <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled" CanContentScroll="False" Focusable="False">
-                <StackPanel Margin="1,0,1,1">
-                    <Border x:Name="CalendarCard" Padding="7" Margin="0,0,0,5" CornerRadius="11" Background="#2B2730" BorderBrush="#4A414D" BorderThickness="1" MouseLeftButtonUp="CalendarCard_Click">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,5"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <StackPanel Orientation="Horizontal"><TextBlock Text="▣" Foreground="#19CBE8" FontSize="10" Margin="0,0,5,0"/><TextBlock Text="Calender" Foreground="#F7FAFC" FontSize="10.5" FontWeight="Bold"/></StackPanel>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal"><Button Style="{StaticResource AccentButton}" Content="+" Click="AddCalendar_Click"/><Button Style="{StaticResource GhostButton}" Content="Detail ›" Click="CalendarDetail_Click"/></StackPanel>
-                            </Grid>
-                            <Border Padding="6" CornerRadius="8" Background="#191D23" BorderBrush="#38414C" BorderThickness="1"><StackPanel x:Name="CalendarPanel"/></Border>
-                        </StackPanel>
-                    </Border>
-
-                    <Border x:Name="RoutineCard" Padding="7" Margin="0,0,0,5" CornerRadius="11" Background="#29252C" BorderBrush="#3A414B" BorderThickness="1" MouseLeftButtonUp="RoutineCard_Click">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,5"><TextBlock Text="Rutinitas" Foreground="#F7FAFC" FontSize="10.5" FontWeight="SemiBold"/><Button Style="{StaticResource AccentButton}" Content="+" HorizontalAlignment="Right" Click="AddRoutine_Click"/></Grid>
-                            <Border Padding="6" CornerRadius="8" Background="#171A1F" BorderBrush="#303842" BorderThickness="1"><StackPanel x:Name="RoutinePanel"/></Border>
-                        </StackPanel>
-                    </Border>
-
-                    <Border x:Name="TaskCard" Padding="7" Margin="0,0,0,2" CornerRadius="11" Background="#29252C" BorderBrush="#3A414B" BorderThickness="1">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,4"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <StackPanel Orientation="Horizontal"><TextBlock Text="Tugas" Foreground="#F7FAFC" FontSize="12" FontWeight="Bold"/><Border Margin="4,0,0,0" Padding="3,1" CornerRadius="6" Background="#14363D"><TextBlock x:Name="TaskCountText" Text="0" Foreground="#19CBE8" FontSize="7.5" FontWeight="Bold"/></Border></StackPanel>
-                                <Button Grid.Column="1" Style="{StaticResource AccentButton}" Content="+" Click="AddTask_Click"/>
-                            </Grid>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                <Button x:Name="FilterAllButton" Style="{StaticResource FilterButton}" Content="Semua" Click="FilterAll_Click" Background="#19CBE8" Foreground="#061015"/>
-                                <Button x:Name="FilterHighButton" Style="{StaticResource FilterButton}" Content="● Tinggi" Click="FilterHigh_Click"/>
-                                <Button x:Name="FilterMediumButton" Style="{StaticResource FilterButton}" Content="● Sedang" Click="FilterMedium_Click"/>
-                                <Button x:Name="FilterLowButton" Style="{StaticResource FilterButton}" Content="● Rendah" Click="FilterLow_Click"/>
+            <StackPanel Grid.Row="3" Margin="1,0,1,1">
+                <Border x:Name="CalendarCard" Padding="7" Margin="0,0,0,5" CornerRadius="11"
+                        Background="#29262D" BorderBrush="#00A8B5" BorderThickness="1"
+                        MouseLeftButtonUp="CalendarCard_Click">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="▣" FontFamily="Segoe MDL2 Assets" Foreground="#00D2D3" FontSize="9" Margin="0,0,5,0"/>
+                                <TextBlock Text="Calender" Foreground="#F7FAFC" FontSize="10" FontWeight="SemiBold"/>
                             </StackPanel>
-                            <StackPanel x:Name="TasksPanel"/>
-                            <TextBlock x:Name="TaskEmptyText" Text="Tidak ada tugas terdaftar." Foreground="#687481" FontSize="7.5" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,5,0,1"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Style="{StaticResource AccentButton}" Content="+" Click="AddCalendar_Click"/>
+                                <Button Style="{StaticResource GhostButton}" Content="Detail ›" Click="CalendarDetail_Click"/>
+                            </StackPanel>
+                        </Grid>
+                        <Border Padding="6" CornerRadius="8" Background="#181C22" BorderBrush="#00A8B5" BorderThickness="0.8">
+                            <StackPanel x:Name="CalendarPanel"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <Border x:Name="RoutineCard" Padding="7" Margin="0,0,0,5" CornerRadius="11"
+                        Background="#29262D" BorderBrush="#3F4650" BorderThickness="1"
+                        MouseLeftButtonUp="RoutineCard_Click">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,5">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="▣" Foreground="#00D2D3" FontSize="9" Margin="0,0,5,0"/>
+                                <TextBlock Text="Rutinitas" Foreground="#F7FAFC" FontSize="10" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <Button Style="{StaticResource AccentButton}" Content="+" HorizontalAlignment="Right" Click="AddRoutine_Click"/>
+                        </Grid>
+                        <Border Padding="6" CornerRadius="8" Background="#181C22" BorderBrush="#3B4650" BorderThickness="1">
+                            <StackPanel x:Name="RoutinePanel"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <Border x:Name="TaskCard" Padding="7" Margin="0,0,0,2" CornerRadius="11"
+                        Background="#29262D" BorderBrush="#3F4650" BorderThickness="1">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Tugas" Foreground="#F7FAFC" FontSize="11" FontWeight="SemiBold"/>
+                                <Border Margin="4,0,0,0" Padding="4,1" CornerRadius="8" Background="#123D45">
+                                    <TextBlock x:Name="TaskCountText" Text="0" Foreground="#19D5E8" FontSize="7.5" FontWeight="SemiBold"/>
+                                </Border>
+                            </StackPanel>
+                            <Button Grid.Column="1" Style="{StaticResource AccentButton}" Content="+" Click="AddTask_Click"/>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <Button x:Name="FilterAllButton" Style="{StaticResource FilterButton}" Content="Semua" Click="FilterAll_Click" Background="#19CBE8" Foreground="#061015"/>
+                            <Button x:Name="FilterHighButton" Style="{StaticResource FilterButton}" Click="FilterHigh_Click">
+                                <StackPanel Orientation="Horizontal"><Ellipse Width="5" Height="5" Fill="#FF4D4D" Margin="0,0,4,0"/><TextBlock Text="Tinggi"/></StackPanel>
+                            </Button>
+                            <Button x:Name="FilterMediumButton" Style="{StaticResource FilterButton}" Click="FilterMedium_Click">
+                                <StackPanel Orientation="Horizontal"><Ellipse Width="5" Height="5" Fill="#FFA500" Margin="0,0,4,0"/><TextBlock Text="Sedang"/></StackPanel>
+                            </Button>
+                            <Button x:Name="FilterLowButton" Style="{StaticResource FilterButton}" Click="FilterLow_Click">
+                                <StackPanel Orientation="Horizontal"><Ellipse Width="5" Height="5" Fill="#2ECC71" Margin="0,0,4,0"/><TextBlock Text="Rendah"/></StackPanel>
+                            </Button>
                         </StackPanel>
-                    </Border>
-                </StackPanel>
-            </ScrollViewer>
+                        <StackPanel x:Name="TasksPanel"/>
+                        <TextBlock x:Name="TaskEmptyText" Text="Tidak ada tugas terdaftar." Foreground="#687481" FontSize="7.5" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,5,0,1"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
         </Grid>
     </Border>
 </Window>
