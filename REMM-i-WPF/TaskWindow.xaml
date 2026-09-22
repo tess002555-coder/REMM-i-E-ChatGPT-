@@ -63,7 +63,6 @@
                     </StackPanel>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Style="{StaticResource IconButton}" Content="⋯" Click="Console_Click" ToolTip="Menu lainnya"/>
                     <Button Style="{StaticResource IconButton}" Content="⚙" Click="Settings_Click" ToolTip="Pengaturan"/>
                     <Button Style="{StaticResource IconButton}" Content="×" Click="Close_Click" ToolTip="Tutup"/>
                 </StackPanel>
