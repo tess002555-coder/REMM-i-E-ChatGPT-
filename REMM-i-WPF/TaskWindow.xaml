@@ -114,7 +114,7 @@
                     </Border>
                     <StackPanel Margin="5,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="REMM(i)E" Foreground="#F8FAFC" FontSize="10" FontWeight="SemiBold"/>
-                        <TextBlock x:Name="DisplayNameText" Text="Maskot Denia" Foreground="#67E8F9" FontSize="7" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="DisplayNameText" Text="Maskot Denia" Foreground="#00D2D3" FontSize="7" FontWeight="SemiBold"/>
                     </StackPanel>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
@@ -123,10 +123,10 @@
                 </StackPanel>
             </Grid>
 
-            <Border Grid.Row="2" Height="30" CornerRadius="9" Background="#171B21" BorderBrush="#303842" BorderThickness="1" Margin="1,0,1,5">
+            <Border Grid.Row="2" Height="30" CornerRadius="9" Background="#15151A" BorderBrush="#303842" BorderThickness="1" Margin="1,0,1,5">
                 <Grid>
                     <TextBlock Text="⌕" Foreground="#758290" FontSize="13" Margin="8,0,0,0" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="SearchPlaceholder" Text="Cari tugas / rutinitas..." Foreground="#71808C" FontSize="8.5"
+                    <TextBlock x:Name="SearchPlaceholder" Text="Cari tugas / rutinitas..." Foreground="#68747C" FontSize="8.5"
                                Margin="25,0,4,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
                     <TextBox x:Name="SearchBox" Margin="25,0,4,0" VerticalContentAlignment="Center"
                              TextChanged="SearchBox_TextChanged" ToolTip="Cari tugas atau rutinitas"/>
@@ -135,7 +135,7 @@
 
             <StackPanel Grid.Row="3" Margin="1,0,1,1">
                 <Border x:Name="CalendarCard" Padding="7" Margin="0,0,0,5" CornerRadius="11"
-                        Background="#29262D" BorderBrush="#00A8B5" BorderThickness="1"
+                        Background="#222228" BorderBrush="#00A8B5" BorderThickness="1"
                         MouseLeftButtonUp="CalendarCard_Click">
                     <StackPanel>
                         <Grid Margin="0,0,0,5">
@@ -149,14 +149,14 @@
                                 <Button Style="{StaticResource GhostButton}" Content="Detail ›" Click="CalendarDetail_Click"/>
                             </StackPanel>
                         </Grid>
-                        <Border Padding="6" CornerRadius="8" Background="#181C22" BorderBrush="#00A8B5" BorderThickness="0.8">
+                        <Border Padding="6" CornerRadius="8" Background="#18181C" BorderBrush="#00A8B5" BorderThickness="0.8">
                             <StackPanel x:Name="CalendarPanel"/>
                         </Border>
                     </StackPanel>
                 </Border>
 
                 <Border x:Name="RoutineCard" Padding="7" Margin="0,0,0,5" CornerRadius="11"
-                        Background="#29262D" BorderBrush="#3F4650" BorderThickness="1"
+                        Background="#222228" BorderBrush="#3F4650" BorderThickness="1"
                         MouseLeftButtonUp="RoutineCard_Click">
                     <StackPanel>
                         <Grid Margin="0,0,0,5">
@@ -166,27 +166,27 @@
                             </StackPanel>
                             <Button Style="{StaticResource AccentButton}" Content="+" HorizontalAlignment="Right" Click="AddRoutine_Click"/>
                         </Grid>
-                        <Border Padding="6" CornerRadius="8" Background="#181C22" BorderBrush="#3B4650" BorderThickness="1">
+                        <Border Padding="6" CornerRadius="8" Background="#18181C" BorderBrush="#3B4650" BorderThickness="1">
                             <StackPanel x:Name="RoutinePanel"/>
                         </Border>
                     </StackPanel>
                 </Border>
 
                 <Border x:Name="TaskCard" Padding="7" Margin="0,0,0,2" CornerRadius="11"
-                        Background="#29262D" BorderBrush="#3F4650" BorderThickness="1">
+                        Background="#222228" BorderBrush="#3F4650" BorderThickness="1">
                     <StackPanel>
                         <Grid Margin="0,0,0,4">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Tugas" Foreground="#F7FAFC" FontSize="11" FontWeight="SemiBold"/>
                                 <Border Margin="4,0,0,0" Padding="4,1" CornerRadius="8" Background="#123D45">
-                                    <TextBlock x:Name="TaskCountText" Text="0" Foreground="#19D5E8" FontSize="7.5" FontWeight="SemiBold"/>
+                                    <TextBlock x:Name="TaskCountText" Text="0" Foreground="#00D2D3" FontSize="7.5" FontWeight="SemiBold"/>
                                 </Border>
                             </StackPanel>
                             <Button Grid.Column="1" Style="{StaticResource AccentButton}" Content="+" Click="AddTask_Click"/>
                         </Grid>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                            <Button x:Name="FilterAllButton" Style="{StaticResource FilterButton}" Content="Semua" Click="FilterAll_Click" Background="#19CBE8" Foreground="#061015"/>
+                            <Button x:Name="FilterAllButton" Style="{StaticResource FilterButton}" Content="Semua" Click="FilterAll_Click" Background="#00D2D3" Foreground="#061015"/>
                             <Button x:Name="FilterHighButton" Style="{StaticResource FilterButton}" Click="FilterHigh_Click">
                                 <StackPanel Orientation="Horizontal"><Ellipse Width="5" Height="5" Fill="#FF4D4D" Margin="0,0,4,0"/><TextBlock Text="Tinggi"/></StackPanel>
                             </Button>
@@ -198,7 +198,7 @@
                             </Button>
                         </StackPanel>
                         <StackPanel x:Name="TasksPanel"/>
-                        <TextBlock x:Name="TaskEmptyText" Text="Tidak ada tugas terdaftar." Foreground="#687481" FontSize="7.5" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,5,0,1"/>
+                        <TextBlock x:Name="TaskEmptyText" Text="Tidak ada tugas terdaftar." Foreground="#68747C" FontSize="7.5" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,5,0,1"/>
                     </StackPanel>
                 </Border>
             </StackPanel>
