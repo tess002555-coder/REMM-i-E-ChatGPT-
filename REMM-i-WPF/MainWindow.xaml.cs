@@ -37,8 +37,8 @@ public partial class MainWindow : Window
 
         Closed += (_, _) =>
         {
-            if (MascotSurface.IsMouseCaptured)
-                MascotSurface.ReleaseMouseCapture();
+            if (IsMouseCaptured)
+                ReleaseMouseCapture();
         };
     }
 
@@ -47,7 +47,7 @@ public partial class MainWindow : Window
         _settings = settings;
         _peekOffset = MascotSize * (1.0 - Math.Clamp(settings.PeekVisiblePercent, 50, 90) / 100.0);
 
-        // The mascot is a normal desktop widget, not an always-on-top overlay.
+        // Normal desktop widget: other applications may appear above it.
         Topmost = false;
 
         SetPose(_taskWindow is not null ? "pointing" : "peek");
@@ -90,7 +90,6 @@ public partial class MainWindow : Window
         if (e.ChangedButton != MouseButton.Left)
             return;
 
-        // Drag can be disabled independently from clicking the mascot.
         if (!_settings.DragEnabled)
         {
             OpenTaskWindow();
@@ -104,12 +103,11 @@ public partial class MainWindow : Window
         _dragStartLeft = Left;
         _dragStartTop = Top;
 
-        // IMPORTANT: capture the same element that owns MouseMove/MouseUp.
-        // Capturing the Window while handling the Grid event prevents the Grid
-        // handlers from receiving the release event and leaves the mascot stuck.
-        MascotSurface.CaptureMouse();
-
-        MascotSurface.Cursor = Cursors.SizeAll;
+        // Capture the Window itself because all drag events are handled here.
+        // This keeps MouseMove/MouseUp alive even after the pointer leaves the
+        // 128x128 mascot window.
+        CaptureMouse();
+        Cursor = Cursors.SizeAll;
         SetPose("idle");
         e.Handled = true;
     }
@@ -131,7 +129,7 @@ public partial class MainWindow : Window
 
         _moved = true;
 
-        // Free drag: no working-area clamp while the pointer is held.
+        // Completely free while dragging: no invisible working-area boundary.
         Left = _dragStartLeft + dx;
         Top = _dragStartTop + dy;
 
@@ -145,10 +143,10 @@ public partial class MainWindow : Window
 
         _dragging = false;
 
-        if (MascotSurface.IsMouseCaptured)
-            MascotSurface.ReleaseMouseCapture();
+        if (IsMouseCaptured)
+            ReleaseMouseCapture();
 
-        MascotSurface.Cursor = Cursors.Hand;
+        Cursor = Cursors.Hand;
 
         if (_moved)
         {
@@ -159,6 +157,7 @@ public partial class MainWindow : Window
         }
         else
         {
+            // Pure click is distinct from drag.
             OpenTaskWindow();
         }
 
@@ -169,13 +168,13 @@ public partial class MainWindow : Window
     {
         var area = GetWorkingAreaInDip();
         var maxTop = area.Bottom - Height;
-
-        // Only left/right are valid snap destinations. Vertical position is kept.
         var y = Math.Max(area.Top, Math.Min(Top, maxTop));
+
         var mascotCenterX = Left + Width / 2.0;
         var distanceToLeft = Math.Abs(mascotCenterX - area.Left);
         var distanceToRight = Math.Abs(mascotCenterX - area.Right);
 
+        // Only LEFT or RIGHT. Never snap to top/bottom.
         if (distanceToLeft <= distanceToRight)
             Left = area.Left - _peekOffset;
         else
@@ -212,7 +211,7 @@ public partial class MainWindow : Window
 
     private void SetPose(string mode)
     {
-        if (MascotSurface.Children.OfType<Image>().FirstOrDefault() is not Image image)
+        if (MascotSurfaceImage() is not Image image)
             return;
 
         var path = mode switch
@@ -251,6 +250,13 @@ public partial class MainWindow : Window
         {
             image.Source = null;
         }
+    }
+
+    private Image? MascotSurfaceImage()
+    {
+        return Content is Grid grid
+            ? grid.Children.OfType<Image>().FirstOrDefault()
+            : null;
     }
 
     public Rect GetWorkingAreaInDip()
