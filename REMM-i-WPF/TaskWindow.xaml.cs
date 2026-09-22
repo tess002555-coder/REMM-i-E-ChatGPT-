@@ -172,7 +172,14 @@ public partial class TaskWindow : Window
     private void FilterHigh_Click(object sender, RoutedEventArgs e) => SetFilter("Tinggi");
     private void FilterMedium_Click(object sender, RoutedEventArgs e) => SetFilter("Sedang");
     private void FilterLow_Click(object sender, RoutedEventArgs e) => SetFilter("Rendah");
-    private void SearchBox_TextChanged(object sender, WpfTextChangedEventArgs e) => RefreshView();
+
+    private void SearchBox_TextChanged(object sender, WpfTextChangedEventArgs e)
+    {
+        SearchPlaceholder.Visibility = string.IsNullOrWhiteSpace(SearchBox.Text)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        RefreshView();
+    }
 
     private void SetFilter(string filter)
     {
@@ -198,49 +205,195 @@ public partial class TaskWindow : Window
         CalendarPanel.Children.Clear();
         foreach (var schedule in _data.Schedules.OrderBy(s => s.DateTime).Take(3))
         {
-            var row = new WpfGrid { Margin = new Thickness(0, 2, 0, 5) };
+            var row = new WpfGrid { Margin = new Thickness(0, 2, 0, 4) };
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            var title = new WpfTextBlock { Text = schedule.Title, Foreground = WpfBrushes.WhiteSmoke, FontSize = 9.5, FontWeight = WpfFontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
-            var date = new WpfTextBlock { Text = schedule.DateTime.ToString("dd MMM"), Foreground = ToBrush("#19CBE8", "#19CBE8"), FontSize = 9, FontWeight = WpfFontWeights.Bold, Margin = new Thickness(7, 0, 0, 0) };
+
+            var title = new WpfTextBlock
+            {
+                Text = schedule.Title,
+                Foreground = ToBrush("#E4E9ED", "#E4E9ED"),
+                FontSize = 8.5,
+                FontWeight = WpfFontWeights.Normal,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            var date = new WpfTextBlock
+            {
+                Text = schedule.DateTime.ToString("dd MMM"),
+                Foreground = ToBrush("#19CBE8", "#19CBE8"),
+                FontSize = 8.5,
+                FontWeight = WpfFontWeights.SemiBold,
+                Margin = new Thickness(7, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
             Grid.SetColumn(date, 1);
             row.Children.Add(title);
             row.Children.Add(date);
             CalendarPanel.Children.Add(row);
         }
-        if (_data.Schedules.Count == 0) CalendarPanel.Children.Add(new WpfTextBlock { Text = "Belum ada jadwal.", Foreground = WpfBrushes.Gray, FontStyle = WpfFontStyles.Italic, FontSize = 9 });
+
+        if (_data.Schedules.Count == 0)
+            CalendarPanel.Children.Add(new WpfTextBlock
+            {
+                Text = "Belum ada jadwal.",
+                Foreground = ToBrush("#687481", "#687481"),
+                FontStyle = WpfFontStyles.Italic,
+                FontSize = 8
+            });
 
         RoutinePanel.Children.Clear();
         var search = SearchBox.Text?.Trim() ?? "";
-        foreach (var routine in _data.Routines.Where(r => string.IsNullOrWhiteSpace(search) || r.Title.Contains(search, StringComparison.OrdinalIgnoreCase)))
+
+        foreach (var routine in _data.Routines.Where(r =>
+                     string.IsNullOrWhiteSpace(search) ||
+                     r.Title.Contains(search, StringComparison.OrdinalIgnoreCase)))
         {
-            var row = new WpfDockPanel { Margin = new Thickness(0, 2, 0, 3), Tag = routine.Id, Cursor = Cursors.Hand };
+            var row = new WpfDockPanel
+            {
+                Margin = new Thickness(0, 1, 0, 2),
+                Tag = routine.Id,
+                Cursor = Cursors.Hand,
+                LastChildFill = true
+            };
             row.MouseLeftButtonUp += RoutineRow_Click;
-            var text = new WpfTextBlock { Text = routine.Title, Foreground = WpfBrushes.WhiteSmoke, FontSize = 9.5, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
-            var delete = new WpfButton { Content = "×", Width = 23, Height = 21, Tag = routine.Id, Margin = new Thickness(5, 0, 0, 0), ToolTip = "Hapus rutinitas" };
+
+            var actions = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            var share = new WpfButton
+            {
+                Content = "↗",
+                Style = (Style)FindResource("ActionButton"),
+                ToolTip = "Bagikan rutinitas",
+                Tag = routine.Id
+            };
+            share.Click += ShareRoutine_Click;
+
+            var open = new WpfButton
+            {
+                Content = "›",
+                Style = (Style)FindResource("ActionButton"),
+                ToolTip = "Buka rutinitas",
+                Tag = routine.Id
+            };
+            open.Click += OpenRoutineAction_Click;
+
+            var delete = new WpfButton
+            {
+                Content = "×",
+                Style = (Style)FindResource("ActionButton"),
+                Foreground = ToBrush("#AEB9C2", "#AEB9C2"),
+                ToolTip = "Hapus rutinitas",
+                Tag = routine.Id
+            };
             delete.Click += DeleteRoutine_Click;
-            WpfDockPanel.SetDock(delete, WpfDock.Right);
-            row.Children.Add(delete);
-            row.Children.Add(text);
+
+            actions.Children.Add(share);
+            actions.Children.Add(open);
+            actions.Children.Add(delete);
+            WpfDockPanel.SetDock(actions, WpfDock.Right);
+
+            var icon = new WpfTextBlock
+            {
+                Text = "▣",
+                Foreground = ToBrush("#00D2D3", "#00D2D3"),
+                FontSize = 8,
+                Margin = new Thickness(0, 0, 6, 0),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            var text = new WpfTextBlock
+            {
+                Text = routine.Title,
+                Foreground = ToBrush("#E4E9ED", "#E4E9ED"),
+                FontSize = 8.5,
+                FontWeight = WpfFontWeights.Normal,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis
+            };
+
+            var textWrap = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            textWrap.Children.Add(icon);
+            textWrap.Children.Add(text);
+
+            row.Children.Add(actions);
+            row.Children.Add(textWrap);
             RoutinePanel.Children.Add(row);
         }
-        if (RoutinePanel.Children.Count == 0) RoutinePanel.Children.Add(new WpfTextBlock { Text = "Belum ada rutinitas.", Foreground = WpfBrushes.Gray, FontStyle = WpfFontStyles.Italic, FontSize = 9 });
+
+        if (RoutinePanel.Children.Count == 0)
+            RoutinePanel.Children.Add(new WpfTextBlock
+            {
+                Text = "Belum ada rutinitas.",
+                Foreground = ToBrush("#687481", "#687481"),
+                FontStyle = WpfFontStyles.Italic,
+                FontSize = 8
+            });
 
         TasksPanel.Children.Clear();
-        var tasks = _data.Tasks.Where(t => (_filter == "Semua" || t.Priority == _filter) && (string.IsNullOrWhiteSpace(search) || t.Title.Contains(search, StringComparison.OrdinalIgnoreCase))).ToList();
+        var tasks = _data.Tasks
+            .Where(t =>
+                (_filter == "Semua" || t.Priority == _filter) &&
+                (string.IsNullOrWhiteSpace(search) ||
+                 t.Title.Contains(search, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+
         TaskEmptyText.Visibility = tasks.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
         foreach (var task in tasks)
         {
-            var row = new WpfDockPanel { Margin = new Thickness(0, 1, 0, 4), Tag = task.Id };
-            var check = new WpfCheckBox { IsChecked = task.Completed, Tag = task.Id, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 5, 0) };
+            var row = new WpfDockPanel
+            {
+                Margin = new Thickness(0, 1, 0, 4),
+                Tag = task.Id
+            };
+
+            var check = new WpfCheckBox
+            {
+                IsChecked = task.Completed,
+                Tag = task.Id,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 5, 0)
+            };
             check.Checked += TaskCheckChanged;
             check.Unchecked += TaskCheckChanged;
             WpfDockPanel.SetDock(check, WpfDock.Left);
-            var delete = new WpfButton { Content = "×", Width = 23, Height = 21, Tag = task.Id, Margin = new Thickness(5, 0, 0, 0), ToolTip = "Hapus tugas" };
+
+            var delete = new WpfButton
+            {
+                Content = "×",
+                Width = 21,
+                Height = 21,
+                Tag = task.Id,
+                Margin = new Thickness(5, 0, 0, 0),
+                ToolTip = "Hapus tugas",
+                Style = (Style)FindResource("ActionButton")
+            };
             delete.Click += DeleteTask_Click;
             WpfDockPanel.SetDock(delete, WpfDock.Right);
+
             var deadline = task.Deadline.HasValue ? $" · {task.Deadline.Value:dd MMM}" : "";
-            var text = new WpfTextBlock { Text = $"{task.Title}  ·  {task.Priority}{deadline}", Foreground = task.Completed ? WpfBrushes.Gray : WpfBrushes.WhiteSmoke, TextDecorations = task.Completed ? WpfTextDecorations.Strikethrough : null, FontSize = 9, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
+            var text = new WpfTextBlock
+            {
+                Text = $"{task.Title}  ·  {task.Priority}{deadline}",
+                Foreground = task.Completed ? ToBrush("#687481", "#687481") : ToBrush("#E4E9ED", "#E4E9ED"),
+                TextDecorations = task.Completed ? WpfTextDecorations.Strikethrough : null,
+                FontSize = 8.5,
+                FontWeight = WpfFontWeights.Normal,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis
+            };
+
             row.Children.Add(check);
             row.Children.Add(delete);
             row.Children.Add(text);
@@ -252,6 +405,31 @@ public partial class TaskWindow : Window
     {
         if (sender is WpfDockPanel row && row.Tag is string id && e.OriginalSource is not WpfButton)
             OpenRoutineWindow(id);
+    }
+
+    private void OpenRoutineAction_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is WpfButton button && button.Tag is string id)
+            OpenRoutineWindow(id);
+    }
+
+    private void ShareRoutine_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is WpfButton button && button.Tag is string id)
+        {
+            var routine = _data.Routines.FirstOrDefault(r => r.Id == id);
+            if (routine is null) return;
+
+            try
+            {
+                Clipboard.SetText(routine.Title);
+                button.ToolTip = "Nama rutinitas disalin";
+            }
+            catch
+            {
+                button.ToolTip = "Tidak dapat menyalin";
+            }
+        }
     }
 
     private void DeleteRoutine_Click(object sender, RoutedEventArgs e)
