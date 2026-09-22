@@ -14,6 +14,7 @@ public partial class MainWindow : Window
 {
     private const double MascotSize = 128;
     private double _peekOffset = 32;
+    private bool _peekedOnRight = true;
     private bool _dragging;
     private bool _moved;
     private Point _mouseDownScreen;
@@ -75,14 +76,44 @@ public partial class MainWindow : Window
 
     private void Mascot_MouseEnter(object sender, MouseEventArgs e)
     {
-        if (!_dragging && _taskWindow is null)
-            SetPose("idle");
+        if (_dragging || _taskWindow is not null)
+            return;
+
+        // Peek is a visual state, not a clipped interaction state.
+        // When the pointer reaches the visible part, bring the whole mascot
+        // back onto the desktop before switching to Idle.
+        ExpandFromPeek();
+        SetPose("idle");
     }
 
     private void Mascot_MouseLeave(object sender, MouseEventArgs e)
     {
-        if (!_dragging && _taskWindow is null)
-            SetPose("peek");
+        if (_dragging || _taskWindow is not null)
+            return;
+
+        CollapseToPeek();
+        SetPose("peek");
+    }
+
+    private void ExpandFromPeek()
+    {
+        var area = GetWorkingAreaInDip();
+        _peekedOnRight = (Left + Width / 2.0) >= area.Left + area.Width / 2.0;
+
+        if (_peekedOnRight)
+            Left = area.Right - Width;
+        else
+            Left = area.Left;
+    }
+
+    private void CollapseToPeek()
+    {
+        var area = GetWorkingAreaInDip();
+
+        if (_peekedOnRight)
+            Left = area.Right - Width + _peekOffset;
+        else
+            Left = area.Left - _peekOffset;
     }
 
     private void Mascot_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -175,10 +206,12 @@ public partial class MainWindow : Window
         var distanceToRight = Math.Abs(mascotCenterX - area.Right);
 
         // Only LEFT or RIGHT. Never snap to top/bottom.
-        if (distanceToLeft <= distanceToRight)
-            Left = area.Left - _peekOffset;
-        else
+        _peekedOnRight = distanceToLeft > distanceToRight;
+
+        if (_peekedOnRight)
             Left = area.Right - Width + _peekOffset;
+        else
+            Left = area.Left - _peekOffset;
 
         Top = y;
         SetPose("peek");
