@@ -10,19 +10,19 @@
         Topmost="False"
         ShowActivated="True"
         SnapsToDevicePixels="True"
-        UseLayoutRounding="True">
-    <Grid x:Name="MascotSurface"
-          Background="Transparent"
-          Cursor="Hand"
-          MouseEnter="Mascot_MouseEnter"
-          MouseLeave="Mascot_MouseLeave"
-          PreviewMouseLeftButtonDown="Mascot_MouseLeftButtonDown"
-          PreviewMouseMove="Mascot_MouseMove"
-          PreviewMouseLeftButtonUp="Mascot_MouseLeftButtonUp">
+        UseLayoutRounding="True"
+        MouseEnter="Mascot_MouseEnter"
+        MouseLeave="Mascot_MouseLeave"
+        PreviewMouseLeftButtonDown="Mascot_MouseLeftButtonDown"
+        PreviewMouseMove="Mascot_MouseMove"
+        PreviewMouseLeftButtonUp="Mascot_MouseLeftButtonUp">
+    <!-- Transparent pixels belong only to this 128x128 mascot window.
+         There is no fullscreen/desktop-sized transparent hit-test surface. -->
+    <Grid>
         <Image Source="/Assets/mascot.png"
                Stretch="Uniform"
                Width="128"
                Height="128"
-               IsHitTestVisible="False" />
+               IsHitTestVisible="True" />
     </Grid>
 </Window>
