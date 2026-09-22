@@ -9,30 +9,60 @@
         UseLayoutRounding="True" SnapsToDevicePixels="True"
         FontFamily="Segoe UI">
     <Window.Resources>
+        <DropShadowEffect x:Key="PanelShadow" BlurRadius="18" ShadowDepth="3" Direction="270" Opacity="0.38" Color="#000000"/>
+
         <Style x:Key="IconButton" TargetType="Button">
             <Setter Property="Width" Value="28"/><Setter Property="Height" Value="28"/>
             <Setter Property="Margin" Value="3,0,0,0"/><Setter Property="Padding" Value="0"/>
-            <Setter Property="Foreground" Value="#DDEAF0"/><Setter Property="Background" Value="#20252C"/>
-            <Setter Property="BorderBrush" Value="#39414B"/><Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="FontSize" Value="11"/><Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#DDEAF0"/><Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value><ControlTemplate TargetType="Button">
+                    <Border CornerRadius="8" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate></Setter.Value>
+            </Setter>
+            <Setter Property="Background" Value="#20252C"/><Setter Property="BorderBrush" Value="#39414B"/><Setter Property="BorderThickness" Value="1"/>
         </Style>
         <Style x:Key="AccentButton" TargetType="Button">
             <Setter Property="Height" Value="27"/><Setter Property="MinWidth" Value="27"/>
             <Setter Property="Padding" Value="6,0"/><Setter Property="Foreground" Value="#061015"/>
             <Setter Property="Background" Value="#19CBE8"/><Setter Property="BorderThickness" Value="0"/>
             <Setter Property="FontSize" Value="10"/><Setter Property="FontWeight" Value="Bold"/><Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value><ControlTemplate TargetType="Button">
+                    <Border CornerRadius="8" Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate></Setter.Value>
+            </Setter>
         </Style>
         <Style x:Key="GhostButton" TargetType="Button">
             <Setter Property="Height" Value="27"/><Setter Property="Padding" Value="6,0"/>
             <Setter Property="Margin" Value="4,0,0,0"/><Setter Property="Foreground" Value="#C7D2DA"/>
             <Setter Property="Background" Value="#20242A"/><Setter Property="BorderBrush" Value="#3A424C"/>
             <Setter Property="BorderThickness" Value="1"/><Setter Property="FontSize" Value="7.5"/><Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value><ControlTemplate TargetType="Button">
+                    <Border CornerRadius="8" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate></Setter.Value>
+            </Setter>
         </Style>
         <Style x:Key="FilterButton" TargetType="Button">
             <Setter Property="Height" Value="21"/><Setter Property="Padding" Value="5,0"/>
             <Setter Property="Margin" Value="0,0,4,0"/><Setter Property="Foreground" Value="#C8D2DA"/>
             <Setter Property="Background" Value="#20242A"/><Setter Property="BorderBrush" Value="#353D47"/>
             <Setter Property="BorderThickness" Value="1"/><Setter Property="FontSize" Value="8"/><Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value><ControlTemplate TargetType="Button">
+                    <Border CornerRadius="7" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate></Setter.Value>
+            </Setter>
         </Style>
         <Style TargetType="TextBox">
             <Setter Property="Background" Value="#171B21"/><Setter Property="Foreground" Value="#E8F6FA"/>
@@ -42,12 +72,12 @@
         </Style>
     </Window.Resources>
 
-    <Border x:Name="PanelRoot" Margin="2" CornerRadius="22" Background="#F521181E" BorderBrush="#F39BB8" BorderThickness="1"
+    <Border x:Name="PanelRoot" Margin="2" CornerRadius="22" Background="#F0181D24" BorderBrush="#C879A0" BorderThickness="1.2" Effect="{DynamicResource PanelShadow}"
             PreviewMouseLeftButtonDown="Panel_PreviewMouseLeftButtonDown">
         <Grid Margin="8,6,8,6">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
 
-            <Border Grid.Row="0" HorizontalAlignment="Center" Padding="8,2" Margin="0,0,0,4" CornerRadius="9" Background="#273344" BorderBrush="#3B4B62" BorderThickness="1" Cursor="SizeAll">
+            <Border Grid.Row="0" HorizontalAlignment="Center" Padding="8,2" Margin="0,0,0,4" CornerRadius="9" Background="#263447" BorderBrush="#42556B" BorderThickness="1" Cursor="SizeAll">
                 <TextBlock Text="•••  Pindah Panel" Foreground="#AFC0CF" FontSize="7" FontWeight="SemiBold"/>
             </Border>
 
@@ -58,7 +88,7 @@
                         <Image Source="/Assets/mascot.png" Width="29" Height="29" Stretch="Uniform" IsHitTestVisible="False"/>
                     </Border>
                     <StackPanel Margin="5,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="REMM(i)E" Foreground="#F8FAFC" FontSize="10.5" FontWeight="Bold"/>
+                        <TextBlock Text="REMM(i)E" Foreground="#F8FAFC" FontSize="10" FontWeight="SemiBold"/>
                         <TextBlock x:Name="DisplayNameText" Text="Maskot Denia" Foreground="#67E8F9" FontSize="7" FontWeight="SemiBold"/>
                     </StackPanel>
                 </StackPanel>
@@ -76,19 +106,19 @@
 
             <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled" CanContentScroll="False" Focusable="False">
                 <StackPanel Margin="1,0,1,1">
-                    <Border x:Name="CalendarCard" Padding="7" Margin="0,0,0,5" CornerRadius="11" Background="#29252C" BorderBrush="#3A414B" BorderThickness="1" MouseLeftButtonUp="CalendarCard_Click">
+                    <Border x:Name="CalendarCard" Padding="7" Margin="0,0,0,5" CornerRadius="11" Background="#2B2730" BorderBrush="#4A414D" BorderThickness="1" MouseLeftButtonUp="CalendarCard_Click">
                         <StackPanel>
                             <Grid Margin="0,0,0,5"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <StackPanel Orientation="Horizontal"><TextBlock Text="▣" Foreground="#19CBE8" FontSize="10" Margin="0,0,5,0"/><TextBlock Text="Calender" Foreground="#F7FAFC" FontSize="10.5" FontWeight="Bold"/></StackPanel>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal"><Button Style="{StaticResource AccentButton}" Content="+" Click="AddCalendar_Click"/><Button Style="{StaticResource GhostButton}" Content="Detail ›" Click="CalendarDetail_Click"/></StackPanel>
                             </Grid>
-                            <Border Padding="6" CornerRadius="8" Background="#171A1F" BorderBrush="#303842" BorderThickness="1"><StackPanel x:Name="CalendarPanel"/></Border>
+                            <Border Padding="6" CornerRadius="8" Background="#191D23" BorderBrush="#38414C" BorderThickness="1"><StackPanel x:Name="CalendarPanel"/></Border>
                         </StackPanel>
                     </Border>
 
                     <Border x:Name="RoutineCard" Padding="7" Margin="0,0,0,5" CornerRadius="11" Background="#29252C" BorderBrush="#3A414B" BorderThickness="1" MouseLeftButtonUp="RoutineCard_Click">
                         <StackPanel>
-                            <Grid Margin="0,0,0,5"><TextBlock Text="Rutinitas" Foreground="#F7FAFC" FontSize="12" FontWeight="Bold"/><Button Style="{StaticResource AccentButton}" Content="+" HorizontalAlignment="Right" Click="AddRoutine_Click"/></Grid>
+                            <Grid Margin="0,0,0,5"><TextBlock Text="Rutinitas" Foreground="#F7FAFC" FontSize="10.5" FontWeight="SemiBold"/><Button Style="{StaticResource AccentButton}" Content="+" HorizontalAlignment="Right" Click="AddRoutine_Click"/></Grid>
                             <Border Padding="6" CornerRadius="8" Background="#171A1F" BorderBrush="#303842" BorderThickness="1"><StackPanel x:Name="RoutinePanel"/></Border>
                         </StackPanel>
                     </Border>
@@ -106,7 +136,7 @@
                                 <Button x:Name="FilterLowButton" Style="{StaticResource FilterButton}" Content="● Rendah" Click="FilterLow_Click"/>
                             </StackPanel>
                             <StackPanel x:Name="TasksPanel"/>
-                            <TextBlock x:Name="TaskEmptyText" Text="Tidak ada tugas terdaftar." Foreground="#687481" FontSize="7.5" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,7,0,1"/>
+                            <TextBlock x:Name="TaskEmptyText" Text="Tidak ada tugas terdaftar." Foreground="#687481" FontSize="7.5" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,5,0,1"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
