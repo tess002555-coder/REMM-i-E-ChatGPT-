@@ -3,9 +3,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <SolidColorBrush x:Key="PanelBackground" Color="#F0151725" />
-        <SolidColorBrush x:Key="PanelCard" Color="#E61E293B" />
-        <SolidColorBrush x:Key="PanelText" Color="#FFF1F5F9" />
-        <SolidColorBrush x:Key="PanelMuted" Color="#FF94A3B8" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Colors.xaml"/>
+                <ResourceDictionary Source="Themes/Controls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <SolidColorBrush x:Key="PanelBackground" Color="#F0181D24"/>
+            <SolidColorBrush x:Key="PanelCard" Color="#29262D"/>
+            <SolidColorBrush x:Key="PanelText" Color="#F4F7F8"/>
+            <SolidColorBrush x:Key="PanelMuted" Color="#68747C"/>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>
