@@ -192,7 +192,7 @@
                                     <CheckBox x:Name="AutoSnapCheck" Content="Auto snap ke sisi layar terdekat saat dilepas" IsChecked="True" />
                                     <CheckBox Content="Tampilkan menu utama sebagai jendela terpisah" IsChecked="True" IsEnabled="False" />
                                     <CheckBox Content="Pertahankan mascot selalu di atas desktop" IsChecked="True" IsEnabled="False" />
-                                    <DockPanel Margin="0,7,0,0"><TextBlock Text="Peek visible (%)" Foreground="#68747C" FontSize="8"/><TextBlock DockPanel.Dock="Right" Text="75%" Foreground="#00D2D3" FontSize="8"/></DockPanel>
+                                    <DockPanel Margin="0,7,0,0"><TextBlock Text="Peek gambar maskot (tetap 50%)" Foreground="#68747C" FontSize="8"/><TextBlock DockPanel.Dock="Right" Text="75%" Foreground="#00D2D3" FontSize="8"/></DockPanel>
                                     <Slider x:Name="PeekSlider" Minimum="50" Maximum="90" Value="75" />
                                 </StackPanel>
                             </Border>
@@ -208,7 +208,7 @@
                             <Border Style="{StaticResource SectionBorder}">
                                 <StackPanel>
                                     <TextBlock Text="Gambar Pose Maskot" Foreground="#00D2D3" FontSize="10" FontWeight="Bold" />
-                                    <TextBlock Text="Atur gambar untuk setiap keadaan maskot. File akan disalin ke AppData/REMM-i/poses saat konfigurasi disimpan." Foreground="#68747C" FontSize="8" Margin="0,4,0,8" TextWrapping="Wrap" />
+                                    <TextBlock Text="Upload gambar pose untuk mengaktifkan Mode Gambar secara otomatis. File disalin ke AppData/REMM-i/poses saat konfigurasi disimpan. Tombol kecil ↔ pada maskot dapat mengubah Mode Gambar kembali ke Bar, atau sebaliknya." Foreground="#68747C" FontSize="8" Margin="0,4,0,8" TextWrapping="Wrap" />
                                     <StackPanel Margin="0,2"><TextBlock Text="Idle" Foreground="#DCE5EB" FontSize="8" FontWeight="SemiBold"/><DockPanel Margin="0,2,0,0"><TextBox x:Name="IdlePathText"/><Button Content="Browse" Click="IdleBrowse_Click" DockPanel.Dock="Right" Width="64" Margin="5,0,0,0"/></DockPanel></StackPanel>
                                     <StackPanel Margin="0,8,0,0"><TextBlock Text="Peek" Foreground="#DCE5EB" FontSize="8" FontWeight="SemiBold"/><DockPanel Margin="0,2,0,0"><TextBox x:Name="PeekPathText"/><Button Content="Browse" Click="PeekBrowse_Click" DockPanel.Dock="Right" Width="64" Margin="5,0,0,0"/></DockPanel></StackPanel>
                                     <StackPanel Margin="0,8,0,0"><TextBlock Text="Pointing" Foreground="#DCE5EB" FontSize="8" FontWeight="SemiBold"/><DockPanel Margin="0,2,0,0"><TextBox x:Name="PointingPathText"/><Button Content="Browse" Click="PointingBrowse_Click" DockPanel.Dock="Right" Width="64" Margin="5,0,0,0"/></DockPanel></StackPanel>
