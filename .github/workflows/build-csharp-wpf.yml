@@ -49,4 +49,5 @@ jobs:
         with:
           name: REMM-i-CSharp-WPF-win-x64
           path: .\REMM-i-WPF\bin\Release\net8.0-windows\win-x64\publish\REMM-i.exe
+          retention-days: 1
           if-no-files-found: error
