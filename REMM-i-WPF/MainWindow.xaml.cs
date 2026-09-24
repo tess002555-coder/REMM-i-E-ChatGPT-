@@ -104,7 +104,6 @@ public partial class MainWindow : Window
         var area = GetWorkingAreaInDip();
         Left = Math.Max(area.Left, Math.Min(_dragStartLeft + dx, area.Right - Width));
         Top = Math.Max(area.Top, Math.Min(_dragStartTop + dy, area.Bottom - Height));
-        _taskWindow?.PositionNearMascot();
     }
 
     private void Mascot_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -148,7 +147,6 @@ public partial class MainWindow : Window
         else if (min == top) { Left = x; Top = area.Top - _peekOffset; }
         else { Left = x; Top = maxTop + _peekOffset; }
 
-        _taskWindow?.PositionNearMascot();
         SetPose("peek");
     }
 
