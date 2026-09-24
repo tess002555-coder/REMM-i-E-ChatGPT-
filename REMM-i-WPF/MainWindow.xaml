@@ -16,13 +16,43 @@
         PreviewMouseLeftButtonDown="Mascot_MouseLeftButtonDown"
         PreviewMouseMove="Mascot_MouseMove"
         PreviewMouseLeftButtonUp="Mascot_MouseLeftButtonUp">
-    <!-- Transparent pixels belong only to this 128x128 mascot window.
-         There is no fullscreen/desktop-sized transparent hit-test surface. -->
     <Grid>
-        <Image Source="/Assets/mascot.png"
+        <Border x:Name="BarSurface"
+                Width="24"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="#15181D"
+                BorderBrush="#22D3EE"
+                BorderThickness="1"
+                CornerRadius="8"
+                Visibility="Collapsed">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="0" Opacity="0.35" />
+            </Border.Effect>
+        </Border>
+
+        <Image x:Name="MascotImage"
+               Source="/Assets/mascot.png"
                Stretch="Uniform"
                Width="128"
                Height="128"
                IsHitTestVisible="True" />
+
+        <Button x:Name="ModeToggleButton"
+                Width="18"
+                Height="18"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0,0,4,4"
+                Padding="0"
+                Content="↔"
+                FontSize="9"
+                FontWeight="Bold"
+                Background="#15181D"
+                Foreground="#22D3EE"
+                BorderBrush="#22D3EE"
+                BorderThickness="1"
+                ToolTip="Ganti mode Bar / Gambar"
+                Click="ModeToggleButton_Click" />
     </Grid>
 </Window>
