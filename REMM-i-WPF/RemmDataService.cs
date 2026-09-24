@@ -33,11 +33,12 @@ public sealed class RemmSettings
 {
     public string Theme { get; set; } = "Soft Sakura Pink";
     public string PanelMode { get; set; } = "Mode Bar";
+    public string MascotMode { get; set; } = "Bar";
     public double PanelOpacity { get; set; } = 0.95;
     public string PanelBackground { get; set; } = "#21181E";
     public string PanelBorder { get; set; } = "#F39BB8";
     public bool AutoSnap { get; set; } = true;
-    public int PeekVisiblePercent { get; set; } = 75;
+    public int PeekVisiblePercent { get; set; } = 50;
     public bool DragEnabled { get; set; } = true;
     public bool NotificationsEnabled { get; set; } = true;
     public bool NotificationSoundEnabled { get; set; } = true;
