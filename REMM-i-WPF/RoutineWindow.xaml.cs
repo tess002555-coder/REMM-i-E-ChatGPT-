@@ -2,6 +2,9 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Windows;
+using Microsoft.Win32;
+using System.IO;
+using System.Text.Json;
 using System.Windows.Controls;
 using WpfBrushes = System.Windows.Media.Brushes;
 using WpfFontStyles = System.Windows.FontStyles;
@@ -60,7 +63,33 @@ public partial class RoutineWindow : Window
     {
         var routine = Routine;
         if (routine is null) return;
-        WpfMessageBox.Show($"Kartu pencapaian untuk '{routine.Title}' siap dibuat.\n\nDibuat: {routine.CreatedDate:dd MMM yyyy}\nCatatan: {routine.Notes}", "Ekspor Kartu", WpfMessageBoxButton.OK, WpfMessageBoxImage.Information);
+
+        var dialog = new SaveFileDialog
+        {
+            FileName = $"REMM-rutinitas-{routine.Title.Replace(" ", "-")}.json",
+            Filter = "REMM Routine (*.json)|*.json|Text (*.txt)|*.txt"
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        try
+        {
+            if (Path.GetExtension(dialog.FileName).Equals(".txt", StringComparison.OrdinalIgnoreCase))
+            {
+                File.WriteAllText(dialog.FileName,
+                    $"REMM(i)E - DETAIL RUTINITAS\n\nNama: {routine.Title}\nDibuat: {routine.CreatedDate:dd MMM yyyy}\n\nCatatan:\n{routine.Notes}");
+            }
+            else
+            {
+                File.WriteAllText(dialog.FileName,
+                    JsonSerializer.Serialize(routine, new JsonSerializerOptions { WriteIndented = true }));
+            }
+
+            WpfMessageBox.Show("Rutinitas berhasil diekspor.", "Ekspor Rutinitas", WpfMessageBoxButton.OK, WpfMessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            WpfMessageBox.Show($"Ekspor gagal:\n{ex.Message}", "REMM(i)", WpfMessageBoxButton.OK, WpfMessageBoxImage.Error);
+        }
     }
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 }
