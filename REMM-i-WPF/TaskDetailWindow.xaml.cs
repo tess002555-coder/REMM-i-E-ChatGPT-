@@ -27,7 +27,7 @@ public partial class TaskDetailWindow : Window
         DateBox.SelectedDate = _task.Deadline?.Date ?? DateTime.Today;
         TimeBox.Text = (_task.Deadline ?? DateTime.Now).ToString("HH:mm");
         CompletedCheck.IsChecked = _task.Completed;
-        NotesBox.Text = "";
+        NotesBox.Text = _task.Notes;
         foreach (var item in PriorityBox.Items.OfType<ComboBoxItem>())
             if (string.Equals(item.Content?.ToString(), _task.Priority, StringComparison.OrdinalIgnoreCase))
                 item.IsSelected = true;
@@ -53,6 +53,7 @@ public partial class TaskDetailWindow : Window
         _task.Priority = (PriorityBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Sedang";
         _task.Completed = CompletedCheck.IsChecked == true;
         _task.Deadline = date.Date.Add(time.TimeOfDay);
+        _task.Notes = NotesBox.Text.Trim();
         RemmDataService.Save(_data);
         Changed?.Invoke(this, EventArgs.Empty);
         Close();
