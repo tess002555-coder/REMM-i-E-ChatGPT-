@@ -29,7 +29,7 @@ public partial class SettingsWindow : Window
     {
         var s = _data.Settings;
         DisplayNameText.Text = _data.DisplayName;
-        ProjectNameText.Text = string.IsNullOrWhiteSpace(_data.DisplayName) ? "REMM(i)E" : "REMM(i)E";
+        ProjectNameText.Text = string.IsNullOrWhiteSpace(_data.ProjectName) ? "REMM(i)E" : _data.ProjectName;
         OpacitySlider.Value = s.PanelOpacity;
         BackgroundColorText.Text = s.PanelBackground;
         BorderColorText.Text = s.PanelBorder;
@@ -128,6 +128,7 @@ public partial class SettingsWindow : Window
             var oldAlert = s.AlertImagePath;
 
             _data.DisplayName = string.IsNullOrWhiteSpace(DisplayNameText.Text) ? "Maskot Denia" : DisplayNameText.Text.Trim();
+            _data.ProjectName = string.IsNullOrWhiteSpace(ProjectNameText.Text) ? "REMM(i)E" : ProjectNameText.Text.Trim();
             s.PanelOpacity = Math.Clamp(OpacitySlider.Value, 0.65, 1.0);
             s.PanelBackground = BackgroundColorText.Text.Trim();
             s.PanelBorder = BorderColorText.Text.Trim();
@@ -161,6 +162,10 @@ public partial class SettingsWindow : Window
                 s.MascotMode = "Image";
 
             s.PanelMode = ModeFloat.IsChecked == true ? "Floating" : "Mode Bar";
+            // If the user explicitly chooses a pose mode, keep the chosen mascot mode.
+            // Uploading a new pose below still switches to Image mode automatically.
+            if (ModeBar.IsChecked == true && !imageWasAddedOrChanged)
+                s.MascotMode = "Bar";
             RemmDataService.Save(_data);
             _mascot.ApplySettings(s);
             Title = "Pengaturan Terpusat — Tersimpan";
