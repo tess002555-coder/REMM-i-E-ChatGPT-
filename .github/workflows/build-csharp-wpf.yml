@@ -9,6 +9,8 @@ on:
 jobs:
   build-csharp:
     runs-on: windows-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -44,10 +46,11 @@ jobs:
           Write-Host "Generated: $($exe.FullName)"
           Write-Host "Size: $($exe.Length) bytes"
 
-      - name: Upload EXE
-        uses: actions/upload-artifact@v4
-        with:
-          name: REMM-i-CSharp-WPF-win-x64
-          path: .\REMM-i-WPF\bin\Release\net8.0-windows\win-x64\publish\REMM-i.exe
-          retention-days: 1
-          if-no-files-found: error
+      - name: Upload EXE as GitHub Release asset
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "build-${{ github.run_number }}"
+          $exe = ".\REMM-i-WPF\bin\Release\net8.0-windows\win-x64\publish\REMM-i.exe"
+          gh release create $tag $exe --title "REMM(i)E Build ${{ github.run_number }}" --notes "Automated C# WPF/WebView2 build from commit ${{ github.sha }}." --target "${{ github.sha }}"
