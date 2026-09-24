@@ -122,13 +122,18 @@ public partial class SettingsWindow : Window
         try
         {
             var s = _data.Settings;
+            var oldIdle = s.IdleImagePath;
+            var oldPeek = s.PeekImagePath;
+            var oldPointing = s.PointingImagePath;
+            var oldAlert = s.AlertImagePath;
+
             _data.DisplayName = string.IsNullOrWhiteSpace(DisplayNameText.Text) ? "Maskot Denia" : DisplayNameText.Text.Trim();
             s.PanelOpacity = Math.Clamp(OpacitySlider.Value, 0.65, 1.0);
             s.PanelBackground = BackgroundColorText.Text.Trim();
             s.PanelBorder = BorderColorText.Text.Trim();
             s.DragEnabled = DragEnabledCheck.IsChecked == true;
             s.AutoSnap = AutoSnapCheck.IsChecked == true;
-            s.PeekVisiblePercent = (int)Math.Round(Math.Clamp(PeekSlider.Value, 50, 90));
+            s.PeekVisiblePercent = 50;
             s.NotificationsEnabled = NotificationsCheck.IsChecked == true;
             s.NotificationSoundEnabled = NotificationSoundCheck.IsChecked == true;
             s.NotificationVolume = (int)Math.Round(Math.Clamp(VolumeSlider.Value, 0, 100));
@@ -146,6 +151,15 @@ public partial class SettingsWindow : Window
             s.PointingImagePath = PersistPose(PointingPathText.Text, "pointing", s.PointingImagePath);
             s.AlertImagePath = PersistPose(AlertPathText.Text, "alert", s.AlertImagePath);
 
+            var imageWasAddedOrChanged =
+                IsNewPath(IdlePathText.Text, oldIdle) ||
+                IsNewPath(PeekPathText.Text, oldPeek) ||
+                IsNewPath(PointingPathText.Text, oldPointing) ||
+                IsNewPath(AlertPathText.Text, oldAlert);
+
+            if (imageWasAddedOrChanged)
+                s.MascotMode = "Image";
+
             s.PanelMode = ModeFloat.IsChecked == true ? "Floating" : "Mode Bar";
             RemmDataService.Save(_data);
             _mascot.ApplySettings(s);
@@ -155,6 +169,17 @@ public partial class SettingsWindow : Window
         {
             WpfMessageBox.Show($"Pengaturan gagal disimpan:\n{ex.Message}", "REMM(i)", WpfMessageBoxButton.OK, WpfMessageBoxImage.Error);
         }
+    }
+
+    private static bool IsNewPath(string source, string previousPath)
+    {
+        source = source?.Trim() ?? "";
+        previousPath = previousPath?.Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(source) || !File.Exists(source))
+            return false;
+        if (string.IsNullOrWhiteSpace(previousPath))
+            return true;
+        return !string.Equals(Path.GetFullPath(source), Path.GetFullPath(previousPath), StringComparison.OrdinalIgnoreCase);
     }
 
     private static string PersistPose(string source, string mode, string previousPath)
