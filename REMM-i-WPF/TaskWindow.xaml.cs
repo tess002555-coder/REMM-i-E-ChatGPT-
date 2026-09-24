@@ -222,7 +222,10 @@ public partial class TaskWindow : Window
     {
         if (!IsInitialized) return;
         _data = RemmDataService.Load();
+        ProjectNameText.Text = string.IsNullOrWhiteSpace(_data.ProjectName) ? "REMM(i)E" : _data.ProjectName;
         DisplayNameText.Text = _data.DisplayName;
+        TodayText.Text = DateTime.Now.ToString("dddd, dd MMMM yyyy", System.Globalization.CultureInfo.GetCultureInfo("id-ID"));
+        CalendarCountText.Text = $"{_data.Schedules.Count} acara tersimpan";
         TaskCountText.Text = _data.Tasks.Count(t => !t.Completed).ToString();
 
         CalendarPanel.Children.Clear();
