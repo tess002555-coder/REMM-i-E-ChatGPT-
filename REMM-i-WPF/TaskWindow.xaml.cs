@@ -264,7 +264,7 @@ public partial class TaskWindow : Window
         TaskEmptyText.Visibility = tasks.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         foreach (var task in tasks)
         {
-            var row = new WpfDockPanel { Margin = new Thickness(0, 1, 0, 4), Tag = task.Id };
+            var row = new WpfDockPanel { Margin = new Thickness(0, 1, 0, 4), Tag = task.Id, Cursor = Cursors.Hand };\n            row.MouseLeftButtonUp += TaskRow_Click;
             var check = new WpfCheckBox { IsChecked = task.Completed, Tag = task.Id, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 5, 0) };
             check.Checked += TaskCheckChanged;
             check.Unchecked += TaskCheckChanged;
@@ -278,6 +278,20 @@ public partial class TaskWindow : Window
             row.Children.Add(delete);
             row.Children.Add(text);
             TasksPanel.Children.Add(row);
+        }
+    }
+
+
+    private void TaskRow_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is WpfDockPanel row && row.Tag is string id && e.OriginalSource is not WpfButton && e.OriginalSource is not WpfCheckBox)
+        {
+            var task = _data.Tasks.FirstOrDefault(t => t.Id == id);
+            if (task is null) return;
+            var dialog = new TaskDetailWindow(this, _data, task);
+            dialog.Changed += (_, _) => RefreshView();
+            dialog.ShowDialog();
+            e.Handled = true;
         }
     }
 
