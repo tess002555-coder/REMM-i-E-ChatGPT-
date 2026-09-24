@@ -32,6 +32,7 @@ public partial class TaskWindow : Window
     private readonly MainWindow _mascot;
     private RemmData _data;
     private string _filter = "Semua";
+    private bool _positionRestored;
 
     public TaskWindow(MainWindow mascot)
     {
@@ -42,9 +43,10 @@ public partial class TaskWindow : Window
         Loaded += (_, _) =>
         {
             ApplySettings(_data.Settings);
-            PositionNearMascot();
+            RestoreOrPosition();
             RefreshView();
         };
+        LocationChanged += (_, _) => SavePanelPosition();
     }
 
     public void ApplySettings(RemmSettings settings)
@@ -66,6 +68,28 @@ public partial class TaskWindow : Window
         return (Brush)new BrushConverter().ConvertFromString(fallback)!;
     }
 
+    private void RestoreOrPosition()
+    {
+        if (_data.Settings.RememberPanelPosition && !double.IsNaN(_data.Settings.PanelLeft) && !double.IsNaN(_data.Settings.PanelTop))
+        {
+            var area = _mascot.GetWorkingAreaInDip();
+            Left = Math.Max(area.Left, Math.Min(_data.Settings.PanelLeft, area.Right - Width));
+            Top = Math.Max(area.Top, Math.Min(_data.Settings.PanelTop, area.Bottom - Height));
+            _positionRestored = true;
+            return;
+        }
+        PositionNearMascot();
+    }
+
+    private void SavePanelPosition()
+    {
+        if (!_positionRestored && !IsLoaded) return;
+        if (!_data.Settings.RememberPanelPosition || double.IsNaN(Left) || double.IsNaN(Top)) return;
+        _data.Settings.PanelLeft = Left;
+        _data.Settings.PanelTop = Top;
+        try { RemmDataService.Save(_data); } catch { }
+    }
+
     public void PositionNearMascot()
     {
         var area = _mascot.GetWorkingAreaInDip();
@@ -79,6 +103,8 @@ public partial class TaskWindow : Window
         var y = mascotCenterY - Height / 2;
         Left = Math.Max(area.Left, Math.Min(x, area.Right - Width));
         Top = Math.Max(area.Top, Math.Min(y, area.Bottom - Height));
+        _positionRestored = true;
+        SavePanelPosition();
     }
 
     private void Panel_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -102,7 +128,11 @@ public partial class TaskWindow : Window
         return false;
     }
 
-    private void Close_Click(object sender, RoutedEventArgs e) => Close();
+    private void Close_Click(object sender, RoutedEventArgs e)
+    {
+        SavePanelPosition();
+        Close();
+    }
 
     private void Settings_Click(object sender, RoutedEventArgs e)
     {
