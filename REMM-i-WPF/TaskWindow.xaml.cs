@@ -37,6 +37,7 @@ public partial class TaskWindow : Window
     {
         InitializeComponent();
         _mascot = mascot;
+        Owner = mascot;
         _data = RemmDataService.Load();
         Loaded += (_, _) =>
         {
