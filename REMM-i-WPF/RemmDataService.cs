@@ -53,6 +53,9 @@ public sealed class RemmSettings
     public string PeekImagePath { get; set; } = "";
     public string PointingImagePath { get; set; } = "";
     public string AlertImagePath { get; set; } = "";
+    public double PanelLeft { get; set; } = double.NaN;
+    public double PanelTop { get; set; } = double.NaN;
+    public bool RememberPanelPosition { get; set; } = true;
 }
 
 public sealed class RemmData
@@ -60,6 +63,7 @@ public sealed class RemmData
     public List<RemmTask> Tasks { get; set; } = new();
     public List<RemmRoutine> Routines { get; set; } = new();
     public List<RemmSchedule> Schedules { get; set; } = new();
+    public string ProjectName { get; set; } = "REMM(i)E";
     public string DisplayName { get; set; } = "Maskot Denia";
     public RemmSettings Settings { get; set; } = new();
 }
