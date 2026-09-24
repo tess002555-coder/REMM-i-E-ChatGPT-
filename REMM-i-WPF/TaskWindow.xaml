@@ -113,7 +113,8 @@
                         <Image Source="/Assets/mascot.png" Width="29" Height="29" Stretch="Uniform" IsHitTestVisible="False"/>
                     </Border>
                     <StackPanel Margin="5,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="REMM(i)E" Foreground="#F8FAFC" FontSize="10" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="ProjectNameText" Text="REMM(i)E" Foreground="#F8FAFC" FontSize="10" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="TodayText" Text="Hari ini" Foreground="#6F7C88" FontSize="7" Margin="0,2,0,0"/>
                         <TextBlock x:Name="DisplayNameText" Text="Maskot Denia" Foreground="#67E8F9" FontSize="7" FontWeight="SemiBold"/>
                     </StackPanel>
                 </StackPanel>
@@ -143,6 +144,7 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="▣" FontFamily="Segoe MDL2 Assets" Foreground="#00D2D3" FontSize="9" Margin="0,0,5,0"/>
                                 <TextBlock Text="Calender" Foreground="#F7FAFC" FontSize="10" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="CalendarCountText" Text="" Foreground="#6F7C88" FontSize="7" Margin="0,1,0,0"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
                                 <Button Style="{StaticResource AccentButton}" Content="+" Click="AddCalendar_Click"/>
