@@ -222,11 +222,19 @@ public partial class TaskWindow : Window
     {
         if (!IsInitialized) return;
         _data = RemmDataService.Load();
-        ProjectNameText.Text = string.IsNullOrWhiteSpace(_data.ProjectName) ? "REMM(i)E" : _data.ProjectName;
         DisplayNameText.Text = _data.DisplayName;
         TodayText.Text = DateTime.Now.ToString("dddd, dd MMMM yyyy", System.Globalization.CultureInfo.GetCultureInfo("id-ID"));
         CalendarCountText.Text = $"{_data.Schedules.Count} acara tersimpan";
-        TaskCountText.Text = _data.Tasks.Count(t => !t.Completed).ToString();
+        var activeTasks = _data.Tasks.Count(t => !t.Completed);
+        var completedTasks = _data.Tasks.Count(t => t.Completed);
+        TaskCountText.Text = activeTasks.ToString();
+        SummaryText.Text = activeTasks == 0 ? "Semua tugas selesai" : $"{activeTasks} tugas aktif";
+        var nextEvent = _data.Schedules.Where(s => s.DateTime >= DateTime.Now).OrderBy(s => s.DateTime).FirstOrDefault();
+        NextEventText.Text = nextEvent is null
+            ? "Tidak ada agenda berikutnya"
+            : $"Berikutnya · {nextEvent.Title} · {nextEvent.DateTime:dd MMM, HH:mm}";
+        if (activeTasks > 0 && completedTasks > 0)
+            SummaryText.Text = $"{activeTasks} aktif · {completedTasks} selesai";
 
         CalendarPanel.Children.Clear();
         foreach (var schedule in _data.Schedules.OrderBy(s => s.DateTime).Take(3))
