@@ -46,14 +46,6 @@ jobs:
           Write-Host "Generated: $($exe.FullName)"
           Write-Host "Size: $($exe.Length) bytes"
 
-      - name: Upload EXE as GitHub Actions artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: REMM-i-build-${{ github.run_number }}
-          path: .\REMM-i-WPF\bin\Release\net8.0-windows\win-x64\publish\REMM-i.exe
-          if-no-files-found: error
-          retention-days: 14
-
       - name: Upload EXE as GitHub Release asset
         shell: pwsh
         env:
