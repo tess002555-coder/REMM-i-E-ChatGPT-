@@ -264,7 +264,8 @@ public partial class TaskWindow : Window
         TaskEmptyText.Visibility = tasks.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         foreach (var task in tasks)
         {
-            var row = new WpfDockPanel { Margin = new Thickness(0, 1, 0, 4), Tag = task.Id, Cursor = Cursors.Hand };\n            row.MouseLeftButtonUp += TaskRow_Click;
+            var row = new WpfDockPanel { Margin = new Thickness(0, 1, 0, 4), Tag = task.Id, Cursor = Cursors.Hand };
+            row.MouseLeftButtonUp += TaskRow_Click;
             var check = new WpfCheckBox { IsChecked = task.Completed, Tag = task.Id, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 5, 0) };
             check.Checked += TaskCheckChanged;
             check.Unchecked += TaskCheckChanged;
