@@ -33,11 +33,17 @@ public sealed class RemmSettings
 {
     public string Theme { get; set; } = "Soft Sakura Pink";
     public string PanelMode { get; set; } = "Mode Bar";
+
+    // MascotMode is independent from the task panel mode.
+    // New installs start as a slim right-side bar. Uploading a pose image
+    // switches the mascot to Image mode automatically.
+    public string MascotMode { get; set; } = "Bar";
+
     public double PanelOpacity { get; set; } = 0.95;
     public string PanelBackground { get; set; } = "#21181E";
     public string PanelBorder { get; set; } = "#F39BB8";
     public bool AutoSnap { get; set; } = true;
-    public int PeekVisiblePercent { get; set; } = 75;
+    public int PeekVisiblePercent { get; set; } = 50;
     public bool DragEnabled { get; set; } = true;
     public bool NotificationsEnabled { get; set; } = true;
     public bool NotificationSoundEnabled { get; set; } = true;
@@ -79,6 +85,7 @@ public static class RemmDataService
                 Save(data);
                 return data;
             }
+
             var json = File.ReadAllText(FilePath);
             var dataLoaded = JsonSerializer.Deserialize<RemmData>(json, Options) ?? CreateDefault();
             dataLoaded.Settings ??= new RemmSettings();
@@ -87,7 +94,10 @@ public static class RemmDataService
             dataLoaded.Schedules ??= new List<RemmSchedule>();
             return dataLoaded;
         }
-        catch { return CreateDefault(); }
+        catch
+        {
+            return CreateDefault();
+        }
     }
 
     public static void Save(RemmData data)
@@ -107,7 +117,8 @@ public static class RemmDataService
     public static void ImportBackup(string path)
     {
         var json = File.ReadAllText(path);
-        var data = JsonSerializer.Deserialize<RemmData>(json, Options) ?? throw new InvalidDataException("File backup REMM tidak valid.");
+        var data = JsonSerializer.Deserialize<RemmData>(json, Options)
+            ?? throw new InvalidDataException("File backup REMM tidak valid.");
         data.Settings ??= new RemmSettings();
         data.Tasks ??= new List<RemmTask>();
         data.Routines ??= new List<RemmRoutine>();
