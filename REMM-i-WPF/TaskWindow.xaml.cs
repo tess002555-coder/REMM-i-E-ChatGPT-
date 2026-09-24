@@ -36,8 +36,8 @@ public partial class TaskWindow : Window
     public TaskWindow(MainWindow mascot)
     {
         InitializeComponent();
+        Topmost = false;
         _mascot = mascot;
-        Owner = mascot;
         _data = RemmDataService.Load();
         Loaded += (_, _) =>
         {
