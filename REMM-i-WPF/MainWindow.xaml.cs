@@ -2,17 +2,24 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Windows;
-using System.Windows.Media.Imaging;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using FormsScreen = System.Windows.Forms.Screen;
 
 namespace RemmI;
 
 public partial class MainWindow : Window
 {
-    private const double MascotSize = 128;
-    private double _peekOffset = 32;
+    private const double MascotImageSize = 128;
+    private const double BarWidth = 24;
+    private const double BarHeight = 128;
+    private const double ImagePeekPercent = 50;
+
+    private double _peekOffset;
+    private bool _peekedOnRight = true;
     private bool _dragging;
     private bool _moved;
     private Point _mouseDownScreen;
@@ -24,8 +31,6 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        Width = MascotSize;
-        Height = MascotSize;
         Loaded += (_, _) =>
         {
             _settings = RemmDataService.Load().Settings;
@@ -36,11 +41,45 @@ public partial class MainWindow : Window
 
     public void ApplySettings(RemmSettings settings)
     {
-        _settings = settings;
-        _peekOffset = MascotSize * (1.0 - Math.Clamp(settings.PeekVisiblePercent, 50, 90) / 100.0);
+        _settings = settings ?? new RemmSettings();
+        ConfigureMascotMode();
         Topmost = true;
         SetPose(_taskWindow is not null ? "pointing" : "peek");
-        _taskWindow?.ApplySettings(settings);
+        _taskWindow?.ApplySettings(_settings);
+    }
+
+    private bool IsImageMode =>
+        string.Equals(_settings.MascotMode, "Image", StringComparison.OrdinalIgnoreCase);
+
+    private double CurrentPeekOffset =>
+        IsImageMode ? MascotImageSize * (1.0 - ImagePeekPercent / 100.0) : 0;
+
+    private void ConfigureMascotMode()
+    {
+        if (IsImageMode)
+        {
+            Width = MascotImageSize;
+            Height = MascotImageSize;
+            BarSurface.Visibility = Visibility.Collapsed;
+            MascotImage.Visibility = Visibility.Visible;
+            MascotImage.Width = MascotImageSize;
+            MascotImage.Height = MascotImageSize;
+            ModeToggleButton.HorizontalAlignment = HorizontalAlignment.Right;
+            ModeToggleButton.VerticalAlignment = VerticalAlignment.Bottom;
+            ModeToggleButton.Margin = new Thickness(0, 0, 4, 4);
+        }
+        else
+        {
+            Width = BarWidth;
+            Height = BarHeight;
+            BarSurface.Visibility = Visibility.Visible;
+            MascotImage.Visibility = Visibility.Collapsed;
+            ModeToggleButton.HorizontalAlignment = HorizontalAlignment.Center;
+            ModeToggleButton.VerticalAlignment = VerticalAlignment.Bottom;
+            ModeToggleButton.Margin = new Thickness(0, 0, 0, 5);
+        }
+
+        _peekOffset = CurrentPeekOffset;
     }
 
     private void PositionInitial()
@@ -48,8 +87,9 @@ public partial class MainWindow : Window
         try
         {
             var area = GetWorkingAreaInDip();
-            Left = area.Right - MascotSize + _peekOffset;
-            Top = area.Top + (area.Height - MascotSize) / 2;
+            _peekedOnRight = true;
+            Left = IsImageMode ? area.Right - Width + CurrentPeekOffset : area.Right - Width;
+            Top = area.Top + (area.Height - Height) / 2;
             SetPose("peek");
             Show();
         }
@@ -64,20 +104,55 @@ public partial class MainWindow : Window
 
     private void Mascot_MouseEnter(object sender, MouseEventArgs e)
     {
-        if (!_dragging && _taskWindow is null)
-            SetPose("idle");
+        if (_dragging || _taskWindow is not null || !IsImageMode)
+            return;
+
+        ExpandFromPeek();
+        SetPose("idle");
     }
 
     private void Mascot_MouseLeave(object sender, MouseEventArgs e)
     {
-        if (!_dragging && _taskWindow is null)
-            SetPose("peek");
+        if (_dragging || _taskWindow is not null || !IsImageMode)
+            return;
+
+        CollapseToPeek();
+        SetPose("peek");
+    }
+
+    private void ExpandFromPeek()
+    {
+        if (!IsImageMode)
+            return;
+
+        var area = GetWorkingAreaInDip();
+        _peekedOnRight = (Left + Width / 2.0) >= area.Left + area.Width / 2.0;
+        Left = _peekedOnRight ? area.Right - Width : area.Left;
+    }
+
+    private void CollapseToPeek()
+    {
+        if (!IsImageMode)
+            return;
+
+        var area = GetWorkingAreaInDip();
+        Left = _peekedOnRight ? area.Right - Width + CurrentPeekOffset : area.Left - CurrentPeekOffset;
     }
 
     private void Mascot_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != MouseButton.Left || !_settings.DragEnabled)
+        if (e.ChangedButton != MouseButton.Left)
             return;
+
+        if (IsDescendantOf(e.OriginalSource as DependencyObject, ModeToggleButton))
+            return;
+
+        if (!_settings.DragEnabled)
+        {
+            OpenTaskWindow();
+            e.Handled = true;
+            return;
+        }
 
         _dragging = true;
         _moved = false;
@@ -85,7 +160,9 @@ public partial class MainWindow : Window
         _dragStartLeft = Left;
         _dragStartTop = Top;
         CaptureMouse();
-        SetPose("idle");
+        Cursor = Cursors.SizeAll;
+        if (IsImageMode)
+            SetPose("idle");
         e.Handled = true;
     }
 
@@ -95,15 +172,19 @@ public partial class MainWindow : Window
             return;
 
         var current = PointToScreen(e.GetPosition(this));
-        var dx = current.X - _mouseDownScreen.X;
-        var dy = current.Y - _mouseDownScreen.Y;
+        var transform = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice;
+        var sx = transform?.M11 ?? 1.0;
+        var sy = transform?.M22 ?? 1.0;
+        var dx = (current.X - _mouseDownScreen.X) / sx;
+        var dy = (current.Y - _mouseDownScreen.Y) / sy;
+
         if (!_moved && Math.Abs(dx) < 5 && Math.Abs(dy) < 5)
             return;
 
         _moved = true;
-        var area = GetWorkingAreaInDip();
-        Left = Math.Max(area.Left, Math.Min(_dragStartLeft + dx, area.Right - Width));
-        Top = Math.Max(area.Top, Math.Min(_dragStartTop + dy, area.Bottom - Height));
+        Left = _dragStartLeft + dx;
+        Top = _dragStartTop + dy;
+        e.Handled = true;
     }
 
     private void Mascot_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -112,13 +193,16 @@ public partial class MainWindow : Window
             return;
 
         _dragging = false;
-        ReleaseMouseCapture();
+        if (IsMouseCaptured)
+            ReleaseMouseCapture();
+
+        Cursor = Cursors.Hand;
 
         if (_moved)
         {
             if (_settings.AutoSnap)
-                SnapToNearestEdge();
-            else
+                SnapToNearestSide();
+            else if (IsImageMode)
                 SetPose("idle");
         }
         else
@@ -129,25 +213,22 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    private void SnapToNearestEdge()
+    private void SnapToNearestSide()
     {
         var area = GetWorkingAreaInDip();
-        var maxLeft = area.Right - Width;
         var maxTop = area.Bottom - Height;
-        var x = Math.Max(area.Left, Math.Min(Left, maxLeft));
         var y = Math.Max(area.Top, Math.Min(Top, maxTop));
-        var left = x - area.Left;
-        var right = maxLeft - x;
-        var top = y - area.Top;
-        var bottom = maxTop - y;
-        var min = Math.Min(Math.Min(left, right), Math.Min(top, bottom));
+        var mascotCenterX = Left + Width / 2.0;
+        var distanceToLeft = Math.Abs(mascotCenterX - area.Left);
+        var distanceToRight = Math.Abs(mascotCenterX - area.Right);
+        _peekedOnRight = distanceToLeft > distanceToRight;
 
-        if (min == left) { Left = area.Left - _peekOffset; Top = y; }
-        else if (min == right) { Left = maxLeft + _peekOffset; Top = y; }
-        else if (min == top) { Left = x; Top = area.Top - _peekOffset; }
-        else { Left = x; Top = maxTop + _peekOffset; }
+        var offset = CurrentPeekOffset;
+        Left = _peekedOnRight ? area.Right - Width + offset : area.Left - offset;
+        Top = y;
 
-        SetPose("peek");
+        if (IsImageMode)
+            SetPose("peek");
     }
 
     private void OpenTaskWindow()
@@ -156,7 +237,6 @@ public partial class MainWindow : Window
 
         if (_taskWindow is not null)
         {
-            _taskWindow.PositionNearMascot();
             _taskWindow.Show();
             _taskWindow.Activate();
             return;
@@ -173,14 +253,31 @@ public partial class MainWindow : Window
         task.Activate();
     }
 
-    public bool IsTaskWindowOpen => _taskWindow is not null;
+    private void ModeToggleButton_Click(object sender, RoutedEventArgs e)
+    {
+        var data = RemmDataService.Load();
+        _settings = data.Settings;
+        _settings.MascotMode = IsImageMode ? "Bar" : "Image";
+        _settings.PeekVisiblePercent = 50;
+        data.Settings = _settings;
+        RemmDataService.Save(data);
+
+        ConfigureMascotMode();
+        SnapToPreferredSide();
+        SetPose(_taskWindow is not null ? "pointing" : "peek");
+    }
+
+    private void SnapToPreferredSide()
+    {
+        var area = GetWorkingAreaInDip();
+        _peekedOnRight = true;
+        Left = IsImageMode ? area.Right - Width + CurrentPeekOffset : area.Right - Width;
+        Top = Math.Max(area.Top, Math.Min(Top, area.Bottom - Height));
+    }
 
     private void SetPose(string mode)
     {
-        if (Content is not System.Windows.Controls.Grid grid)
-            return;
-        var image = grid.Children.OfType<System.Windows.Controls.Image>().FirstOrDefault();
-        if (image is null)
+        if (!IsImageMode)
             return;
 
         var path = mode switch
@@ -202,24 +299,30 @@ public partial class MainWindow : Window
                 bitmap.UriSource = new Uri(path, UriKind.Absolute);
                 bitmap.EndInit();
                 bitmap.Freeze();
-                image.Source = bitmap;
+                MascotImage.Source = bitmap;
                 return;
             }
             catch
             {
-                // Use the bundled mascot if a custom pose cannot be decoded.
             }
         }
 
-        try
-        {
-            image.Source = new BitmapImage(new Uri("/Assets/mascot.png", UriKind.Relative));
-        }
-        catch
-        {
-            image.Source = null;
-        }
+        try { MascotImage.Source = new BitmapImage(new Uri("/Assets/mascot.png", UriKind.Relative)); }
+        catch { MascotImage.Source = null; }
     }
+
+    private static bool IsDescendantOf(DependencyObject? source, DependencyObject target)
+    {
+        while (source is not null)
+        {
+            if (ReferenceEquals(source, target))
+                return true;
+            source = VisualTreeHelper.GetParent(source);
+        }
+        return false;
+    }
+
+    public bool IsTaskWindowOpen => _taskWindow is not null;
 
     public Rect GetWorkingAreaInDip()
     {
