@@ -19,6 +19,7 @@ public partial class EntryDialogWindow : Window
         _data = data;
         _kind = kind;
         DateBox.SelectedDate = DateTime.Now;
+        TimeBox.Text = DateTime.Now.ToString("HH:mm");
         Configure();
     }
 
@@ -63,6 +64,8 @@ public partial class EntryDialogWindow : Window
         }
 
         var date = DateBox.SelectedDate ?? DateTime.Now;
+        if (DateTime.TryParseExact(TimeBox.Text.Trim(), new[] { "HH:mm", "H:mm" }, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var time))
+            date = date.Date.Add(time.TimeOfDay);
         if (_kind == EntryKind.Schedule)
             _data.Schedules.Add(new RemmSchedule { Title = name, DateTime = date });
         else if (_kind == EntryKind.Routine)
