@@ -15,7 +15,11 @@
                 <TextBlock x:Name="NameLabel" Text="Nama" Foreground="#AFC0CF" FontSize="9" Margin="0,0,0,4"/>
                 <TextBox x:Name="NameBox" Height="32" Padding="8" Background="#101216" Foreground="#F8FAFC" BorderBrush="#343C47" Margin="0,0,0,10"/>
                 <TextBlock x:Name="DateLabel" Text="Tanggal &amp; waktu" Foreground="#AFC0CF" FontSize="9" Margin="0,0,0,4"/>
-                <DatePicker x:Name="DateBox" Height="32" Background="#101216" Foreground="#F8FAFC" Margin="0,0,0,10"/>
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="92"/></Grid.ColumnDefinitions>
+                    <DatePicker x:Name="DateBox" Height="32" Background="#101216" Foreground="#F8FAFC"/>
+                    <TextBox x:Name="TimeBox" Grid.Column="1" Height="32" Margin="7,0,0,0" Text="09:00" ToolTip="HH:mm"/>
+                </Grid>
                 <TextBlock x:Name="PriorityLabel" Text="Prioritas" Foreground="#AFC0CF" FontSize="9" Margin="0,0,0,4"/>
                 <ComboBox x:Name="PriorityBox" Height="32" Background="#101216" Foreground="#F8FAFC" Margin="0,0,0,10">
                     <ComboBoxItem Content="Tinggi"/><ComboBoxItem Content="Sedang" IsSelected="True"/><ComboBoxItem Content="Rendah"/>
