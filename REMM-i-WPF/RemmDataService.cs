@@ -12,6 +12,7 @@ public sealed class RemmTask
     public string Priority { get; set; } = "Sedang";
     public bool Completed { get; set; }
     public DateTime? Deadline { get; set; }
+    public string Notes { get; set; } = "";
 }
 
 public sealed class RemmRoutine
