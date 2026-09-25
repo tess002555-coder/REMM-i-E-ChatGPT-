@@ -82,7 +82,7 @@
             <Setter Property="FontSize" Value="9" />
             <Setter Property="Margin" Value="0,0,0,6" />
         </Style>
-        <Style TargetType="Slider">
+        <Style TargetType="RadioButton" BasedOn="{StaticResource TabButton}"/>\n        <Style TargetType="Slider">
             <Setter Property="Margin" Value="0,2,0,4" />
         </Style>
         <Style TargetType="Button" BasedOn="{StaticResource CompactButton}" />
@@ -173,13 +173,27 @@
                             <Border Style="{StaticResource SectionBorder}">
                                 <StackPanel>
                                     <TextBlock Text="Transparansi &amp; Warna Kustom" Foreground="#00D2D3" FontSize="10" FontWeight="Bold" />
-                                    <DockPanel Margin="0,7,0,0"><TextBlock Text="Transparansi / Opacity Panel" Foreground="#D4DDE3" FontSize="8"/><TextBlock x:Name="OpacityValue" DockPanel.Dock="Right" Foreground="#00D2D3" FontSize="8" FontWeight="Bold" Text="95%"/></DockPanel>
-                                    <Slider x:Name="OpacitySlider" Minimum="0.65" Maximum="1" Value="0.95" ValueChanged="OpacitySlider_ValueChanged" />
-                                    <Grid Margin="0,5,0,0">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                        <StackPanel Margin="0,0,4,0"><TextBlock Text="Warna Latar Panel" Foreground="#68747C" FontSize="7.5"/><TextBox x:Name="BackgroundColorText" Text="#15181D" /></StackPanel>
-                                        <StackPanel Grid.Column="1" Margin="4,0,0,0"><TextBlock Text="Warna Bingkai / Border Panel" Foreground="#68747C" FontSize="7.5"/><TextBox x:Name="BorderColorText" Text="#22D3EE" /></StackPanel>
-                                    </Grid>
+                                    <DockPanel Margin="0,7,0,0"><TextBlock Text="Transparansi Panel" Foreground="#D4DDE3" FontSize="8"/><TextBlock x:Name="OpacityValue" DockPanel.Dock="Right" Foreground="#00D2D3" FontSize="8" FontWeight="Bold" Text="100%"/></DockPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                        <RadioButton x:Name="Opacity65Radio" GroupName="PanelOpacity" Content="65%" Margin="0,0,6,0" Padding="9,5" Click="OpacityRadio_Click"/>
+                                        <RadioButton x:Name="Opacity100Radio" GroupName="PanelOpacity" Content="100%" Padding="9,5" Click="OpacityRadio_Click"/>
+                                    </StackPanel>
+                                    <TextBlock Text="Warna Latar Tabel / Panel" Foreground="#68747C" FontSize="7.5" Margin="0,8,0,3"/>
+                                    <WrapPanel>
+                                        <Button Content="Obsidian" Tag="#18181C" Click="PanelBackground_Click" Margin="1,1" Padding="7,4"/>
+                                        <Button Content="Dark Surface" Tag="#222228" Click="PanelBackground_Click" Margin="1,1" Padding="7,4"/>
+                                        <Button Content="Deep Blue" Tag="#121B26" Click="PanelBackground_Click" Margin="1,1" Padding="7,4"/>
+                                        <Button Content="Custom" Tag="Custom" Click="PanelBackground_Click" Margin="1,1" Padding="7,4"/>
+                                    </WrapPanel>
+                                    <TextBox x:Name="BackgroundColorText" Text="#18181C" Margin="0,4,0,0"/>
+                                    <TextBlock Text="Warna Bingkai / Border Panel" Foreground="#68747C" FontSize="7.5" Margin="0,8,0,3"/>
+                                    <WrapPanel>
+                                        <Button Content="Cyan" Tag="#00D2D3" Click="PanelBorder_Click" Margin="1,1" Padding="7,4"/>
+                                        <Button Content="Teal" Tag="#00A8B5" Click="PanelBorder_Click" Margin="1,1" Padding="7,4"/>
+                                        <Button Content="Soft Cyan" Tag="#123D45" Click="PanelBorder_Click" Margin="1,1" Padding="7,4"/>
+                                        <Button Content="Custom" Tag="Custom" Click="PanelBorder_Click" Margin="1,1" Padding="7,4"/>
+                                    </WrapPanel>
+                                    <TextBox x:Name="BorderColorText" Text="#00D2D3" Margin="0,4,0,0"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
