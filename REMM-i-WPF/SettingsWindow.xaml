@@ -174,10 +174,8 @@
                                 <StackPanel>
                                     <TextBlock Text="Transparansi &amp; Warna Kustom" Foreground="#00D2D3" FontSize="10" FontWeight="Bold" />
                                     <DockPanel Margin="0,7,0,0"><TextBlock Text="Transparansi Panel" Foreground="#D4DDE3" FontSize="8"/><TextBlock x:Name="OpacityValue" DockPanel.Dock="Right" Foreground="#00D2D3" FontSize="8" FontWeight="Bold" Text="100%"/></DockPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                                        <RadioButton x:Name="Opacity65Radio" GroupName="PanelOpacity" Content="65%" Margin="0,0,6,0" Padding="9,5" Click="OpacityRadio_Click"/>
-                                        <RadioButton x:Name="Opacity100Radio" GroupName="PanelOpacity" Content="100%" Padding="9,5" Click="OpacityRadio_Click"/>
-                                    </StackPanel>
+                                    <Slider x:Name="OpacitySlider" Minimum="0" Maximum="100" Value="100" TickFrequency="1" IsSnapToTickEnabled="False" ValueChanged="OpacitySlider_ValueChanged" Margin="0,5,0,0" Height="22" />
+                                    <DockPanel Margin="0,0,0,0"><TextBlock Text="0% = transparan penuh" Foreground="#68747C" FontSize="7"/><TextBlock Text="100% = solid" DockPanel.Dock="Right" Foreground="#68747C" FontSize="7"/></DockPanel>
                                     <TextBlock Text="Warna Latar Tabel / Panel" Foreground="#68747C" FontSize="7.5" Margin="0,8,0,3"/>
                                     <WrapPanel>
                                         <Button Content="Obsidian" Tag="#18181C" Click="PanelBackground_Click" Margin="1,1" Padding="7,4"/>
