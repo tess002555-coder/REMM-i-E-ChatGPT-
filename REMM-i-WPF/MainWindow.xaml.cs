@@ -13,7 +13,7 @@ namespace RemmI;
 
 public partial class MainWindow : Window
 {
-    private const double MascotImageSize = 128;
+    private const double MascotImageSize = 96;
     private const double BarWidth = 24;
     private const double BarHeight = 128;
     private const double ImagePeekPercent = 50;
@@ -89,7 +89,7 @@ public partial class MainWindow : Window
             var area = GetWorkingAreaInDip();
             _peekedOnRight = true;
             Left = IsImageMode ? area.Right - Width + CurrentPeekOffset : area.Right - Width;
-            Top = area.Top + (area.Height - Height) / 2;
+            Top = area.Top + 48;
             SetPose("peek");
             Show();
         }
