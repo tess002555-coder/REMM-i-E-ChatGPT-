@@ -31,7 +31,7 @@ public partial class SettingsWindow : Window
         var s = _data.Settings;
         DisplayNameText.Text = _data.DisplayName;
         ProjectNameText.Text = string.IsNullOrWhiteSpace(_data.DisplayName) ? "REMM(i)E" : "REMM(i)E";
-        Opacity65Radio.IsChecked = s.PanelOpacity <= 0.825;\n        Opacity100Radio.IsChecked = s.PanelOpacity > 0.825;
+        OpacitySlider.Value = Math.Clamp(s.PanelOpacity * 100.0, 0, 100);
         BackgroundColorText.Text = s.PanelBackground;
         BorderColorText.Text = s.PanelBorder;
         DragEnabledCheck.IsChecked = s.DragEnabled;
@@ -51,7 +51,7 @@ public partial class SettingsWindow : Window
         AlertPathText.Text = s.AlertImagePath;
         ModeBar.IsChecked = s.PanelMode != "Floating";
         ModeFloat.IsChecked = s.PanelMode == "Floating";
-        OpacityRadio_Click(null, null);
+        OpacitySlider_ValueChanged(null, null);
     }
 
     private void Header_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -112,10 +112,9 @@ public partial class SettingsWindow : Window
         }
     }
 
-    private void OpacityRadio_Click(object? sender, RoutedEventArgs? e)
+    private void OpacitySlider_ValueChanged(object? sender, System.Windows.Controls.Primitives.RangeBaseValueChangedEventArgs? e)
     {
-        var value = Opacity65Radio?.IsChecked == true ? 0.65 : 1.0;
-        if (OpacityValue != null) OpacityValue.Text = $"{value * 100:0}%";
+        if (OpacityValue != null) OpacityValue.Text = $"{OpacitySlider.Value:0}%";
     }
 
     private void PanelBackground_Click(object sender, RoutedEventArgs e)
@@ -142,7 +141,7 @@ public partial class SettingsWindow : Window
             var oldAlert = s.AlertImagePath;
 
             _data.DisplayName = string.IsNullOrWhiteSpace(DisplayNameText.Text) ? "Maskot Denia" : DisplayNameText.Text.Trim();
-            s.PanelOpacity = Opacity65Radio.IsChecked == true ? 0.65 : 1.0;
+            s.PanelOpacity = Math.Clamp(OpacitySlider.Value / 100.0, 0.0, 1.0);
             s.PanelBackground = BackgroundColorText.Text.Trim();
             s.PanelBorder = BorderColorText.Text.Trim();
             s.DragEnabled = DragEnabledCheck.IsChecked == true;
