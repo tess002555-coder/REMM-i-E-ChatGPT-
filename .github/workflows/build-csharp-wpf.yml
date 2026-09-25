@@ -1,0 +1,56 @@
+name: Build REMM(i) C# WPF
+
+on:
+  push:
+    branches:
+      - csharp-wpf
+  workflow_dispatch:
+
+jobs:
+  build-csharp:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore .\REMM-i-WPF\REMM-i-WPF.csproj
+
+      - name: Build
+        run: dotnet build .\REMM-i-WPF\REMM-i-WPF.csproj -c Release --no-restore
+
+      - name: Publish self-contained EXE
+        run: >-
+          dotnet publish .\REMM-i-WPF\REMM-i-WPF.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:DebugType=None
+          -p:DebugSymbols=false
+
+      - name: Verify EXE
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path .\REMM-i-WPF\bin\Release\net8.0-windows\win-x64\publish -Filter "REMM-i.exe" -File
+          if (-not $exe) { throw "REMM-i.exe was not generated." }
+          Write-Host "Generated: $($exe.FullName)"
+          Write-Host "Size: $($exe.Length) bytes"
+
+      - name: Upload EXE as GitHub Release asset
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "build-${{ github.run_number }}"
+          $exe = ".\REMM-i-WPF\bin\Release\net8.0-windows\win-x64\publish\REMM-i.exe"
+          gh release create $tag $exe --title "REMM(i)E Build ${{ github.run_number }}" --notes "Automated C# WPF/WebView2 build from commit ${{ github.sha }}." --target "${{ github.sha }}"

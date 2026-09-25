@@ -1,0 +1,11 @@
+<Window x:Class="RemmI.CalendarWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Width="330" Height="560" WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True" Background="Transparent" AllowsTransparency="True">
+    <Border x:Name="Root" Margin="2" CornerRadius="22" Background="#F5171A20" BorderBrush="#22D3EE" BorderThickness="1" Padding="12">
+        <Grid>
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <Grid Grid.Row="0" Margin="0,0,0,10"><TextBlock Text="● CALENDER — ACARA &amp; TANGGAL" Foreground="#22D3EE" FontSize="11" FontWeight="Bold"/><Button Content="×" Width="26" Height="26" HorizontalAlignment="Right" Click="Close_Click" Background="#20242A" Foreground="#DDEAF0" BorderBrush="#343C47"/></Grid>
+            <Grid Grid.Row="1" Margin="0,0,0,8"><TextBlock x:Name="MonthText" Foreground="#F8FAFC" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center"/><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="‹" Width="28" Height="26" Click="Prev_Click"/><Button Content="›" Width="28" Height="26" Margin="4,0,0,0" Click="Next_Click"/></StackPanel></Grid>
+            <Border Grid.Row="2" CornerRadius="12" Background="#171A1F" BorderBrush="#303742" BorderThickness="1" Padding="8" Margin="0,0,0,8"><StackPanel><UniformGrid x:Name="DayHeaders" Columns="7" Margin="0,0,0,4"/><UniformGrid x:Name="CalendarGrid" Columns="7"/></StackPanel></Border>
+            <Grid Grid.Row="3"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions><Grid Grid.Row="0" Margin="0,0,0,7"><TextBlock Text="Tabel Acara" Foreground="#AFC0CF" FontSize="10" FontWeight="Bold"/><Button Content="+ Tambah Acara" Width="102" Height="27" HorizontalAlignment="Right" Click="Add_Click" Background="#22D3EE" Foreground="#061015" BorderThickness="0" FontWeight="Bold"/></Grid><ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"><StackPanel x:Name="EventList"/></ScrollViewer></Grid>
+        </Grid>
+    </Border>
+</Window>
