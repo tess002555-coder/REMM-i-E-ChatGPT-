@@ -77,7 +77,6 @@ public partial class MainWindow : Window
             Height = MascotImageSize;
             BarSurface.Visibility = Visibility.Collapsed;
             MascotImage.Visibility = Visibility.Visible;
-            MascotFallback.Visibility = Visibility.Collapsed;
             MascotImage.Width = MascotImageSize;
             MascotImage.Height = MascotImageSize;
             ModeToggleButton.HorizontalAlignment = HorizontalAlignment.Right;
@@ -316,7 +315,6 @@ public partial class MainWindow : Window
                 bitmap.EndInit();
                 bitmap.Freeze();
                 MascotImage.Source = bitmap;
-                MascotFallback.Visibility = Visibility.Collapsed;
                 return;
             }
             catch
@@ -324,30 +322,8 @@ public partial class MainWindow : Window
             }
         }
 
-        try
-        {
-            var fallback = Path.Combine(AppContext.BaseDirectory, "Assets", "mascot.png");
-            if (File.Exists(fallback))
-            {
-                var bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.UriSource = new Uri(fallback, UriKind.Absolute);
-                bitmap.EndInit();
-                bitmap.Freeze();
-                MascotImage.Source = bitmap;
-            }
-            else
-            {
-                MascotImage.Source = null;
-                MascotFallback.Visibility = Visibility.Visible;
-            }
-        }
-        catch
-        {
-            MascotImage.Source = null;
-            MascotFallback.Visibility = Visibility.Visible;
-        }
+        try { MascotImage.Source = new BitmapImage(new Uri("/Assets/mascot.png", UriKind.Relative)); }
+        catch { MascotImage.Source = null; }
     }
 
     private static bool IsDescendantOf(DependencyObject? source, DependencyObject target)
