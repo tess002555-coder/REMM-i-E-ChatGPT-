@@ -31,7 +31,7 @@ public partial class SettingsWindow : Window
         var s = _data.Settings;
         DisplayNameText.Text = _data.DisplayName;
         ProjectNameText.Text = string.IsNullOrWhiteSpace(_data.DisplayName) ? "REMM(i)E" : "REMM(i)E";
-        OpacitySlider.Value = s.PanelOpacity;
+        Opacity65Radio.IsChecked = s.PanelOpacity <= 0.825;\n        Opacity100Radio.IsChecked = s.PanelOpacity > 0.825;
         BackgroundColorText.Text = s.PanelBackground;
         BorderColorText.Text = s.PanelBorder;
         DragEnabledCheck.IsChecked = s.DragEnabled;
@@ -51,7 +51,7 @@ public partial class SettingsWindow : Window
         AlertPathText.Text = s.AlertImagePath;
         ModeBar.IsChecked = s.PanelMode != "Floating";
         ModeFloat.IsChecked = s.PanelMode == "Floating";
-        OpacitySlider_ValueChanged(null, null);
+        OpacityRadio_Click(null, null);
     }
 
     private void Header_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -112,10 +112,22 @@ public partial class SettingsWindow : Window
         }
     }
 
-    private void OpacitySlider_ValueChanged(object? sender, RoutedPropertyChangedEventArgs<double>? e)
+    private void OpacityRadio_Click(object? sender, RoutedEventArgs? e)
     {
-        if (OpacityValue != null)
-            OpacityValue.Text = $"{OpacitySlider.Value * 100:0}%";
+        var value = Opacity65Radio?.IsChecked == true ? 0.65 : 1.0;
+        if (OpacityValue != null) OpacityValue.Text = $"{value * 100:0}%";
+    }
+
+    private void PanelBackground_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is WpfButton button && button.Tag is string value && !string.Equals(value, "Custom", StringComparison.OrdinalIgnoreCase))
+            BackgroundColorText.Text = value;
+    }
+
+    private void PanelBorder_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is WpfButton button && button.Tag is string value && !string.Equals(value, "Custom", StringComparison.OrdinalIgnoreCase))
+            BorderColorText.Text = value;
     }
 
     private void Save_Click(object sender, RoutedEventArgs e)
@@ -130,7 +142,7 @@ public partial class SettingsWindow : Window
             var oldAlert = s.AlertImagePath;
 
             _data.DisplayName = string.IsNullOrWhiteSpace(DisplayNameText.Text) ? "Maskot Denia" : DisplayNameText.Text.Trim();
-            s.PanelOpacity = Math.Clamp(OpacitySlider.Value, 0.65, 1.0);
+            s.PanelOpacity = Opacity65Radio.IsChecked == true ? 0.65 : 1.0;
             s.PanelBackground = BackgroundColorText.Text.Trim();
             s.PanelBorder = BorderColorText.Text.Trim();
             s.DragEnabled = DragEnabledCheck.IsChecked == true;
