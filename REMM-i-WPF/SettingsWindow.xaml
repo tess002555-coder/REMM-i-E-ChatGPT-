@@ -82,7 +82,8 @@
             <Setter Property="FontSize" Value="9" />
             <Setter Property="Margin" Value="0,0,0,6" />
         </Style>
-        <Style TargetType="RadioButton" BasedOn="{StaticResource TabButton}"/>\n        <Style TargetType="Slider">
+        <Style TargetType="RadioButton" BasedOn="{StaticResource TabButton}"/>
+        <Style TargetType="Slider">
             <Setter Property="Margin" Value="0,2,0,4" />
         </Style>
         <Style TargetType="Button" BasedOn="{StaticResource CompactButton}" />
