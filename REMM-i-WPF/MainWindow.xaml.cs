@@ -77,6 +77,7 @@ public partial class MainWindow : Window
             Height = MascotImageSize;
             BarSurface.Visibility = Visibility.Collapsed;
             MascotImage.Visibility = Visibility.Visible;
+            MascotFallback.Visibility = Visibility.Collapsed;
             MascotImage.Width = MascotImageSize;
             MascotImage.Height = MascotImageSize;
             ModeToggleButton.HorizontalAlignment = HorizontalAlignment.Right;
@@ -315,6 +316,7 @@ public partial class MainWindow : Window
                 bitmap.EndInit();
                 bitmap.Freeze();
                 MascotImage.Source = bitmap;
+                MascotFallback.Visibility = Visibility.Collapsed;
                 return;
             }
             catch
@@ -338,11 +340,13 @@ public partial class MainWindow : Window
             else
             {
                 MascotImage.Source = null;
+                MascotFallback.Visibility = Visibility.Visible;
             }
         }
         catch
         {
             MascotImage.Source = null;
+            MascotFallback.Visibility = Visibility.Visible;
         }
     }
 
