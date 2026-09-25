@@ -35,6 +35,20 @@ public partial class MainWindow : Window
         Loaded += (_, _) =>
         {
             _settings = RemmDataService.Load().Settings;
+
+            if (_settings.PanelLayoutVersion < CurrentPanelLayoutVersion)
+            {
+                _settings.MascotMode = "Image";
+                _settings.PanelLeft = double.NaN;
+                _settings.PanelTop = double.NaN;
+                _settings.PanelLayoutVersion = CurrentPanelLayoutVersion;
+                _settings.RememberPanelPosition = true;
+
+                var migrated = RemmDataService.Load();
+                migrated.Settings = _settings;
+                RemmDataService.Save(migrated);
+            }
+
             ApplySettings(_settings);
             PositionInitial();
         };
