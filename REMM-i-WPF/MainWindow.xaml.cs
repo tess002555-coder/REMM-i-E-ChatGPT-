@@ -322,8 +322,28 @@ public partial class MainWindow : Window
             }
         }
 
-        try { MascotImage.Source = new BitmapImage(new Uri("/Assets/mascot.png", UriKind.Relative)); }
-        catch { MascotImage.Source = null; }
+        try
+        {
+            var fallback = Path.Combine(AppContext.BaseDirectory, "Assets", "mascot.png");
+            if (File.Exists(fallback))
+            {
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.UriSource = new Uri(fallback, UriKind.Absolute);
+                bitmap.EndInit();
+                bitmap.Freeze();
+                MascotImage.Source = bitmap;
+            }
+            else
+            {
+                MascotImage.Source = null;
+            }
+        }
+        catch
+        {
+            MascotImage.Source = null;
+        }
     }
 
     private static bool IsDescendantOf(DependencyObject? source, DependencyObject target)
