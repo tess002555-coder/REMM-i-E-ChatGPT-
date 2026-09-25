@@ -93,6 +93,22 @@ public partial class TaskWindow : Window
             case "add-task":
                 OpenEntry(EntryKind.Task);
                 break;
+            case "filter:Semua":
+                _filter = "Semua";
+                RefreshView();
+                break;
+            case "filter:Tinggi":
+                _filter = "Tinggi";
+                RefreshView();
+                break;
+            case "filter:Sedang":
+                _filter = "Sedang";
+                RefreshView();
+                break;
+            case "filter:Rendah":
+                _filter = "Rendah";
+                RefreshView();
+                break;
         }
     }
 
