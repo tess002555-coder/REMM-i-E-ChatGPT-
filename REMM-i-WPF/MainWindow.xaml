@@ -29,7 +29,6 @@
         </Border>
 
         <Image x:Name="MascotImage"
-               Source="/Assets/mascot.png"
                Stretch="Uniform"
                Width="96"
                Height="96"
