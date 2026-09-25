@@ -57,6 +57,7 @@ public sealed class RemmSettings
     public double PanelLeft { get; set; } = double.NaN;
     public double PanelTop { get; set; } = double.NaN;
     public bool RememberPanelPosition { get; set; } = true;
+    public int PanelLayoutVersion { get; set; } = 0;
 }
 
 public sealed class RemmData
