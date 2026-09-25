@@ -37,7 +37,7 @@ public partial class TaskWindow : Window
     public TaskWindow(MainWindow mascot)
     {
         InitializeComponent();
-        Topmost = false;
+        Topmost = true;
         _mascot = mascot;
         _data = RemmDataService.Load();
         Loaded += (_, _) =>
@@ -96,11 +96,12 @@ public partial class TaskWindow : Window
         var mascotLeft = _mascot.Left;
         var mascotRight = _mascot.Left + _mascot.Width;
         var mascotCenterX = mascotLeft + (_mascot.Width / 2);
-        var mascotCenterY = _mascot.Top + (_mascot.Height / 2);
-        const double gap = 10;
         var placeLeft = mascotCenterX >= area.Left + area.Width / 2;
+        const double gap = 24;
         var x = placeLeft ? mascotLeft - Width - gap : mascotRight + gap;
-        var y = mascotCenterY - Height / 2;
+        // The reference keeps the panel near the mascot's upper edge,
+        // rather than vertically centering it against the mascot.
+        var y = _mascot.Top + 20;
         Left = Math.Max(area.Left, Math.Min(x, area.Right - Width));
         Top = Math.Max(area.Top, Math.Min(y, area.Bottom - Height));
         _positionRestored = true;
