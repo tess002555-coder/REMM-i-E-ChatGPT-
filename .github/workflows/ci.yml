@@ -2,9 +2,9 @@ name: REMM V2 CI
 
 on:
   push:
-    branches: [ main, master, v2-rebuild, v3-clean-widget, csharp-wpf ]
+    branches: [ main, master, v2-rebuild, v3-clean-widget ]
   pull_request:
-    branches: [ main, master, v2-rebuild, v3-clean-widget, csharp-wpf ]
+    branches: [ main, master, v2-rebuild, v3-clean-widget ]
   workflow_dispatch:
 
 jobs:
