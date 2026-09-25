@@ -17,23 +17,6 @@
         PreviewMouseMove="Mascot_MouseMove"
         PreviewMouseLeftButtonUp="Mascot_MouseLeftButtonUp">
     <Grid>
-        <Border x:Name="MascotFallback"
-                Width="88" Height="88"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Background="#20242B"
-                BorderBrush="#22D3EE"
-                BorderThickness="2"
-                CornerRadius="44"
-                Visibility="Collapsed">
-            <TextBlock Text="R"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center"
-                       Foreground="#22D3EE"
-                       FontSize="30"
-                       FontWeight="Bold"/>
-        </Border>
-
         <Border x:Name="BarSurface"
                 Background="#15181D"
                 BorderBrush="#22D3EE"
@@ -46,6 +29,7 @@
         </Border>
 
         <Image x:Name="MascotImage"
+               Source="/Assets/mascot.png"
                Stretch="Uniform"
                Width="96"
                Height="96"
