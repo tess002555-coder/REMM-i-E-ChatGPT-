@@ -13,6 +13,7 @@ namespace RemmI;
 
 public partial class MainWindow : Window
 {
+    private const int CurrentPanelLayoutVersion = 2;
     private const double MascotImageSize = 96;
     private const double BarWidth = 24;
     private const double BarHeight = 128;
