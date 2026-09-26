@@ -102,8 +102,22 @@ export const SyncModal: React.FC<SyncModalProps> = ({
     setSqlResult(res);
   };
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A0A0B]/90 backdrop-blur-md">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A0A0B]/90 backdrop-blur-md pointer-events-auto cursor-default"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="w-full max-w-2xl bg-[#121214] border border-[#2A2A2E] rounded-3xl p-6 shadow-2xl text-slate-100 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[#2A2A2E]">
@@ -111,7 +125,11 @@ export const SyncModal: React.FC<SyncModalProps> = ({
             <Server className="w-5 h-5 text-cyan-400" />
             <h2 className="text-lg font-bold tracking-wide">Penyimpanan & Integrasi API</h2>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-lg font-semibold">
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-800/80 hover:bg-red-500/20 text-gray-400 hover:text-red-400 border border-slate-700 hover:border-red-500/40 transition-all cursor-pointer font-bold text-sm"
+            title="Tutup (Esc)"
+          >
             ✕
           </button>
         </div>

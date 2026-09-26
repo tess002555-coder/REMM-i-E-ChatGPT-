@@ -119,5 +119,5 @@ export interface WindowState {
   isPanelOpen: boolean;
   isPinned: boolean; // Pinned open on click
   alwaysOnTop: boolean;
-  displayMode: 'sidebar' | 'mascot';
+  displayMode: 'sidebar' | 'mascot' | 'bar';
 }

@@ -22,7 +22,18 @@ interface Bounds {
 const EDGE_KEY = 'rememberme-widget-edge';
 
 export function useMascotWindow() {
-  const win = getCurrentWindow();
+  const isTauri = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
+  const winRef = useRef<any>(null);
+
+  if (isTauri && !winRef.current) {
+    try {
+      winRef.current = getCurrentWindow();
+    } catch {
+      winRef.current = null;
+    }
+  }
+
+  const win = winRef.current;
   const bounds = useRef<Bounds>({ x: 0, y: 0, width: 1920, height: 1080, scale: 1 });
   const lastPosition = useRef({ x: 300, y: 300 });
   const dragStart = useRef({ x: 300, y: 300 });
@@ -31,24 +42,34 @@ export function useMascotWindow() {
   const snapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const readBounds = useCallback(async () => {
-    const monitor = await currentMonitor();
-    if (!monitor) return false;
+    if (!isTauri) return false;
+    try {
+      const monitor = await currentMonitor();
+      if (!monitor) return false;
 
-    const scale = monitor.scaleFactor || 1;
-    const work = monitor.workArea;
-    bounds.current = {
-      x: work.position.x / scale,
-      y: work.position.y / scale,
-      width: work.size.width / scale,
-      height: work.size.height / scale,
-      scale,
-    };
-    return true;
-  }, []);
+      const scale = monitor.scaleFactor || 1;
+      const work = monitor.workArea;
+      bounds.current = {
+        x: work.position.x / scale,
+        y: work.position.y / scale,
+        width: work.size.width / scale,
+        height: work.size.height / scale,
+        scale,
+      };
+      return true;
+    } catch {
+      return false;
+    }
+  }, [isTauri]);
 
   const move = useCallback(async (x: number, y: number) => {
-    lastPosition.current = { x, y };
-    await win.setPosition(new LogicalPosition(x, y));
+    if (!win) return;
+    try {
+      lastPosition.current = { x, y };
+      await win.setPosition(new LogicalPosition(x, y));
+    } catch (err) {
+      console.warn('Failed to move window:', err);
+    }
   }, [win]);
 
   const getEdge = useCallback((): Edge => {
@@ -81,7 +102,7 @@ export function useMascotWindow() {
   }, [move, setEdge]);
 
   const snapAfterDrag = useCallback(async () => {
-    if (!dragging.current) return;
+    if (!win || !dragging.current) return;
 
     dragging.current = false;
     movedDuringDrag.current = true;
@@ -118,91 +139,102 @@ export function useMascotWindow() {
   }, [readBounds, snapToPeek, win]);
 
   const beginDrag = useCallback(async () => {
+    if (!win) return;
     movedDuringDrag.current = false;
     dragging.current = true;
 
-    const position = await win.outerPosition();
-    const scale = (await win.scaleFactor()) || 1;
-    dragStart.current = {
-      x: position.x / scale,
-      y: position.y / scale,
-    };
+    try {
+      const position = await win.outerPosition();
+      const scale = (await win.scaleFactor()) || 1;
+      dragStart.current = {
+        x: position.x / scale,
+        y: position.y / scale,
+      };
 
-    await win.startDragging();
+      await win.startDragging();
+    } catch (err) {
+      console.warn('Begin drag error:', err);
+    }
   }, [win]);
 
   const openPanel = useCallback(async () => {
+    if (!win) return;
     if (movedDuringDrag.current) {
       movedDuringDrag.current = false;
       return;
     }
 
-    const current = await win.outerPosition();
-    const scale = (await win.scaleFactor()) || 1;
-    const currentX = current.x / scale;
-    const currentY = current.y / scale;
-    const moved = Math.hypot(currentX - dragStart.current.x, currentY - dragStart.current.y) > DRAG_THRESHOLD;
-    if (moved) return;
+    try {
+      const current = await win.outerPosition();
+      const scale = (await win.scaleFactor()) || 1;
+      const currentX = current.x / scale;
+      const currentY = current.y / scale;
+      const moved = Math.hypot(currentX - dragStart.current.x, currentY - dragStart.current.y) > DRAG_THRESHOLD;
+      if (moved) return;
 
-    await readBounds();
-    const b = bounds.current;
-    const edge = getEdge();
-    const mascotX = currentX;
-    const mascotY = currentY;
-    lastPosition.current = { x: mascotX, y: mascotY };
+      await readBounds();
+      const b = bounds.current;
+      const edge = getEdge();
+      const mascotX = currentX;
+      const mascotY = currentY;
+      lastPosition.current = { x: mascotX, y: mascotY };
 
-    const maxX = b.x + Math.max(0, b.width - PANEL_W);
-    const maxY = b.y + Math.max(0, b.height - PANEL_H);
-    let x = Math.max(b.x, Math.min(mascotX, maxX));
-    let y = Math.max(b.y, Math.min(mascotY, maxY));
+      const maxX = b.x + Math.max(0, b.width - PANEL_W);
+      const maxY = b.y + Math.max(0, b.height - PANEL_H);
+      let x = Math.max(b.x, Math.min(mascotX, maxX));
+      let y = Math.max(b.y, Math.min(mascotY, maxY));
 
-    if (edge === 'right') x = maxX;
-    if (edge === 'left') x = b.x;
-    if (edge === 'top') y = b.y;
-    if (edge === 'bottom') y = maxY;
+      if (edge === 'right') x = maxX;
+      if (edge === 'left') x = b.x;
+      if (edge === 'top') y = b.y;
+      if (edge === 'bottom') y = maxY;
 
-    if (edge === 'left' || edge === 'right') {
-      y = Math.max(b.y, Math.min(mascotY + MASCOT / 2 - PANEL_H / 2, maxY));
-    } else {
-      x = Math.max(b.x, Math.min(mascotX + MASCOT / 2 - PANEL_W / 2, maxX));
+      if (edge === 'left' || edge === 'right') {
+        y = Math.max(b.y, Math.min(mascotY + MASCOT / 2 - PANEL_H / 2, maxY));
+      } else {
+        x = Math.max(b.x, Math.min(mascotX + MASCOT / 2 - PANEL_W / 2, maxX));
+      }
+
+      const existing = await WebviewWindow.getByLabel('task-panel');
+      if (existing) {
+        await existing.setPosition(new LogicalPosition(x, y));
+        await existing.show();
+        await existing.setFocus();
+        return;
+      }
+
+      const panel = new WebviewWindow('task-panel', {
+        url: 'index.html?window=panel',
+        title: 'Remember ME - Tasks',
+        x,
+        y,
+        width: PANEL_W,
+        height: PANEL_H,
+        minWidth: PANEL_W,
+        minHeight: PANEL_H,
+        maxWidth: PANEL_W,
+        maxHeight: PANEL_H,
+        resizable: false,
+        fullscreen: false,
+        transparent: false,
+        decorations: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        shadow: true,
+        visible: true,
+        focus: true,
+      });
+
+      panel.once('tauri://error', (event) => {
+        console.error('Task panel creation failed:', event);
+      });
+    } catch (err) {
+      console.warn('Open panel error:', err);
     }
-
-    const existing = await WebviewWindow.getByLabel('task-panel');
-    if (existing) {
-      await existing.setPosition(new LogicalPosition(x, y));
-      await existing.show();
-      await existing.setFocus();
-      return;
-    }
-
-    const panel = new WebviewWindow('task-panel', {
-      url: 'index.html?window=panel',
-      title: 'Remember ME - Tasks',
-      x,
-      y,
-      width: PANEL_W,
-      height: PANEL_H,
-      minWidth: PANEL_W,
-      minHeight: PANEL_H,
-      maxWidth: PANEL_W,
-      maxHeight: PANEL_H,
-      resizable: false,
-      fullscreen: false,
-      transparent: false,
-      decorations: false,
-      alwaysOnTop: true,
-      skipTaskbar: true,
-      shadow: true,
-      visible: true,
-      focus: true,
-    });
-
-    panel.once('tauri://error', (event) => {
-      console.error('Task panel creation failed:', event);
-    });
   }, [getEdge, readBounds, win]);
 
   useEffect(() => {
+    if (!win) return;
     let active = true;
 
     void (async () => {
@@ -245,7 +277,7 @@ export function useMascotWindow() {
       snapTimer.current = setTimeout(() => {
         void snapAfterDrag();
       }, SNAP_DELAY);
-    }).then((fn) => {
+    }).then((fn: any) => {
       unlisten = fn;
     });
 

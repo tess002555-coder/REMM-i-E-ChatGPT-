@@ -66,6 +66,15 @@ export const SoundSettings: React.FC<SoundSettingsProps> = ({
   const [sqlQuery, setSqlQuery] = useState('SELECT * FROM tasks');
   const [sqlResult, setSqlResult] = useState<{ columns: string[]; rows: Record<string, unknown>[] } | null>(null);
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSave = () => {
@@ -158,7 +167,12 @@ export const SoundSettings: React.FC<SoundSettingsProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A0A0B]/90 backdrop-blur-md">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A0A0B]/90 backdrop-blur-md pointer-events-auto cursor-default"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="w-full max-w-xl bg-[#121214] border border-[#2A2A2E] rounded-3xl p-5 shadow-2xl text-slate-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
         {/* Header */}
         <div className="flex items-center justify-between pb-3.5 border-b border-[#2A2A2E]">
@@ -169,7 +183,11 @@ export const SoundSettings: React.FC<SoundSettingsProps> = ({
               <span className="text-[11px] text-gray-400">Konfigurasi Maskot, API, & Suara Notifikasi</span>
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-lg font-semibold px-2">
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-800/80 hover:bg-red-500/20 text-gray-400 hover:text-red-400 border border-slate-700 hover:border-red-500/40 transition-all cursor-pointer font-bold text-sm"
+            title="Tutup Pengaturan (Esc)"
+          >
             ✕
           </button>
         </div>

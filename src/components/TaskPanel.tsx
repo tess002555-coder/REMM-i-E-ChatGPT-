@@ -110,7 +110,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
         borderColor: panelBorderColor,
         opacity: panelOpacity,
       }}
-      className={`w-80 max-h-[88vh] flex flex-col border rounded-[28px] shadow-2xl overflow-hidden z-40 text-sm font-sans backdrop-blur-xl p-3.5 space-y-2.5 custom-scrollbar overflow-y-auto ${
+      className={`w-[360px] sm:w-[380px] max-h-[88vh] flex flex-col border rounded-[28px] shadow-2xl overflow-hidden z-40 text-sm font-sans backdrop-blur-xl p-3.5 space-y-2.5 custom-scrollbar overflow-y-auto ${
         isLight ? 'text-slate-900' : 'text-slate-100'
       }`}
     >

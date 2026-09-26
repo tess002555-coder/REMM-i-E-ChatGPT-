@@ -110,6 +110,15 @@ export const DetailModal: React.FC<DetailModalProps> = ({
     }
   }, [modalState?.kind === 'routine' ? modalState.item.id : null, todayKey]);
 
+  useEffect(() => {
+    if (!modalState) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [modalState, onClose]);
+
   if (!modalState) return null;
 
   const handleCreateSchedule = (e: React.FormEvent) => {

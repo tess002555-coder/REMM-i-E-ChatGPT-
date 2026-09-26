@@ -118,6 +118,15 @@ export const TauriConfigModal: React.FC<TauriConfigModalProps> = ({ isOpen, onCl
   const [activeTab, setActiveTab] = useState<'tauri' | 'cargo' | 'mainrs'>('tauri');
   const [copied, setCopied] = useState(false);
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const getContent = () => {
@@ -139,7 +148,12 @@ export const TauriConfigModal: React.FC<TauriConfigModalProps> = ({ isOpen, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A0A0B]/90 backdrop-blur-md">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A0A0B]/90 backdrop-blur-md pointer-events-auto cursor-default"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="w-full max-w-3xl bg-[#121214] border border-[#2A2A2E] rounded-3xl p-6 shadow-2xl text-slate-100 flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[#2A2A2E]">
@@ -150,7 +164,11 @@ export const TauriConfigModal: React.FC<TauriConfigModalProps> = ({ isOpen, onCl
               <p className="text-xs text-gray-400">File konfigurasi native Windows Desktop (frameless, transparent, alwaysOnTop)</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-lg font-semibold">
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-800/80 hover:bg-red-500/20 text-gray-400 hover:text-red-400 border border-slate-700 hover:border-red-500/40 transition-all cursor-pointer font-bold text-sm"
+            title="Tutup (Esc)"
+          >
             ✕
           </button>
         </div>
