@@ -5,9 +5,6 @@ using System.Text.Json;
 using System.Windows;
 using Microsoft.Web.WebView2.Core;
 using WpfApplication = System.Windows.Application;
-using WpfMessageBox = System.Windows.MessageBox;
-using WpfMessageBoxButton = System.Windows.MessageBoxButton;
-using WpfMessageBoxImage = System.Windows.MessageBoxImage;
 
 namespace RemmI;
 
@@ -68,7 +65,6 @@ public partial class TaskWindow : Window
             {
                 case "close": Close(); break;
                 case "settings": Settings_Click(); break;
-                case "console": ShowConsole(); break;
                 case "calendar":
                 case "calendar-detail": OpenCalendarWindow(); break;
                 case "add-calendar": OpenEntry(EntryKind.Schedule); break;
@@ -126,13 +122,6 @@ public partial class TaskWindow : Window
         if (settings.Left + settings.Width > SystemParameters.WorkArea.Right)
             settings.Left = Math.Max(SystemParameters.WorkArea.Left, Left - settings.Width - 12);
         settings.Show();
-    }
-
-    private void ShowConsole()
-    {
-        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "REMM-i", "remm-data.json");
-        WpfMessageBox.Show($"Data tersimpan di:\n{path}\n\nTugas: {_data.Tasks.Count}\nRutinitas: {_data.Routines.Count}\nJadwal: {_data.Schedules.Count}",
-            "REMM(i) Info", WpfMessageBoxButton.OK, WpfMessageBoxImage.Information);
     }
 
     private void OpenCalendarWindow()
