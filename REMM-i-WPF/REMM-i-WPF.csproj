@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Resource Include="..\public\mascot.png">
+    <Resource Include="Assets\mascot.png">
       <Link>Assets\mascot.png</Link>
     </Resource>
   </ItemGroup>
