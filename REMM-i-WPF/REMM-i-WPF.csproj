@@ -21,6 +21,7 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3485.44" />
     <Content Include="WebUI\\**\\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
 </Project>
