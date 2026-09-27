@@ -3,7 +3,7 @@ name: Build REMM(i) C# WPF
 on:
   push:
     branches:
-      - csharp-wpf
+      - main
   workflow_dispatch:
 
 jobs:
