@@ -40,17 +40,56 @@ public partial class TaskWindow : Window
 
     private async System.Threading.Tasks.Task InitializeWebViewAsync()
     {
-        await WebView.EnsureCoreWebView2Async();
+        try
+        {
+            var root = Path.Combine(AppContext.BaseDirectory, "WebUI");
+            var index = Path.Combine(root, "index.html");
+
+            if (!File.Exists(index))
+                throw new FileNotFoundException("WebUI/index.html tidak ditemukan di folder publish.", index);
+
+            await WebView.EnsureCoreWebView2Async();
         WebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
         WebView.CoreWebView2.Settings.IsZoomControlEnabled = false;
         WebView.CoreWebView2.WebMessageReceived += WebMessageReceived;
 
-        var root = Path.Combine(AppContext.BaseDirectory, "WebUI");
         WebView.CoreWebView2.SetVirtualHostNameToFolderMapping(
             "remmie.local", root, CoreWebView2HostResourceAccessKind.Allow);
 
+        WebView.CoreWebView2.NavigationCompleted += NavigationCompleted;
         _webReady = true;
         WebView.CoreWebView2.Navigate("https://remmie.local/index.html");
+    }
+    catch (Microsoft.Web.WebView2.Core.WebView2RuntimeNotFoundException)
+    {
+        MessageBox.Show(
+            "Microsoft Edge WebView2 Runtime belum terpasang. Instal WebView2 Runtime lalu jalankan REMM-i.exe kembali.",
+            "REMM(i) — WebView2",
+            MessageBoxButton.OK,
+            MessageBoxImage.Warning);
+        Close();
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show(
+            $"Panel HTML gagal dimuat.\\n\\n{ex.Message}",
+            "REMM(i) — WebView2",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
+        Close();
+    }
+
+    private void NavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
+    {
+        if (!e.IsSuccess)
+        {
+            MessageBox.Show(
+                $"Panel HTML gagal dimuat (WebView2 error: {e.WebErrorStatus}).",
+                "REMM(i) — WebView2",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            Close();
+        }
     }
 
     private void WebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
@@ -206,7 +245,10 @@ public partial class TaskWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         if (_webReady && WebView.CoreWebView2 is not null)
+        {
             WebView.CoreWebView2.WebMessageReceived -= WebMessageReceived;
+            WebView.CoreWebView2.NavigationCompleted -= NavigationCompleted;
+        }
         base.OnClosed(e);
     }
 }
