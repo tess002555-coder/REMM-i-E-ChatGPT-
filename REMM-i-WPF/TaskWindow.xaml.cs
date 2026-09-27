@@ -49,34 +49,35 @@ public partial class TaskWindow : Window
                 throw new FileNotFoundException("WebUI/index.html tidak ditemukan di folder publish.", index);
 
             await WebView.EnsureCoreWebView2Async();
-        WebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
-        WebView.CoreWebView2.Settings.IsZoomControlEnabled = false;
-        WebView.CoreWebView2.WebMessageReceived += WebMessageReceived;
+            WebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
+            WebView.CoreWebView2.Settings.IsZoomControlEnabled = false;
+            WebView.CoreWebView2.WebMessageReceived += WebMessageReceived;
 
-        WebView.CoreWebView2.SetVirtualHostNameToFolderMapping(
-            "remmie.local", root, CoreWebView2HostResourceAccessKind.Allow);
+            WebView.CoreWebView2.SetVirtualHostNameToFolderMapping(
+                "remmie.local", root, CoreWebView2HostResourceAccessKind.Allow);
 
-        WebView.CoreWebView2.NavigationCompleted += NavigationCompleted;
-        _webReady = true;
-        WebView.CoreWebView2.Navigate("https://remmie.local/index.html");
-    }
-    catch (Microsoft.Web.WebView2.Core.WebView2RuntimeNotFoundException)
-    {
-        MessageBox.Show(
-            "Microsoft Edge WebView2 Runtime belum terpasang. Instal WebView2 Runtime lalu jalankan REMM-i.exe kembali.",
-            "REMM(i) — WebView2",
-            MessageBoxButton.OK,
-            MessageBoxImage.Warning);
-        Close();
-    }
-    catch (Exception ex)
-    {
-        MessageBox.Show(
-            $"Panel HTML gagal dimuat.\\n\\n{ex.Message}",
-            "REMM(i) — WebView2",
-            MessageBoxButton.OK,
-            MessageBoxImage.Error);
-        Close();
+            WebView.CoreWebView2.NavigationCompleted += NavigationCompleted;
+            _webReady = true;
+            WebView.CoreWebView2.Navigate("https://remmie.local/index.html");
+        }
+        catch (Microsoft.Web.WebView2.Core.WebView2RuntimeNotFoundException)
+        {
+            MessageBox.Show(
+                "Microsoft Edge WebView2 Runtime belum terpasang. Instal WebView2 Runtime lalu jalankan REMM-i.exe kembali.",
+                "REMM(i) — WebView2",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            Close();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Panel HTML gagal dimuat.\n\n{ex.Message}",
+                "REMM(i) — WebView2",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            Close();
+        }
     }
 
     private void NavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
