@@ -38,6 +38,16 @@ jobs:
           -p:DebugType=None
           -p:DebugSymbols=false
 
+      - name: Verify WebUI
+        shell: pwsh
+        run: |
+          $publish = ".\\REMM-i-WPF\\bin\\Release\\net8.0-windows\\win-x64\\publish"
+          foreach ($file in @("WebUI\\index.html", "WebUI\\css\\app.css", "WebUI\\js\\app.js")) {
+            $path = Join-Path $publish $file
+            if (-not (Test-Path $path)) { throw "Missing published WebUI file: $file" }
+            Write-Host "Found: $path"
+          }
+
       - name: Verify EXE
         shell: pwsh
         run: |
