@@ -112,7 +112,7 @@ public partial class SettingsWindow : Window
         }
     }
 
-    private void OpacitySlider_ValueChanged(object? sender, System.Windows.Controls.Primitives.RangeBaseValueChangedEventArgs? e)
+    private void OpacitySlider_ValueChanged(object? sender, System.Windows.RoutedPropertyChangedEventArgs<double>? e)
     {
         if (OpacityValue != null) OpacityValue.Text = $"{OpacitySlider.Value:0}%";
     }
