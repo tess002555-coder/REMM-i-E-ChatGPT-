@@ -19,7 +19,7 @@
   let panelDragStart = null;
   let searchTimer = 0;
   const themePalette = {
-    'Soft Sakura Pink': { accent: '#ef9fb8', strong: '#f4bad0', ink: '#27171e', green: '#60d6b0' },
+    'Soft Sakura Pink': { accent: '#00bfd0', strong: '#40dbe6', ink: '#052629', green: '#60d6b0' },
     'Cyberpunk Neon': { accent: '#e879f9', strong: '#f0abfc', ink: '#27142d', green: '#57e3d0' },
     'Clean Milk White': { accent: '#f4b5c8', strong: '#ffd1df', ink: '#321923', green: '#65d3a9' },
     'Minimal Obsidian': { accent: '#a8b4c0', strong: '#d1dae1', ink: '#171c21', green: '#77c9ac' },
@@ -104,27 +104,61 @@
     </article>`;
   }
 
-  function routineRow(item) {
+  function routineRow(item, compact = false) {
     const status = item.IsActive === false ? 'Jeda' : 'Aktif';
-    return `<article class="list-row"><span class="routine-symbol" aria-hidden="true">↻</span><div class="row-main"><div class="row-title">${esc(item.Title)}</div><div class="row-subtitle">${esc(item.Schedule || 'Jadwal belum diatur')} · Dibuat ${esc(fmtDate(item.CreatedDate))}${item.Notes ? ` · ${esc(item.Notes)}` : ''}</div></div><span class="routine-status ${item.IsActive === false ? 'paused' : ''}">${status}</span><div class="row-buttons"><button class="icon-action" data-action="routine.edit" data-id="${esc(item.Id)}" aria-label="Edit rutinitas">✎</button><button class="icon-action delete" data-action="routine.delete" data-id="${esc(item.Id)}" aria-label="Hapus rutinitas">×</button></div></article>`;
+    if (compact) {
+      return '<article class="list-row compact-routine-row">' +
+        '<button class="routine-summary-main" data-action="routine.edit" data-id="' + esc(item.Id) + '">' +
+        '<span class="routine-symbol" aria-hidden="true">▦</span>' +
+        '<span class="row-main"><span class="row-title">' + esc(item.Title) + '</span><span class="row-subtitle">' + esc(item.Schedule || status) + '</span></span></button>' +
+        '<button class="icon-action routine-open" data-action="routine.edit" data-id="' + esc(item.Id) + '" aria-label="Buka rutinitas">›</button></article>';
+    }
+    return '<article class="list-row"><span class="routine-symbol" aria-hidden="true">↻</span><div class="row-main"><div class="row-title">' + esc(item.Title) + '</div><div class="row-subtitle">' + esc(item.Schedule || 'Jadwal belum diatur') + ' · Dibuat ' + esc(fmtDate(item.CreatedDate)) + (item.Notes ? ' · ' + esc(item.Notes) : '') + '</div></div><span class="routine-status ' + (item.IsActive === false ? 'paused' : '') + '">' + status + '</span><div class="row-buttons"><button class="icon-action" data-action="routine.edit" data-id="' + esc(item.Id) + '" aria-label="Edit rutinitas">✎</button><button class="icon-action delete" data-action="routine.delete" data-id="' + esc(item.Id) + '" aria-label="Hapus rutinitas">×</button></div></article>';
   }
-
   function pageHeader(kicker, heading, subtitle, action = '') {
     return `<div class="page-heading"><div><div class="eyebrow">${esc(kicker)}</div><h1>${esc(heading)}</h1><p>${esc(subtitle)}</p></div>${action}</div>`;
   }
 
   function renderDashboard() {
-    const pending = allTasks().filter(task => !task.Completed);
-    const completed = allTasks().filter(task => task.Completed);
-    const upcoming = allSchedules().filter(event => new Date(event.DateTime) >= new Date()).sort((a, b) => new Date(a.DateTime) - new Date(b.DateTime));
-    const taskPreview = tasksFiltered().slice(0, 5);
-    const events = schedulesFiltered().filter(item => new Date(item.DateTime) >= new Date()).sort((a, b) => new Date(a.DateTime) - new Date(b.DateTime)).slice(0, 4);
-    return `${pageHeader('RINGKASAN', 'Hai, siap mulai?', 'Satu langkah kecil hari ini tetap berarti.', '<button class="primary-button" data-action="task.new">＋ Tambah tugas</button>')}
-      <div class="stats-grid"><article class="stat-card accent"><div class="stat-card-label">Tugas aktif</div><div class="stat-card-value">${pending.length}</div><div class="stat-card-sub">${completed.length} tugas selesai</div></article><article class="stat-card green"><div class="stat-card-label">Rutinitas</div><div class="stat-card-value">${allRoutines().length}</div><div class="stat-card-sub">Kebiasaan yang kamu catat</div></article><article class="stat-card"><div class="stat-card-label">Jadwal mendatang</div><div class="stat-card-value">${upcoming.length}</div><div class="stat-card-sub">Agenda yang akan datang</div></article></div>
-      <div class="dashboard-grid"><section class="content-card"><div class="card-heading"><h2>Yang perlu dikerjakan</h2><button class="text-button" data-page="tasks">Lihat semua →</button></div><div class="list-stack">${taskPreview.length ? taskPreview.map(item => taskRow(item, true)).join('') : listEmpty(searchText ? 'Tidak ada tugas yang cocok.' : 'Belum ada tugas. Tambahkan satu untuk memulai.')}</div></section>
-      <section class="content-card"><div class="card-heading"><h2>Agenda berikutnya</h2><button class="text-button" data-page="schedules">Lihat jadwal →</button></div><div class="list-stack">${events.length ? events.map(item => scheduleRow(item, true)).join('') : listEmpty('Belum ada agenda mendatang.')}</div></section></div>`;
-  }
+    const upcoming = allSchedules()
+      .filter(item => new Date(item.DateTime) >= new Date())
+      .sort((a, b) => new Date(a.DateTime) - new Date(b.DateTime))
+      .slice(0, 2);
+    const routines = routinesFiltered().slice(0, 1);
+    const tasks = tasksFiltered().slice(0, 3);
+    const filters = ['Semua', 'Tinggi', 'Sedang', 'Rendah'];
 
+    const filterButtons = filters.map(value =>
+      '<button class="filter-button ' + (taskFilter === value ? 'active' : '') + '" data-action="task.filter" data-value="' + value + '">' + value + '</button>'
+    ).join('');
+
+    return '<div class="dashboard-stack">' +
+      '<section class="dashboard-card">' +
+        '<div class="compact-section-heading">' +
+          '<button class="section-title" data-page="calendar"><span class="section-icon">▦</span>Kalender</button>' +
+          '<div class="section-actions"><button class="section-link" data-page="calendar">Detail <span aria-hidden="true">›</span></button>' +
+          '<button class="add-button" data-action="schedule.new" aria-label="Tambah acara">＋</button></div>' +
+        '</div>' +
+        '<div class="list-stack summary-list">' + (upcoming.length ? upcoming.map(item => scheduleRow(item, true)).join('') : listEmpty('Belum ada acara. Tambahkan jadwal untuk memulai.')) + '</div>' +
+      '</section>' +
+      '<section class="dashboard-card">' +
+        '<div class="compact-section-heading">' +
+          '<button class="section-title" data-page="routines"><span class="section-icon">↻</span>Rutinitas</button>' +
+          '<div class="section-actions"><button class="section-link" data-page="routines">Semua <span aria-hidden="true">›</span></button>' +
+          '<button class="add-button" data-action="routine.new" aria-label="Tambah rutinitas">＋</button></div>' +
+        '</div>' +
+        '<div class="list-stack summary-list">' + (routines.length ? routines.map(item => routineRow(item, true)).join('') : listEmpty(searchText ? 'Tidak ada rutinitas yang cocok.' : 'Belum ada rutinitas tersimpan.')) + '</div>' +
+      '</section>' +
+      '<section class="dashboard-card task-dashboard-card">' +
+        '<div class="compact-section-heading">' +
+          '<button class="section-title" data-page="tasks"><span class="section-icon">☑</span>Tugas <span class="section-count">' + allTasks().filter(item => !item.Completed).length + '</span></button>' +
+          '<button class="add-button" data-action="task.new" aria-label="Tambah tugas">＋</button>' +
+        '</div>' +
+        '<div class="toolbar dashboard-filters">' + filterButtons + '</div>' +
+        '<div class="list-stack summary-list">' + (tasks.length ? tasks.map(item => taskRow(item, true)).join('') : listEmpty(searchText ? 'Tidak ada tugas yang cocok.' : 'Tidak ada tugas terdaftar.')) + '</div>' +
+      '</section>' +
+    '</div>';
+  }
   function renderTasks() {
     const filters = ['Semua', 'Tinggi', 'Sedang', 'Rendah'];
     const rows = tasksFiltered();
@@ -207,7 +241,8 @@
     document.querySelectorAll('[data-page]').forEach(button => button.classList.toggle('active', button.dataset.page === currentPage));
     document.getElementById('project-name').textContent = title(snapshot);
     document.getElementById('display-name').textContent = snapshot.DisplayName || 'Ruang produktivitasmu';
-    document.getElementById('today-label').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
+    document.getElementById('today-label').textContent = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+    document.getElementById('back-button').hidden = currentPage === 'dashboard';
     const pages = { dashboard: renderDashboard, tasks: renderTasks, routines: renderRoutines, schedules: renderSchedules, calendar: renderCalendar, settings: renderSettings };
     pageContent.innerHTML = (pages[currentPage] || renderDashboard)();
     const bg = settings().PanelBackground;
@@ -215,7 +250,8 @@
     const palette = themePalette[settings().Theme] || themePalette['Soft Sakura Pink'];
     document.documentElement.style.setProperty('--bg', bg || '#0c1116');
     document.documentElement.style.setProperty('--panel-native', bg || '#131a21');
-    document.documentElement.style.setProperty('--accent', border || palette.accent);
+    document.documentElement.style.setProperty('--accent', palette.accent);
+    document.documentElement.style.setProperty('--frame-border', border || '#e55b6b');
     document.documentElement.style.setProperty('--accent-strong', palette.strong);
     document.documentElement.style.setProperty('--accent-ink', palette.ink);
     document.documentElement.style.setProperty('--green', palette.green);

@@ -20,43 +20,38 @@
   </main>
 
   <main id="panel-view" class="panel-view" aria-label="REMM(i)E productivity panel">
-    <header class="topbar" data-drag-handle>
-      <div class="brand-lockup">
-        <img src="assets/mascot.png" alt="" class="brand-avatar">
-        <div><strong id="project-name">REMM(i)E</strong><span id="display-name">Ruang produktivitasmu</span></div>
+    <header class="topbar">
+      <div class="panel-drag-handle" data-drag-handle><span aria-hidden="true">⠿</span> Pindah Panel</div>
+      <div class="brand-row">
+        <div class="brand-lockup">
+          <img src="assets/mascot.png" alt="" class="brand-avatar">
+          <div class="brand-copy">
+            <strong id="project-name">REMM(i)E</strong>
+            <span id="display-name">Ruang produktivitasmu</span>
+          </div>
+        </div>
+        <div class="top-actions">
+          <span id="today-label" class="today-label"></span>
+          <button id="back-button" type="button" class="window-button" data-page="dashboard" aria-label="Kembali ke ringkasan" title="Kembali" hidden>‹</button>
+          <button type="button" class="window-button" data-page="settings" aria-label="Pengaturan" title="Pengaturan">⚙</button>
+          <button type="button" class="window-button" data-action="panel.close" aria-label="Tutup panel" title="Tutup">×</button>
+        </div>
       </div>
-      <label class="global-search"><span aria-hidden="true">⌕</span><input id="global-search" type="search" placeholder="Cari tugas, rutinitas, jadwal…" autocomplete="off" aria-label="Cari"></label>
-      <div class="top-actions">
-        <span id="today-label" class="today-label"></span>
-        <button type="button" class="window-button" data-action="app.exit" aria-label="Keluar dari aplikasi" title="Keluar dari REMM(i)E">⏻</button>
-        <button type="button" class="window-button" data-action="panel.close" aria-label="Tutup panel" title="Tutup">×</button>
-      </div>
+      <label class="global-search">
+        <span aria-hidden="true">⌕</span>
+        <input id="global-search" type="search" placeholder="Cari tugas / rutinitas..." autocomplete="off" aria-label="Cari tugas dan rutinitas">
+      </label>
     </header>
 
-    <div class="app-layout">
-      <aside class="sidebar">
-        <div class="sidebar-label">RUANG KERJA</div>
-        <nav id="navigation" aria-label="Navigasi utama">
-          <button class="nav-item active" data-page="dashboard"><span>⌂</span>Ringkasan</button>
-          <button class="nav-item" data-page="tasks"><span>☑</span>Tugas</button>
-          <button class="nav-item" data-page="routines"><span>↻</span>Rutinitas</button>
-          <button class="nav-item" data-page="schedules"><span>◷</span>Jadwal</button>
-          <button class="nav-item" data-page="calendar"><span>▦</span>Kalender</button>
-        </nav>
-        <div class="sidebar-spacer"></div>
-        <button class="nav-item settings-link" data-page="settings"><span>⚙</span>Pengaturan</button>
-        <div class="sidebar-footer"><span class="status-dot"></span><span id="connection-label">Menghubungkan data lokal…</span></div>
-      </aside>
-
-      <section class="page-shell">
-        <div id="page-content" class="page-content" aria-live="polite">
-          <div class="loading-state"><span class="loader"></span><p>Menyiapkan ruang kerjamu…</p></div>
-        </div>
-      </section>
-    </div>
+    <section class="page-shell">
+      <div id="page-content" class="page-content" aria-live="polite">
+        <div class="loading-state"><span class="loader"></span><p>Menyiapkan ruang kerjamu…</p></div>
+      </div>
+    </section>
 
     <div id="modal-root"></div>
     <div id="toast-region" class="toast-region" aria-live="assertive"></div>
+    <span id="connection-label" class="connection-label">Data tersimpan di perangkat ini</span>
   </main>
 </body>
 </html>
