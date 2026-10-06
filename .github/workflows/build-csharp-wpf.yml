@@ -38,19 +38,35 @@ jobs:
           -p:DebugType=None
           -p:DebugSymbols=false
 
-      - name: Verify EXE
+      - name: Verify published app package
         shell: pwsh
         run: |
-          $exe = Get-ChildItem -Path .\REMM-i-WPF\bin\Release\net8.0-windows\win-x64\publish -Filter "REMM-i.exe" -File
-          if (-not $exe) { throw "REMM-i.exe was not generated." }
-          Write-Host "Generated: $($exe.FullName)"
-          Write-Host "Size: $($exe.Length) bytes"
+          $publish = ".\REMM-i-WPF\bin\Release\net8.0-windows\win-x64\publish"
+          $exe = Join-Path $publish "REMM-i.exe"
+          $required = @(
+            $exe,
+            (Join-Path $publish "WebUI\index.html"),
+            (Join-Path $publish "WebUI\css\app.css"),
+            (Join-Path $publish "WebUI\js\app.js"),
+            (Join-Path $publish "WebUI\assets\mascot.png")
+          )
+          $missing = @($required | Where-Object { -not (Test-Path -LiteralPath $_ -PathType Leaf) })
+          if ($missing.Count -gt 0) { throw "Published app is incomplete. Missing: $($missing -join ', ')" }
+          Write-Host "Generated: $((Get-Item -LiteralPath $exe).FullName)"
 
-      - name: Upload EXE as GitHub Release asset
+      - name: Package complete app
+        shell: pwsh
+        run: |
+          $publish = (Resolve-Path ".\REMM-i-WPF\bin\Release\net8.0-windows\win-x64\publish").Path
+          $archive = Join-Path $env:RUNNER_TEMP "REMM-iE-win-x64-$env:GITHUB_RUN_NUMBER.zip"
+          Compress-Archive -Path (Join-Path $publish "*") -DestinationPath $archive -CompressionLevel Optimal -Force
+          Add-Content -Path $env:GITHUB_ENV -Value "REMMI_RELEASE_ARCHIVE=$archive"
+          Write-Host "Packaged: $archive"
+
+      - name: Upload complete app package as GitHub Release asset
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $tag = "build-${{ github.run_number }}"
-          $exe = ".\REMM-i-WPF\bin\Release\net8.0-windows\win-x64\publish\REMM-i.exe"
-          gh release create $tag $exe --title "REMM(i)E Build ${{ github.run_number }}" --notes "Automated C# WPF/WebView2 build from commit ${{ github.sha }}." --target "${{ github.sha }}"
+          $tag = "build-$env:GITHUB_RUN_NUMBER"
+          gh release create $tag $env:REMMI_RELEASE_ARCHIVE --title "REMM(i)E Build $env:GITHUB_RUN_NUMBER" --notes "Automated C# WPF/WebView2 app package from commit $env:GITHUB_SHA. Extract the ZIP and run REMM-i.exe." --target "$env:GITHUB_SHA"
