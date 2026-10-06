@@ -2,9 +2,11 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using RemmI.Data;
 using RemmI.Models;
 
@@ -16,16 +18,18 @@ public partial class MascotWindow : Window, IMascotHost
     private const double MascotImageSize = 96;
     private const double BarWidth = 24;
     private const double BarHeight = 128;
-    private const double ImagePeekPercent = 50;
     private const uint MonitorDefaultToNearest = 2;
 
     private RemmSettings _settings = new();
     private PanelWindow? _panelWindow;
+    private bool _mousePressed;
     private bool _dragging;
     private bool _moved;
     private bool _positionReady;
     private double _dragStartLeft;
     private double _dragStartTop;
+    private double _dragStartScreenX;
+    private double _dragStartScreenY;
     private string _currentPose = "peek";
 
     public MascotWindow()
@@ -35,7 +39,7 @@ public partial class MascotWindow : Window, IMascotHost
         Closing += (_, _) => SaveMascotPosition();
     }
 
-    private async void MascotWindow_Loaded(object sender, RoutedEventArgs e)
+    private void MascotWindow_Loaded(object sender, RoutedEventArgs e)
     {
         try
         {
@@ -56,13 +60,12 @@ public partial class MascotWindow : Window, IMascotHost
             ApplySettings(_settings);
             PositionInitial();
             Show();
-            await WebViewHostService.InitializeAsync(Browser, "mascot", OnBrowserMessage);
         }
         catch (Exception ex)
         {
-            Trace.TraceError($"Could not initialize REMM(i) mascot WebView: {ex}");
+            Trace.TraceError($"Could not initialize REMM(i) mascot: {ex}");
             MessageBox.Show(
-                $"REMM(i)E tidak dapat menyiapkan mascot.\n\n{ex.Message}\n\nPastikan WebView2 Runtime terpasang dan folder WebUI tersedia.",
+                "REMM(i)E tidak dapat menyiapkan mascot." + Environment.NewLine + Environment.NewLine + ex.Message,
                 "REMM(i)E",
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
@@ -77,13 +80,17 @@ public partial class MascotWindow : Window, IMascotHost
         _settings = settings ?? new RemmSettings();
         ConfigureMascotMode();
         Topmost = _settings.AlwaysOnTop;
+
         if (_positionReady && _settings.RememberMascotPosition
             && double.IsFinite(_settings.MascotLeft) && double.IsFinite(_settings.MascotTop))
         {
             var area = GetWorkingAreaInDip();
             Left = Math.Max(area.Left, Math.Min(_settings.MascotLeft, area.Right - Width));
             Top = Math.Max(area.Top, Math.Min(_settings.MascotTop, area.Bottom - Height));
+            if (_settings.AutoSnap && IsImageMode)
+                SnapToNearestSide();
         }
+
         SetPose(_panelWindow is not null ? "pointing" : _currentPose);
         _panelWindow?.ApplySettings(_settings);
     }
@@ -94,12 +101,16 @@ public partial class MascotWindow : Window, IMascotHost
         string.Equals(_settings.MascotMode, "Image", StringComparison.OrdinalIgnoreCase);
 
     private double CurrentPeekOffset =>
-        IsImageMode ? MascotImageSize * (1.0 - ImagePeekPercent / 100.0) : 0;
+        IsImageMode
+            ? Width * (1.0 - Math.Clamp(_settings.PeekVisiblePercent, 10, 100) / 100.0)
+            : 0;
 
     private void ConfigureMascotMode()
     {
         Width = IsImageMode ? MascotImageSize : BarWidth;
         Height = IsImageMode ? MascotImageSize : BarHeight;
+        MascotImage.Visibility = IsImageMode ? Visibility.Visible : Visibility.Collapsed;
+        BarVisual.Visibility = IsImageMode ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void PositionInitial()
@@ -112,6 +123,8 @@ public partial class MascotWindow : Window, IMascotHost
             Left = Math.Max(area.Left, Math.Min(_settings.MascotLeft, area.Right - Width));
             Top = Math.Max(area.Top, Math.Min(_settings.MascotTop, area.Bottom - Height));
             _positionReady = true;
+            if (_settings.AutoSnap && IsImageMode)
+                SnapToNearestSide();
             SetPose("peek");
             return;
         }
@@ -122,90 +135,36 @@ public partial class MascotWindow : Window, IMascotHost
         SetPose("peek");
     }
 
-    private void OnBrowserMessage(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)
+    private void MascotSurface_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (!WebViewHostService.IsTrustedSource(e.Source))
+        if (ModeButton.IsMouseOver)
             return;
 
-        try
-        {
-            using var message = JsonDocument.Parse(e.WebMessageAsJson);
-            if (!message.RootElement.TryGetProperty("type", out var typeElement))
-                return;
-
-            switch (typeElement.GetString())
-            {
-                case "mascot.ready":
-                    SetPose(_currentPose);
-                    break;
-                case "mascot.hover":
-                    HandleHover(message.RootElement);
-                    break;
-                case "mascot.drag.start":
-                    BeginDrag();
-                    break;
-                case "mascot.drag.move":
-                    MoveDrag(message.RootElement);
-                    break;
-                case "mascot.drag.end":
-                    EndDrag(message.RootElement);
-                    break;
-                case "mascot.toggle":
-                    ToggleMascotMode();
-                    break;
-                case "app.exit":
-                    Application.Current.Shutdown();
-                    break;
-            }
-        }
-        catch (Exception ex)
-        {
-            Trace.TraceError($"Invalid mascot WebView message: {ex}");
-        }
-    }
-
-    private void HandleHover(JsonElement message)
-    {
-        if (_dragging || _panelWindow is not null || !IsImageMode)
-            return;
-
-        var hovered = message.TryGetProperty("hovered", out var value) && value.ValueKind == JsonValueKind.True;
-        if (hovered)
-        {
-            ExpandFromPeek();
-            SetPose("idle");
-        }
-        else
-        {
-            CollapseToPeek();
-            SetPose("peek");
-        }
-    }
-
-    private void BeginDrag()
-    {
-        if (!_settings.DragEnabled)
-        {
-            _dragging = false;
-            return;
-        }
-
-        _dragging = true;
+        _mousePressed = true;
+        _dragging = _settings.DragEnabled;
         _moved = false;
         _dragStartLeft = Left;
         _dragStartTop = Top;
+        var screenPoint = PointToScreen(e.GetPosition(MascotSurface));
+        _dragStartScreenX = screenPoint.X;
+        _dragStartScreenY = screenPoint.Y;
+        MascotSurface.CaptureMouse();
+
         if (IsImageMode)
             SetPose("idle");
+        e.Handled = true;
     }
 
-    private void MoveDrag(JsonElement message)
+    private void MascotSurface_PreviewMouseMove(object sender, MouseEventArgs e)
     {
-        if (!_dragging)
+        if (!_mousePressed || !_dragging || e.LeftButton != MouseButtonState.Pressed)
             return;
 
-        var dx = GetNumber(message, "dx");
-        var dy = GetNumber(message, "dy");
-        if (Math.Abs(dx) < 4 && Math.Abs(dy) < 4)
+        var screenPoint = PointToScreen(e.GetPosition(MascotSurface));
+        var transform = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice;
+        var dx = (screenPoint.X - _dragStartScreenX) / (transform?.M11 ?? 1.0);
+        var dy = (screenPoint.Y - _dragStartScreenY) / (transform?.M22 ?? 1.0);
+        if (!_moved && Math.Abs(dx) < 4 && Math.Abs(dy) < 4)
             return;
 
         _moved = true;
@@ -213,41 +172,70 @@ public partial class MascotWindow : Window, IMascotHost
         Top = _dragStartTop + dy;
     }
 
-    private void EndDrag(JsonElement message)
+    private void MascotSurface_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        var wasDragging = _dragging;
-        _dragging = false;
-        var moved = _moved || (message.TryGetProperty("moved", out var movedValue) && movedValue.ValueKind == JsonValueKind.True);
-        _moved = false;
-
-        if (!wasDragging)
-        {
-            if (!_settings.DragEnabled)
-                OpenPanelWindow();
+        if (!_mousePressed)
             return;
-        }
+
+        var moved = _dragging && _moved;
+        _mousePressed = false;
+        _dragging = false;
+        _moved = false;
+        if (MascotSurface.IsMouseCaptured)
+            MascotSurface.ReleaseMouseCapture();
 
         if (moved)
         {
             if (_settings.AutoSnap)
                 SnapToNearestSide();
+            else
+                ClampPositionToWorkingArea();
+            SetPose(_settings.AutoSnap && IsImageMode ? "peek" : "idle");
             SaveMascotPosition();
         }
         else
         {
+            SetPose("peek");
             OpenPanelWindow();
         }
+
+        e.Handled = true;
     }
 
-    private static double GetNumber(JsonElement message, string name) =>
-        message.TryGetProperty(name, out var value) && value.TryGetDouble(out var result) && double.IsFinite(result)
-            ? result
-            : 0;
+    private void MascotSurface_MouseEnter(object sender, MouseEventArgs e)
+    {
+        if (_mousePressed || _panelWindow is not null)
+            return;
+
+        if (_settings.AutoSnap && IsImageMode)
+            ExpandFromPeek();
+        SetPose("idle");
+    }
+
+    private void MascotSurface_MouseLeave(object sender, MouseEventArgs e)
+    {
+        if (_mousePressed || _panelWindow is not null)
+            return;
+
+        if (_settings.AutoSnap && IsImageMode)
+            CollapseToPeek();
+        SetPose("peek");
+    }
+
+    private void ModeButton_Click(object sender, RoutedEventArgs e) => ToggleMascotMode();
+
+    private void ClampPositionToWorkingArea()
+    {
+        var area = GetWorkingAreaInDip();
+        Left = Math.Max(area.Left, Math.Min(Left, area.Right - Width));
+        Top = Math.Max(area.Top, Math.Min(Top, area.Bottom - Height));
+    }
 
     private void ExpandFromPeek()
     {
         if (!IsImageMode)
             return;
+
         var area = GetWorkingAreaInDip();
         var onRight = Left + Width / 2.0 >= area.Left + area.Width / 2.0;
         Left = onRight ? area.Right - Width : area.Left;
@@ -257,6 +245,7 @@ public partial class MascotWindow : Window, IMascotHost
     {
         if (!IsImageMode)
             return;
+
         var area = GetWorkingAreaInDip();
         var onRight = Left + Width / 2.0 >= area.Left + area.Width / 2.0;
         Left = onRight ? area.Right - Width + CurrentPeekOffset : area.Left - CurrentPeekOffset;
@@ -269,7 +258,6 @@ public partial class MascotWindow : Window, IMascotHost
         var center = Left + Width / 2.0;
         var onRight = Math.Abs(center - area.Right) < Math.Abs(center - area.Left);
         Left = onRight ? area.Right - Width + CurrentPeekOffset : area.Left - CurrentPeekOffset;
-        SetPose("peek");
     }
 
     private void SnapToPreferredSide()
@@ -283,7 +271,7 @@ public partial class MascotWindow : Window, IMascotHost
         var data = RemmDataService.Load();
         _settings = data.Settings;
         _settings.MascotMode = IsImageMode ? "Bar" : "Image";
-        _settings.PeekVisiblePercent = 50;
+        _settings.PeekVisiblePercent = Math.Clamp(_settings.PeekVisiblePercent, 10, 100);
         ConfigureMascotMode();
         SnapToPreferredSide();
         var area = GetWorkingAreaInDip();
@@ -297,20 +285,34 @@ public partial class MascotWindow : Window, IMascotHost
     private void SetPose(string pose)
     {
         _currentPose = pose;
-        if (Browser.CoreWebView2 is null)
-            return;
-
-        var payload = JsonSerializer.Serialize(new
+        var uri = GetPoseUri(pose);
+        try
         {
-            type = "mascot.pose",
-            pose,
-            mode = _settings.MascotMode,
-            src = GetPoseSource(pose)
-        });
-        Browser.CoreWebView2.PostWebMessageAsJson(payload);
+            var image = new BitmapImage();
+            image.BeginInit();
+            image.CacheOption = BitmapCacheOption.OnLoad;
+            image.UriSource = uri;
+            image.EndInit();
+            image.Freeze();
+            MascotImage.Source = image;
+
+            var transform = new TransformGroup();
+            if (pose == "idle")
+                transform.Children.Add(new ScaleTransform(1.07, 1.07));
+            else if (pose == "pointing")
+            {
+                transform.Children.Add(new ScaleTransform(1.09, 1.09));
+                transform.Children.Add(new TranslateTransform(0, -3));
+            }
+            MascotImage.RenderTransform = transform;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError($"Could not load REMM(i) mascot pose '{pose}': {ex}");
+        }
     }
 
-    private string GetPoseSource(string pose)
+    private Uri GetPoseUri(string pose)
     {
         var path = pose switch
         {
@@ -322,7 +324,7 @@ public partial class MascotWindow : Window, IMascotHost
         };
 
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
-            return "https://app.local/assets/mascot.png";
+            return new Uri("pack://application:,,,/Assets/mascot.png", UriKind.Absolute);
 
         var poseFolder = Path.GetFullPath(Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -330,8 +332,8 @@ public partial class MascotWindow : Window, IMascotHost
             "poses"));
         var fullPath = Path.GetFullPath(path);
         if (!string.Equals(Path.GetDirectoryName(fullPath), poseFolder, StringComparison.OrdinalIgnoreCase))
-            return "https://app.local/assets/mascot.png";
-        return $"https://pose.local/{Uri.EscapeDataString(Path.GetFileName(fullPath))}";
+            return new Uri("pack://application:,,,/Assets/mascot.png", UriKind.Absolute);
+        return new Uri(fullPath, UriKind.Absolute);
     }
 
     private void OpenPanelWindow()
@@ -349,7 +351,9 @@ public partial class MascotWindow : Window, IMascotHost
         panel.Closed += (_, _) =>
         {
             _panelWindow = null;
-            SetPose("peek");
+            if (_settings.AutoSnap && IsImageMode && !MascotSurface.IsMouseOver)
+                CollapseToPeek();
+            SetPose(MascotSurface.IsMouseOver ? "idle" : "peek");
         };
         panel.Show();
         panel.Activate();
