@@ -95,6 +95,15 @@ public static class RemmDataService
     {
         data.Tasks ??= new List<RemmTask>();
         data.Routines ??= new List<RemmRoutine>();
+        foreach (var routine in data.Routines)
+        {
+            if (routine is null)
+                continue;
+            routine.Entries ??= new List<RemmRoutineLog>();
+            foreach (var entry in routine.Entries)
+                if (entry is not null)
+                    entry.Notes ??= "";
+        }
         data.Schedules ??= new List<RemmSchedule>();
         data.Settings ??= new RemmSettings();
         data.ProjectName ??= "REMM(i)E";

@@ -23,6 +23,14 @@ public sealed class RemmRoutine
     public string Notes { get; set; } = "";
     public string Schedule { get; set; } = "";
     public bool IsActive { get; set; } = true;
+    public List<RemmRoutineLog> Entries { get; set; } = new();
+}
+
+public sealed class RemmRoutineLog
+{
+    public DateTime Date { get; set; } = DateTime.Today;
+    public bool Completed { get; set; }
+    public string Notes { get; set; } = "";
 }
 
 public sealed class RemmSchedule

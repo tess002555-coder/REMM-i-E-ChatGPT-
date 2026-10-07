@@ -17,6 +17,47 @@
 .form-check{display:flex;align-items:center;gap:9px;color:var(--text);font-size:12px}
 .form-check input{accent-color:var(--accent);width:16px;height:16px}
 
+.routine-row-main{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px;padding:0;border:0;background:none;text-align:left;cursor:pointer}
+.routine-row-main:hover .row-title{color:#64e5ed}
+.routine-total-banner{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;padding:10px 12px;border:1px solid #3c555c;border-radius:12px;background:linear-gradient(100deg,#12353a,#282c32);color:#a8bbc0;font-size:9px}
+.routine-total-banner strong{color:#5ce0e8;font-size:15px}
+.routine-stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:9px}
+.routine-stat{min-width:0;display:flex;flex-direction:column;gap:5px;padding:9px;border:1px solid #3f4b50;border-radius:11px;background:#25282d}
+.routine-stat span{overflow:hidden;color:#9ba9ae;font-size:8px;text-overflow:ellipsis;white-space:nowrap}
+.routine-stat strong{overflow:hidden;color:#5ce0e8;font-size:16px;text-overflow:ellipsis;white-space:nowrap}
+.routine-calendar-card{margin-bottom:9px}
+.routine-calendar-card .card-heading{margin-bottom:8px}
+.routine-legend{display:flex;align-items:center;gap:5px;color:#a7b5ba;font-size:8px;white-space:nowrap}
+.routine-legend i{width:8px;height:8px;border-radius:3px;background:#0aaab6}
+.routine-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.routine-calendar-grid .weekday{padding:2px 0;font-size:8px}
+.routine-day{position:relative;min-width:0;min-height:36px;display:grid;place-items:center;border:1px solid #3a4147;border-radius:8px;background:#22252a;color:#d8dee1;font-size:9px;cursor:pointer}
+.routine-day:hover{border-color:#3ed5df;background:#17383d}
+.routine-day.muted{color:#66747c;background:#1c1e22}
+.routine-day.today{border-color:#e6a0b9}
+.routine-day.selected{box-shadow:0 0 0 1px #e6a0b9 inset;color:#fff}
+.routine-day.completed{border-color:#09c0cb;background:#087985;color:#f3ffff;font-weight:700}
+.routine-day.completed.selected{background:#0a929d;box-shadow:0 0 0 2px #e6a0b9 inset}
+.routine-day.has-note::after{position:absolute;right:4px;bottom:3px;width:4px;height:4px;border-radius:50%;background:#f39bb8;content:""}
+.routine-day-card{padding:10px}
+.routine-day-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.routine-day-heading .eyebrow{margin:0 0 3px;font-size:7px}
+.routine-day-heading h2{margin:0;font-size:11px}
+.routine-day-card .routine-status{padding:4px 6px;font-size:7px}
+.routine-note-label{display:block;margin-bottom:5px;color:#9ba9ae;font-size:8px}
+.routine-day-note{width:100%;min-height:60px;padding:8px;border:1px solid #40474d;border-radius:9px;background:#1b1d21;color:#edf1f2;font:9px/1.45 "Segoe UI",Arial,sans-serif;resize:vertical}
+.routine-day-actions{display:flex;justify-content:space-between;gap:6px;margin-top:8px}
+.routine-day-actions button{min-height:28px;font-size:8px}
+.share-controls{display:grid;gap:6px}
+.share-controls .field{margin:0}
+.share-controls .field span{color:#aab7bd;font-size:8px}
+.share-controls input,.share-controls select{min-height:30px;padding:6px 8px;border:1px solid #35424b;border-radius:8px;background:#0f171d;color:#e7edef;font-size:9px}
+.share-preview{display:block;width:100%;max-height:42vh;object-fit:contain;margin:9px auto;border:1px solid #47515a;border-radius:9px;background:#12171b}
+.share-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.share-actions button{min-height:29px;padding:0 7px;font-size:8px}
+.share-actions button:last-child{grid-column:1/-1}
+.clipboard-helper{position:fixed;left:-9999px;top:0;opacity:0}
+
 /* Compact floating panel, aligned with the REMM(i)E reference screens. */
 .panel-view{
   position:relative;

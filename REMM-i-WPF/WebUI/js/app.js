@@ -15,6 +15,12 @@
   let searchText = '';
   let month = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   let selectedDay = new Date();
+  let selectedRoutineId = null;
+  let routineMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  let routineSelectedDay = new Date();
+  const routineNoteDrafts = new Map();
+  let shareTheme = 'Soft Sakura';
+  let shareQuote = 'Sedikit demi sedikit, setiap hari.';
   let mascotStart = null;
   let panelDragStart = null;
   let searchTimer = 0;
@@ -44,6 +50,10 @@
   const allTasks = () => data().Tasks || [];
   const allSchedules = () => data().Schedules || [];
   const allRoutines = () => data().Routines || [];
+  const completedEntries = routine => (routine?.Entries || []).filter(entry => entry.Completed === true);
+  const totalRoutineRuns = () => allRoutines().reduce((total, routine) => total + completedEntries(routine).length, 0);
+  const routineRunCount = routine => completedEntries(routine).length;
+  const routineEntryForDay = (routine, date) => (routine?.Entries || []).find(entry => isoDay(new Date(entry.Date)) === isoDay(date));
 
   function notify(message, kind = '') {
     const item = document.createElement('div');
@@ -106,14 +116,15 @@
 
   function routineRow(item, compact = false) {
     const status = item.IsActive === false ? 'Jeda' : 'Aktif';
+    const count = routineRunCount(item);
     if (compact) {
       return '<article class="list-row compact-routine-row">' +
-        '<button class="routine-summary-main" data-action="routine.edit" data-id="' + esc(item.Id) + '">' +
+        '<button class="routine-summary-main" data-action="routine.detail" data-id="' + esc(item.Id) + '">' +
         '<span class="routine-symbol" aria-hidden="true">▦</span>' +
-        '<span class="row-main"><span class="row-title">' + esc(item.Title) + '</span><span class="row-subtitle">' + esc(item.Schedule || status) + '</span></span></button>' +
-        '<button class="icon-action routine-open" data-action="routine.edit" data-id="' + esc(item.Id) + '" aria-label="Buka rutinitas">›</button></article>';
+        '<span class="row-main"><span class="row-title">' + esc(item.Title) + '</span><span class="row-subtitle">' + esc(item.Schedule || status) + ' · ' + count + ' kali dijalankan</span></span></button>' +
+        '<button class="icon-action routine-open" data-action="routine.detail" data-id="' + esc(item.Id) + '" aria-label="Buka kalender rutinitas">›</button></article>';
     }
-    return '<article class="list-row"><span class="routine-symbol" aria-hidden="true">↻</span><div class="row-main"><div class="row-title">' + esc(item.Title) + '</div><div class="row-subtitle">' + esc(item.Schedule || 'Jadwal belum diatur') + ' · Dibuat ' + esc(fmtDate(item.CreatedDate)) + (item.Notes ? ' · ' + esc(item.Notes) : '') + '</div></div><span class="routine-status ' + (item.IsActive === false ? 'paused' : '') + '">' + status + '</span><div class="row-buttons"><button class="icon-action" data-action="routine.edit" data-id="' + esc(item.Id) + '" aria-label="Edit rutinitas">✎</button><button class="icon-action delete" data-action="routine.delete" data-id="' + esc(item.Id) + '" aria-label="Hapus rutinitas">×</button></div></article>';
+    return '<article class="list-row"><span class="routine-symbol" aria-hidden="true">↻</span><button class="routine-row-main" data-action="routine.detail" data-id="' + esc(item.Id) + '"><span class="row-title">' + esc(item.Title) + '</span><span class="row-subtitle">' + esc(item.Schedule || 'Jadwal belum diatur') + ' · ' + count + ' kali dijalankan</span></button><span class="routine-status ' + (item.IsActive === false ? 'paused' : '') + '">' + status + '</span><div class="row-buttons"><button class="icon-action" data-action="routine.edit" data-id="' + esc(item.Id) + '" aria-label="Edit rutinitas">✎</button><button class="icon-action delete" data-action="routine.delete" data-id="' + esc(item.Id) + '" aria-label="Hapus rutinitas">×</button></div></article>';
   }
   function pageHeader(kicker, heading, subtitle, action = '') {
     return `<div class="page-heading"><div><div class="eyebrow">${esc(kicker)}</div><h1>${esc(heading)}</h1><p>${esc(subtitle)}</p></div>${action}</div>`;
@@ -143,7 +154,7 @@
       '</section>' +
       '<section class="dashboard-card">' +
         '<div class="compact-section-heading">' +
-          '<button class="section-title" data-page="routines"><span class="section-icon">↻</span>Rutinitas</button>' +
+          '<button class="section-title" data-page="routines"><span class="section-icon">↻</span>Rutinitas <span class="section-count">' + totalRoutineRuns() + '</span></button>' +
           '<div class="section-actions"><button class="section-link" data-page="routines">Semua <span aria-hidden="true">›</span></button>' +
           '<button class="add-button" data-action="routine.new" aria-label="Tambah rutinitas">＋</button></div>' +
         '</div>' +
@@ -170,7 +181,180 @@
   function renderRoutines() {
     const rows = routinesFiltered();
     return `${pageHeader('KEBIASAAN', 'Rutinitas', 'Simpan kebiasaan dan catatan agar mudah kamu ingat.', '<button class="primary-button" data-action="routine.new">＋ Rutinitas baru</button>')}
+      <div class="routine-total-banner"><span>Total rutinitas dijalankan</span><strong>${totalRoutineRuns()}</strong></div>
       <section class="content-card"><div class="list-stack">${rows.length ? rows.map(routineRow).join('') : listEmpty(searchText ? 'Tidak ada rutinitas yang cocok.' : 'Belum ada rutinitas yang tersimpan.')}</div></section>`;
+  }
+
+  function renderRoutineDetail() {
+    const routine = allRoutines().find(item => item.Id === selectedRoutineId);
+    if (!routine) {
+      currentPage = 'routines';
+      return renderRoutines();
+    }
+    const entries = routine.Entries || [];
+    const entry = routineEntryForDay(routine, routineSelectedDay);
+    const key = isoDay(routineSelectedDay);
+    const draftKey = `${routine.Id}:${key}`;
+    const draft = routineNoteDrafts.has(draftKey) ? routineNoteDrafts.get(draftKey) : (entry?.Notes || '');
+    const completed = entry?.Completed === true;
+    const year = routineMonth.getFullYear();
+    const monthIndex = routineMonth.getMonth();
+    const first = new Date(year, monthIndex, 1);
+    const offset = (first.getDay() + 6) % 7;
+    const monthName = routineMonth.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    const monthDays = Array.from({ length: 42 }, (_, index) => new Date(year, monthIndex, index - offset + 1));
+    const weekdays = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    const dayButtons = monthDays.map(date => {
+      const dayEntry = routineEntryForDay(routine, date);
+      const classes = [date.getMonth() !== monthIndex ? 'muted' : '', isoDay(date) === isoDay(new Date()) ? 'today' : '', isoDay(date) === key ? 'selected' : '', dayEntry?.Completed ? 'completed' : '', dayEntry?.Notes ? 'has-note' : ''].filter(Boolean).join(' ');
+      return `<button class="routine-day ${classes}" data-action="routine.day.select" data-date="${isoDay(date)}" aria-label="${esc(date.toLocaleDateString('id-ID'))}${dayEntry?.Completed ? ', rutinitas dijalankan' : ''}"><span>${date.getDate()}</span></button>`;
+    }).join('');
+    const selectedLabel = routineSelectedDay.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    return `${pageHeader('KALENDER RUTINITAS', routine.Title, routine.Schedule || 'Tandai hari rutinitas ini dijalankan dan simpan catatan harian.', `<button class="secondary-button" data-action="routine.edit" data-id="${esc(routine.Id)}">Edit</button><button class="primary-button" data-action="routine.share" data-id="${esc(routine.Id)}">✦ Bagikan pencapaian</button>`)}
+      <div class="routine-stats-grid"><div class="routine-stat"><span>Total dijalankan</span><strong>${routineRunCount(routine)}</strong></div><div class="routine-stat"><span>Bulan terpilih</span><strong>${entries.filter(item => item.Completed && new Date(item.Date).getFullYear() === year && new Date(item.Date).getMonth() === monthIndex).length}</strong></div><div class="routine-stat"><span>Streak saat ini</span><strong>${routineStreak(routine)} hari</strong></div></div>
+      <section class="content-card routine-calendar-card"><div class="card-heading"><div class="month-toolbar"><button class="icon-action" data-action="routine.month.prev" aria-label="Bulan sebelumnya">‹</button><strong>${esc(monthName)}</strong><button class="icon-action" data-action="routine.month.next" aria-label="Bulan berikutnya">›</button></div><span class="routine-legend"><i></i> Dijalankan</span></div>
+      <div class="routine-calendar-grid">${weekdays.map(day => `<div class="weekday">${day}</div>`).join('')}${dayButtons}</div></section>
+      <section class="content-card routine-day-card"><div class="routine-day-heading"><div><div class="eyebrow">CATATAN HARIAN</div><h2>${esc(selectedLabel)}</h2></div><span class="routine-status ${completed ? '' : 'paused'}">${completed ? 'Dijalankan ✓' : 'Belum ditandai'}</span></div>
+        <label class="routine-note-label" for="routine-day-note">Catatan untuk tanggal ini</label><textarea id="routine-day-note" class="routine-day-note" maxlength="1000" placeholder="Apa yang kamu lakukan hari ini?">${esc(draft)}</textarea>
+        <div class="routine-day-actions"><button class="secondary-button" data-action="routine.day.toggle" data-id="${esc(routine.Id)}" data-completed="${completed ? 'false' : 'true'}">${completed ? 'Batalkan tanda' : '✓ Tandai dijalankan'}</button><button class="primary-button" data-action="routine.day.save" data-id="${esc(routine.Id)}">Simpan catatan</button></div>
+      </section>`;
+  }
+
+  const achievementPalettes = {
+    'Soft Sakura': { bg: '#241820', panel: '#38222d', accent: '#ff9fc2', second: '#ffd4e2', text: '#fff3f7', muted: '#d5afbd' },
+    'Cyberpunk Neon': { bg: '#101126', panel: '#1b1b3d', accent: '#e879f9', second: '#54e7f3', text: '#f5f3ff', muted: '#aaaacb' },
+    'Emerald Gold': { bg: '#10231e', panel: '#18382d', accent: '#7ce0b5', second: '#f2d27a', text: '#f3fff9', muted: '#aac9bb' },
+    'Sunset Glow': { bg: '#2c1720', panel: '#49242a', accent: '#ff9a72', second: '#ffd279', text: '#fff4ed', muted: '#d8b4a7' },
+    'Minimal Dark': { bg: '#14191e', panel: '#222a31', accent: '#d3e0e7', second: '#84d9df', text: '#f4f7f8', muted: '#a7b3ba' }
+  };
+
+  function routineStreak(routine) {
+    const dates = new Set(completedEntries(routine).map(entry => isoDay(new Date(entry.Date))));
+    let cursor = new Date();
+    if (!dates.has(isoDay(cursor))) cursor.setDate(cursor.getDate() - 1);
+    let streak = 0;
+    while (dates.has(isoDay(cursor))) { streak += 1; cursor.setDate(cursor.getDate() - 1); }
+    return streak;
+  }
+
+  function drawAchievementCard(routine) {
+    const canvas = document.getElementById('share-preview');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width = 1080;
+    const height = canvas.height = 1350;
+    const palette = achievementPalettes[shareTheme] || achievementPalettes['Soft Sakura'];
+    const year = routineMonth.getFullYear();
+    const monthIndex = routineMonth.getMonth();
+    const monthTitle = routineMonth.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    const entries = completedEntries(routine);
+    const dates = new Set(entries.map(entry => isoDay(new Date(entry.Date))));
+    const monthRuns = entries.filter(entry => new Date(entry.Date).getFullYear() === year && new Date(entry.Date).getMonth() === monthIndex).length;
+    const monthDays = new Date(year, monthIndex + 1, 0).getDate();
+    const firstOffset = (new Date(year, monthIndex, 1).getDay() + 6) % 7;
+    const gradient = ctx.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, palette.bg); gradient.addColorStop(1, '#101216');
+    ctx.fillStyle = gradient; ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = palette.panel; ctx.beginPath(); ctx.roundRect(36, 36, width - 72, height - 72, 38); ctx.fill();
+    ctx.strokeStyle = palette.accent + '88'; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(36, 36, width - 72, height - 72, 38); ctx.stroke();
+    ctx.fillStyle = palette.accent; ctx.font = '700 25px Segoe UI, sans-serif'; ctx.fillText('REMM(i)E  •  ROUTINE REWARD', 82, 112);
+    ctx.fillStyle = palette.text; ctx.font = '700 60px Segoe UI, sans-serif';
+    const titleText = routine.Title.length > 25 ? routine.Title.slice(0, 23) + '…' : routine.Title;
+    ctx.fillText(titleText, 82, 220);
+    ctx.fillStyle = palette.muted; ctx.font = '30px Segoe UI, sans-serif'; ctx.fillText(monthTitle, 82, 275);
+    const statBoxes = [
+      { label: 'TOTAL DIJALANKAN', value: String(entries.length), color: palette.accent },
+      { label: 'BULAN TERPILIH', value: String(monthRuns), color: palette.second },
+      { label: 'STREAK SAAT INI', value: `${routineStreak(routine)} hari`, color: palette.accent }
+    ];
+    statBoxes.forEach((stat, index) => {
+      const x = 82 + index * 306;
+      ctx.fillStyle = '#ffffff0c'; ctx.beginPath(); ctx.roundRect(x, 325, 278, 160, 22); ctx.fill();
+      ctx.fillStyle = palette.muted; ctx.font = '700 19px Segoe UI, sans-serif'; ctx.fillText(stat.label, x + 20, 368);
+      ctx.fillStyle = stat.color; ctx.font = '700 48px Segoe UI, sans-serif'; ctx.fillText(stat.value, x + 20, 435);
+    });
+    ctx.fillStyle = palette.text; ctx.font = '700 27px Segoe UI, sans-serif'; ctx.fillText('KALENDER PROGRES', 82, 560);
+    const gridX = 82, gridY = 600, cellW = 132, cellH = 88;
+    ['S', 'S', 'R', 'K', 'J', 'S', 'M'].forEach((day, index) => {
+      ctx.fillStyle = palette.muted; ctx.font = '700 20px Segoe UI, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(day, gridX + index * cellW + cellW / 2, gridY + 24);
+    });
+    for (let day = 1; day <= monthDays; day += 1) {
+      const cell = firstOffset + day - 1, row = Math.floor(cell / 7), col = cell % 7;
+      const x = gridX + col * cellW, y = gridY + 42 + row * cellH;
+      const done = dates.has(`${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+      ctx.fillStyle = done ? palette.accent : '#ffffff0c'; ctx.beginPath(); ctx.roundRect(x + 7, y + 6, cellW - 14, cellH - 12, 15); ctx.fill();
+      ctx.fillStyle = done ? palette.bg : palette.text; ctx.font = '700 24px Segoe UI, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(String(day), x + cellW / 2, y + 43);
+      if (done) { ctx.font = '700 16px Segoe UI, sans-serif'; ctx.fillText('✓', x + cellW / 2, y + 66); }
+    }
+    ctx.textAlign = 'left';
+    ctx.fillStyle = palette.second; ctx.font = 'italic 27px Segoe UI, sans-serif';
+    const quote = (shareQuote || 'Aku terus melangkah.').trim();
+    const words = quote.split(/\s+/); let line = '', lineY = 1190;
+    for (const word of words) {
+      const next = line ? `${line} ${word}` : word;
+      if (ctx.measureText(next).width > 900 && line) { ctx.fillText(line, 82, lineY); line = word; lineY += 38; }
+      else line = next;
+    }
+    if (lineY < 1270) ctx.fillText(line, 82, lineY);
+    ctx.fillStyle = palette.muted; ctx.font = '19px Segoe UI, sans-serif'; ctx.fillText('Langkah kecil yang kamu jaga, layak dirayakan.', 82, 1297);
+  }
+
+  function showRoutineShare(routine) {
+    shareTheme = 'Soft Sakura';
+    shareQuote = 'Sedikit demi sedikit, setiap hari.';
+    openModal(`<div class="modal-heading"><div><h2>Bagikan pencapaian</h2><p>Kartu progres rutinitas yang bisa diunduh atau dibagikan.</p></div><button class="window-button" data-action="modal.close" aria-label="Tutup">×</button></div>
+      <div class="share-controls"><label class="field"><span>Tema kartu</span><select id="share-theme">${Object.keys(achievementPalettes).map(theme => `<option>${theme}</option>`).join('')}</select></label><label class="field"><span>Kutipan penyemangat</span><input id="share-quote" maxlength="100" value="${esc(shareQuote)}"></label></div>
+      <canvas id="share-preview" class="share-preview" width="1080" height="1350" aria-label="Pratinjau kartu pencapaian"></canvas>
+      <div class="share-actions"><button class="primary-button" data-action="routine.share.download">⇩ Unduh PNG</button><button class="secondary-button" data-action="routine.share.send">↗ Bagikan gambar</button><button class="secondary-button" data-action="routine.share.caption">Salin caption</button></div>`);
+    drawAchievementCard(routine);
+  }
+
+  function routineCaption(routine) {
+    const monthTitle = routineMonth.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    return `✨ Pencapaian rutinitasku: ${routine.Title}\nSudah dijalankan ${routineRunCount(routine)} kali, termasuk ${completedEntries(routine).filter(entry => new Date(entry.Date).getFullYear() === routineMonth.getFullYear() && new Date(entry.Date).getMonth() === routineMonth.getMonth()).length} kali pada ${monthTitle}.\n${shareQuote}\n#REMMiE #Rutinitas`;
+  }
+
+  function downloadAchievement(announce = true) {
+    const canvas = document.getElementById('share-preview');
+    if (!canvas) return;
+    const link = document.createElement('a');
+    link.download = 'remmie-pencapaian-rutinitas.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    if (announce) notify('Kartu pencapaian PNG diunduh.', 'success');
+  }
+
+  async function copyCaption(routine, announce = true) {
+    const caption = routineCaption(routine);
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(caption);
+      copied = true;
+    } catch {
+      const helper = document.createElement('textarea'); helper.value = caption; helper.className = 'clipboard-helper'; document.body.append(helper); helper.select();
+      copied = document.execCommand('copy'); helper.remove();
+    }
+    if (announce) notify(copied ? 'Caption pencapaian disalin.' : 'Izin clipboard tidak tersedia.', copied ? 'success' : 'error');
+    return copied;
+  }
+
+  async function shareAchievement(routine) {
+    const canvas = document.getElementById('share-preview');
+    if (!canvas) return;
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) { notify('Kartu PNG gagal dibuat.', 'error'); return; }
+    const file = new File([blob], 'remmie-pencapaian-rutinitas.png', { type: 'image/png' });
+    try {
+      if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+        await navigator.share({ files: [file], title: `Pencapaian ${routine.Title}`, text: routineCaption(routine) });
+        return;
+      }
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
+    }
+    downloadAchievement(false);
+    const captionCopied = await copyCaption(routine, false);
+    notify(captionCopied ? 'PNG diunduh dan caption disalin. Lampirkan PNG saat membagikan.' : 'PNG diunduh; izin clipboard tidak tersedia untuk caption.', captionCopied ? 'success' : 'error');
   }
 
   function renderSchedules() {
@@ -242,8 +426,11 @@
     document.getElementById('project-name').textContent = title(snapshot);
     document.getElementById('display-name').textContent = snapshot.DisplayName || 'Ruang produktivitasmu';
     document.getElementById('today-label').textContent = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-    document.getElementById('back-button').hidden = currentPage === 'dashboard';
-    const pages = { dashboard: renderDashboard, tasks: renderTasks, routines: renderRoutines, schedules: renderSchedules, calendar: renderCalendar, settings: renderSettings };
+    const backButton = document.getElementById('back-button');
+    backButton.hidden = currentPage === 'dashboard';
+    backButton.dataset.page = currentPage === 'routineDetail' ? 'routines' : 'dashboard';
+    backButton.setAttribute('aria-label', currentPage === 'routineDetail' ? 'Kembali ke daftar rutinitas' : 'Kembali ke ringkasan');
+    const pages = { dashboard: renderDashboard, tasks: renderTasks, routines: renderRoutines, routineDetail: renderRoutineDetail, schedules: renderSchedules, calendar: renderCalendar, settings: renderSettings };
     pageContent.innerHTML = (pages[currentPage] || renderDashboard)();
     const bg = settings().PanelBackground;
     const border = settings().PanelBorder;
@@ -351,7 +538,50 @@
       case 'task.filter': taskFilter = value; post('search.update', { query: searchText, priority: taskFilter }); break;
       case 'routine.new': showRoutineForm(); break;
       case 'routine.edit': { const item = allRoutines().find(row => row.Id === id); if (item) showRoutineForm(item); break; }
+      case 'routine.detail': {
+        const item = allRoutines().find(row => row.Id === id);
+        if (item) {
+          selectedRoutineId = id;
+          routineSelectedDay = new Date();
+          routineMonth = new Date(routineSelectedDay.getFullYear(), routineSelectedDay.getMonth(), 1);
+          currentPage = 'routineDetail';
+          renderPage();
+        }
+        break;
+      }
       case 'routine.delete': doDelete('routine', id, 'rutinitas ini'); break;
+      case 'routine.month.prev': {
+        routineMonth = new Date(routineMonth.getFullYear(), routineMonth.getMonth() - 1, 1);
+        routineSelectedDay = new Date(routineMonth.getFullYear(), routineMonth.getMonth(), Math.min(routineSelectedDay.getDate(), new Date(routineMonth.getFullYear(), routineMonth.getMonth() + 1, 0).getDate()));
+        renderPage(); break;
+      }
+      case 'routine.month.next': {
+        routineMonth = new Date(routineMonth.getFullYear(), routineMonth.getMonth() + 1, 1);
+        routineSelectedDay = new Date(routineMonth.getFullYear(), routineMonth.getMonth(), Math.min(routineSelectedDay.getDate(), new Date(routineMonth.getFullYear(), routineMonth.getMonth() + 1, 0).getDate()));
+        renderPage(); break;
+      }
+      case 'routine.day.select': routineSelectedDay = new Date(`${target.dataset.date}T00:00:00`); routineMonth = new Date(routineSelectedDay.getFullYear(), routineSelectedDay.getMonth(), 1); renderPage(); break;
+      case 'routine.day.toggle': {
+        const routine = allRoutines().find(item => item.Id === id);
+        if (!routine) break;
+        const note = document.getElementById('routine-day-note')?.value ?? routineNoteDrafts.get(`${id}:${isoDay(routineSelectedDay)}`) ?? '';
+        post('routine.day.save', { id, date: isoDay(routineSelectedDay), completed: target.dataset.completed === 'true', notes: note });
+        routineNoteDrafts.delete(`${id}:${isoDay(routineSelectedDay)}`);
+        break;
+      }
+      case 'routine.day.save': {
+        const routine = allRoutines().find(item => item.Id === id);
+        if (!routine) break;
+        const entry = routineEntryForDay(routine, routineSelectedDay);
+        const note = document.getElementById('routine-day-note')?.value ?? '';
+        post('routine.day.save', { id, date: isoDay(routineSelectedDay), completed: entry?.Completed === true, notes: note });
+        routineNoteDrafts.delete(`${id}:${isoDay(routineSelectedDay)}`);
+        break;
+      }
+      case 'routine.share': { const item = allRoutines().find(row => row.Id === id); if (item) showRoutineShare(item); break; }
+      case 'routine.share.download': downloadAchievement(); break;
+      case 'routine.share.send': { const item = allRoutines().find(row => row.Id === selectedRoutineId); if (item) shareAchievement(item); break; }
+      case 'routine.share.caption': { const item = allRoutines().find(row => row.Id === selectedRoutineId); if (item) copyCaption(item); break; }
       case 'schedule.new': showScheduleForm(); break;
       case 'schedule.edit': { const item = allSchedules().find(row => row.Id === id); if (item) showScheduleForm(item); break; }
       case 'schedule.delete': doDelete('schedule', id, 'jadwal ini'); break;
@@ -385,6 +615,7 @@
 
   function handleChange(event) {
     const input = event.target;
+    if (input.id === 'share-theme') { shareTheme = input.value; const routine = allRoutines().find(row => row.Id === selectedRoutineId); if (routine) drawAchievementCard(routine); return; }
     if (input.matches('[data-action="pose.upload"]')) {
       const file = input.files?.[0];
       if (!file) return;
@@ -410,6 +641,14 @@
         FilteredRoutines: message.filteredRoutines || message.data?.Routines || [],
         FilteredSchedules: message.filteredSchedules || message.data?.Schedules || []
       };
+      for (const [key, draft] of routineNoteDrafts) {
+        const separator = key.lastIndexOf(':');
+        const routineId = key.slice(0, separator);
+        const dateKey = key.slice(separator + 1);
+        const routine = allRoutines().find(item => item.Id === routineId);
+        const savedNote = routineEntryForDay(routine, new Date(`${dateKey}T00:00:00`))?.Notes || '';
+        if (savedNote === draft) routineNoteDrafts.delete(key);
+      }
       if (mode === 'panel') renderPage();
       return;
     }
@@ -477,6 +716,8 @@
     topbar.addEventListener('pointercancel', end);
     document.addEventListener('input', event => {
       if (event.target.id === 'setting-opacity') document.getElementById('opacity-label').textContent = `${event.target.value}%`;
+      if (event.target.id === 'routine-day-note' && selectedRoutineId) routineNoteDrafts.set(`${selectedRoutineId}:${isoDay(routineSelectedDay)}`, event.target.value);
+      if (event.target.id === 'share-quote') { shareQuote = event.target.value; const routine = allRoutines().find(row => row.Id === selectedRoutineId); if (routine) drawAchievementCard(routine); }
     });
     post('panel.ready');
   }

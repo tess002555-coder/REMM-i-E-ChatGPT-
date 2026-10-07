@@ -198,6 +198,9 @@ public partial class PanelWindow : Window
                 case "routine.delete":
                     DeleteRoutine(root);
                     break;
+                case "routine.day.save":
+                    SaveRoutineDay(root);
+                    break;
                 case "schedule.create":
                     CreateOrUpdateSchedule(root, false);
                     break;
@@ -319,6 +322,40 @@ public partial class PanelWindow : Window
         PersistContentChanges();
         SendSnapshot();
         SendToast("Rutinitas dihapus.", "success");
+    }
+
+    private void SaveRoutineDay(JsonElement root)
+    {
+        var routine = _data.Routines.FirstOrDefault(item => item.Id == GetString(root, "id"))
+            ?? throw new InvalidOperationException("Rutinitas tidak ditemukan.");
+        var dateText = GetString(root, "date");
+        if (!DateTime.TryParseExact(dateText, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+            throw new InvalidOperationException("Tanggal rutinitas tidak valid.");
+
+        routine.Entries ??= new();
+        var completed = GetBoolean(root, "completed", false);
+        var notes = LimitedText(root, "notes", 1000);
+        var entry = routine.Entries.FirstOrDefault(item => item.Date.Date == date.Date);
+        if (entry is null && (completed || !string.IsNullOrWhiteSpace(notes)))
+        {
+            entry = new RemmRoutineLog { Date = date.Date };
+            routine.Entries.Add(entry);
+        }
+
+        if (entry is not null)
+        {
+            entry.Completed = completed;
+            entry.Notes = notes;
+            if (!entry.Completed && string.IsNullOrWhiteSpace(entry.Notes))
+                routine.Entries.Remove(entry);
+        }
+
+        PersistContentChanges();
+        SendSnapshot();
+        var toast = completed
+            ? "Rutinitas ditandai selesai untuk tanggal ini."
+            : string.IsNullOrWhiteSpace(notes) ? "Tanda rutinitas dibatalkan." : "Catatan rutinitas disimpan.";
+        SendToast(toast, "success");
     }
 
     private void CreateOrUpdateSchedule(JsonElement root, bool update)
