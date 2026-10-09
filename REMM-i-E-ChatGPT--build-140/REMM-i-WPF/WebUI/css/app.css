@@ -368,3 +368,40 @@
 /* ── Opacity / range row ─────────────────────────────────────────────── */
 .opacity-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
 .opacity-val{font-size:9px;color:#7abcca;font-weight:600;min-width:30px;text-align:right}
+
+/* ── Settings overlay modal ──────────────────────────────────────────── */
+.settings-overlay{
+  position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  padding:12px;background:rgba(4,7,10,.72);backdrop-filter:blur(10px);
+}
+.settings-overlay[hidden]{display:none!important}
+.settings-overlay .cfg-page{
+  width:min(92vw,560px);height:min(92vh,650px);max-width:calc(100% - 8px);max-height:calc(100% - 8px);
+  background:linear-gradient(180deg,#12181f 0%,#0d1117 100%);
+  border:1px solid #26323d;border-radius:16px;box-shadow:0 22px 70px rgba(0,0,0,.62),0 0 0 1px rgba(255,255,255,.03);
+}
+.settings-overlay .cfg-header{padding:14px 16px 10px;background:transparent;border-bottom:1px solid #202a34}
+.settings-overlay .cfg-tab-bar{padding:10px 14px 0;background:transparent;overflow-x:auto;scrollbar-width:none}
+.settings-overlay .cfg-tab-bar::-webkit-scrollbar{display:none}
+.settings-overlay .cfg-tab-btn{min-height:28px;padding:6px 10px;font-size:8px;background:#151c23;border-color:#25303a;flex:1;justify-content:center}
+.settings-overlay .cfg-tab-btn.active{background:#0b2e36;border-color:#13c5d7;color:#2ee6f2;box-shadow:0 0 18px rgba(19,197,215,.12)}
+.settings-overlay .cfg-tab-content{padding:10px 14px 12px;overflow-y:auto;min-height:0}
+.settings-overlay .cfg-subtab-bar{position:sticky;top:0;z-index:2;padding:0 0 8px;background:linear-gradient(180deg,#0d1117 75%,rgba(13,17,23,0));margin-bottom:8px}
+.settings-overlay .cfg-subtab-btn{min-height:24px;padding:5px 9px;background:#151c23;border-color:#25303a;color:#7d91a0}
+.settings-overlay .cfg-subtab-btn.active{background:#102b34;border-color:#13c5d7;color:#2ee6f2}
+.settings-overlay .setting-grid{display:grid;grid-template-columns:1fr;gap:8px}
+.settings-overlay .setting-card{background:#151a20;border:1px solid #26313b;border-radius:12px;padding:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.settings-overlay .setting-card h2{font-size:9px;color:#d8e6ec;margin:0 0 8px;letter-spacing:.01em}
+.settings-overlay .field label,.settings-overlay .setting-row label{font-size:7.5px;color:#8da2af;text-transform:none;letter-spacing:0}
+.settings-overlay .field input,.settings-overlay .field select,.settings-overlay .field textarea{min-height:25px;border-radius:8px;background:#0f141a;border-color:#28343f;color:#d3e1e8;font-size:8px}
+.settings-overlay .setting-row{padding:7px 0;border-color:#222c35}
+.settings-overlay .cfg-footer{padding:10px 14px;background:rgba(13,17,23,.96);border-top:1px solid #202a34}
+.settings-overlay .cfg-footer .secondary-button,.settings-overlay .cfg-footer .primary-button{min-height:28px;border-radius:9px;font-size:8px;padding:0 12px}
+.settings-overlay .cfg-save-btn{background:#13c5d7;color:#041417;box-shadow:0 0 18px rgba(19,197,215,.18)}
+
+@media(max-width:360px){
+  .settings-overlay{padding:8px}
+  .settings-overlay .cfg-page{width:100%;height:100%;max-width:none;max-height:none;border-radius:14px}
+  .settings-overlay .cfg-tab-btn{flex:0 0 auto}
+  .widget-mode-grid{grid-template-columns:1fr}
+}

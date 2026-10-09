@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data:; img-src 'self' data: https://pose.local; style-src 'self'; script-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>REMM(i)E</title>
+  <link rel="stylesheet" href="css/app.css">
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <main id="mascot-view" class="mascot-view" aria-label="REMM(i)E mascot">
+    <div id="mascot-orb" class="mascot-orb" data-pose="peek">
+      <img id="mascot-image" src="assets/mascot.png" alt="Mascot REMM(i)E" draggable="false">
+      <span class="mascot-spark spark-one" aria-hidden="true">✦</span>
+      <span class="mascot-spark spark-two" aria-hidden="true">✧</span>
+      <button class="mascot-mode" type="button" data-action="mascot.toggle" aria-label="Ganti mode mascot" title="Ganti mode">↔</button>
+    </div>
+  </main>
+
+  <main id="panel-view" class="panel-view" aria-label="REMM(i)E productivity panel">
+    <header class="topbar">
+      <div class="panel-drag-handle" data-drag-handle aria-label="Pindah panel">
+        <span class="drag-dots" aria-hidden="true">⠿</span>
+        <span class="drag-label">Pindah Panel</span>
+      </div>
+      <div class="brand-row">
+        <div class="brand-lockup">
+          <img src="assets/mascot.png" alt="" class="brand-avatar">
+          <div class="brand-copy">
+            <strong id="project-name">REMM(i)E</strong>
+            <span id="display-name">Ruang produktivitasmu</span>
+          </div>
+        </div>
+        <div class="top-actions">
+          <span id="today-label" class="today-label"></span>
+          <button id="back-button" type="button" class="window-button" data-page="dashboard" aria-label="Kembali ke ringkasan" title="Kembali" hidden>‹</button>
+          <div class="action-pill">
+            <button type="button" class="window-button" data-page="settings" aria-label="Pengaturan" title="Pengaturan">⚙</button>
+            <button type="button" class="window-button" data-action="panel.close" aria-label="Tutup panel" title="Tutup">×</button>
+          </div>
+        </div>
+      </div>
+      <label class="global-search">
+        <span aria-hidden="true">⌕</span>
+        <input id="global-search" type="search" placeholder="Cari tugas / rutinitas..." autocomplete="off" aria-label="Cari tugas dan rutinitas">
+      </label>
+    </header>
+
+    <div class="panel-body">
+      <section class="page-shell">
+        <div id="page-content" class="page-content" aria-live="polite">
+          <div class="loading-state"><span class="loader"></span><p>Menyiapkan ruang kerjamu…</p></div>
+        </div>
+      </section>
+    </div>
+
+    <div id="settings-overlay" class="settings-overlay" hidden aria-modal="true" role="dialog" aria-label="Pengaturan Terpusat"></div>
+    <div id="modal-root"></div>
+    <div id="toast-region" class="toast-region" aria-live="assertive"></div>
+    <span id="connection-label" class="connection-label">Data tersimpan di perangkat ini</span>
+  </main>
+</body>
+</html>

@@ -8,6 +8,7 @@
   const pageContent = document.getElementById('page-content');
   const modalRoot = document.getElementById('modal-root');
   const toastRegion = document.getElementById('toast-region');
+  const settingsOverlay = document.getElementById('settings-overlay');
   const bridge = window.chrome && window.chrome.webview;
   let snapshot = null;
   let currentPage = 'dashboard';
@@ -587,6 +588,17 @@
     return `<div class="setting-row"><div><label for="${id}">${esc(label)}</label><small>${esc(description)}</small></div><input id="${id}" type="checkbox" ${checked ? 'checked' : ''}></div>`;
   }
 
+  function openSettingsOverlay() {
+    settingsOverlay.innerHTML = renderSettings();
+    settingsOverlay.hidden = false;
+    settingsOverlay.querySelector('input,select,button')?.focus();
+  }
+
+  function closeSettingsOverlay() {
+    settingsOverlay.hidden = true;
+    settingsOverlay.innerHTML = '';
+  }
+
   function renderPage() {
     if (mode !== 'panel' || !snapshot) return;
     document.querySelectorAll('[data-page]').forEach(button => button.classList.toggle('active', button.dataset.page === currentPage));
@@ -597,7 +609,7 @@
     backButton.hidden = currentPage === 'dashboard';
     backButton.dataset.page = currentPage === 'routineDetail' ? 'routines' : 'dashboard';
     backButton.setAttribute('aria-label', currentPage === 'routineDetail' ? 'Kembali ke daftar rutinitas' : 'Kembali ke ringkasan');
-    const pages = { dashboard: renderDashboard, tasks: renderTasks, routines: renderRoutines, routineDetail: renderRoutineDetail, schedules: renderSchedules, calendar: renderCalendar, settings: renderSettings };
+    const pages = { dashboard: renderDashboard, tasks: renderTasks, routines: renderRoutines, routineDetail: renderRoutineDetail, schedules: renderSchedules, calendar: renderCalendar };
     pageContent.innerHTML = (pages[currentPage] || renderDashboard)();
     const bg = settings().PanelBackground;
     const border = settings().PanelBorder;
@@ -691,7 +703,17 @@
     const target = event.target.closest('[data-action],[data-page]');
     if (!target) return;
     if (target.dataset.page) {
-      currentPage = target.dataset.page;
+      const page = target.dataset.page;
+      // settings overlay open
+      if (page === 'settings') {
+        openSettingsOverlay();
+        return;
+      }
+      // close settings overlay and go to target page
+      if (!settingsOverlay.hidden) {
+        closeSettingsOverlay();
+      }
+      currentPage = page;
       if (currentPage === 'tasks') {
         post('search.update', { query: searchText, priority: taskFilter });
         return;
@@ -760,8 +782,8 @@
       case 'calendar.next': month = new Date(month.getFullYear(), month.getMonth() + 1, 1); renderPage(); break;
       case 'calendar.today': month = new Date(new Date().getFullYear(), new Date().getMonth(), 1); selectedDay = new Date(); renderPage(); break;
       case 'calendar.select': selectedDay = new Date(`${target.dataset.date}T00:00:00`); month = new Date(selectedDay.getFullYear(), selectedDay.getMonth(), 1); renderPage(); break;
-      case 'settings.tab': settingsTab = event.target.closest('[data-tab]').dataset.tab; if (settingsTab === 'appearance') settingsSubTab = 'theme'; renderPage(); break;
-      case 'settings.subtab': settingsSubTab = event.target.closest('[data-subtab]').dataset.subtab; renderPage(); break;
+      case 'settings.tab': settingsTab = event.target.closest('[data-tab]').dataset.tab; if (settingsTab === 'appearance') settingsSubTab = 'theme'; openSettingsOverlay(); break;
+      case 'settings.subtab': settingsSubTab = event.target.closest('[data-subtab]').dataset.subtab; openSettingsOverlay(); break;
       case 'settings.theme.pick': {
         const picked = event.target.closest('[data-theme]').dataset.theme;
         const hiddenInput = document.getElementById('setting-theme');
