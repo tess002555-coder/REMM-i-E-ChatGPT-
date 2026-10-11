@@ -407,3 +407,12 @@
   .settings-overlay .cfg-tab-btn{flex:0 0 auto}
   .widget-mode-grid{grid-template-columns:1fr}
 }
+
+/* ── Standalone calendar window ──────────────────────────────────────── */
+body[data-window="calendar"] .panel-view{display:flex;flex-direction:column;border-radius:0;border:0;box-shadow:none}
+body[data-window="calendar"] .topbar{display:none}
+body[data-window="calendar"] .panel-body{flex:1;min-height:0}
+body[data-window="calendar"] .page-shell{height:100%}
+body[data-window="calendar"] .page-content{padding:18px;height:100%}
+body[data-window="calendar"] .calendar-layout{grid-template-columns:1fr;gap:12px}
+body[data-window="calendar"] .page-heading{margin-bottom:14px}

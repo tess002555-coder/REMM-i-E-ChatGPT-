@@ -2,7 +2,8 @@
   'use strict';
 
   const query = new URLSearchParams(location.search);
-  const mode = query.get('window') === 'mascot' ? 'mascot' : 'panel';
+  const requestedWindow = query.get('window');
+  const mode = requestedWindow === 'mascot' ? 'mascot' : requestedWindow === 'calendar' ? 'calendar' : 'panel';
   document.body.dataset.window = mode;
 
   const pageContent = document.getElementById('page-content');
@@ -11,7 +12,7 @@
   const settingsOverlay = document.getElementById('settings-overlay');
   const bridge = window.chrome && window.chrome.webview;
   let snapshot = null;
-  let currentPage = 'dashboard';
+  let currentPage = mode === 'calendar' ? 'calendar' : 'dashboard';
   let taskFilter = 'Semua';
   let searchText = '';
   let month = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -702,12 +703,18 @@
     if (!target) return;
     if (target.dataset.page) {
       const page = target.dataset.page;
-      // settings overlay open
+      if (mode === 'panel' && page === 'calendar') {
+        post('calendar.open');
+        return;
+      }
+      if (mode === 'calendar' && page === 'dashboard') {
+        post('calendar.close');
+        return;
+      }
       if (page === 'settings') {
         openSettingsOverlay();
         return;
       }
-      // close settings overlay and go to target page
       if (!settingsOverlay.hidden) {
         closeSettingsOverlay();
       }
@@ -904,7 +911,7 @@
         const savedNote = routineEntryForDay(routine, new Date(`${dateKey}T00:00:00`))?.Notes || '';
         if (savedNote === draft) routineNoteDrafts.delete(key);
       }
-      if (mode === 'panel') renderPage();
+      if (mode === 'panel' || mode === 'calendar') renderPage();
       return;
     }
     if (message.type === 'mascot.pose') {
