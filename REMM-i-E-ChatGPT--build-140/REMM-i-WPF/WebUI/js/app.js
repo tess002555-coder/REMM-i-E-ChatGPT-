@@ -128,7 +128,9 @@
     return '<article class="list-row"><span class="routine-symbol" aria-hidden="true">↻</span><button class="routine-row-main" data-action="routine.detail" data-id="' + esc(item.Id) + '"><span class="row-title">' + esc(item.Title) + '</span><span class="row-subtitle">' + esc(item.Schedule || 'Jadwal belum diatur') + ' · ' + count + ' kali dijalankan</span></button><span class="routine-status ' + (item.IsActive === false ? 'paused' : '') + '">' + status + '</span><div class="row-buttons"><button class="icon-action" data-action="routine.edit" data-id="' + esc(item.Id) + '" aria-label="Edit rutinitas">✎</button><button class="icon-action delete" data-action="routine.delete" data-id="' + esc(item.Id) + '" aria-label="Hapus rutinitas">×</button></div></article>';
   }
   function pageHeader(kicker, heading, subtitle, action = '') {
-    return `<div class="page-heading"><div><div class="eyebrow">${esc(kicker)}</div><h1>${esc(heading)}</h1><p>${esc(subtitle)}</p></div>${action}</div>`;
+    const closeButton = '<button class="window-button page-close-button" data-page="dashboard" aria-label="Tutup halaman" title="Tutup">×</button>';
+    const actions = `<div class="page-heading-actions">${action}${closeButton}</div>`;
+    return `<div class="page-heading"><div><div class="eyebrow">${esc(kicker)}</div><h1>${esc(heading)}</h1><p>${esc(subtitle)}</p></div>${actions}</div>`;
   }
 
   function renderDashboard() {
@@ -605,10 +607,6 @@
     document.getElementById('project-name').textContent = title(snapshot);
     document.getElementById('display-name').textContent = snapshot.DisplayName || 'Ruang produktivitasmu';
     document.getElementById('today-label').textContent = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-    const backButton = document.getElementById('back-button');
-    backButton.hidden = currentPage === 'dashboard';
-    backButton.dataset.page = currentPage === 'routineDetail' ? 'routines' : 'dashboard';
-    backButton.setAttribute('aria-label', currentPage === 'routineDetail' ? 'Kembali ke daftar rutinitas' : 'Kembali ke ringkasan');
     const pages = { dashboard: renderDashboard, tasks: renderTasks, routines: renderRoutines, routineDetail: renderRoutineDetail, schedules: renderSchedules, calendar: renderCalendar };
     pageContent.innerHTML = (pages[currentPage] || renderDashboard)();
     const bg = settings().PanelBackground;

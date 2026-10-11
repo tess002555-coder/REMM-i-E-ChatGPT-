@@ -119,7 +119,9 @@
   transition:background .14s,color .14s;
 }
 .window-button:hover{background:#14343b;color:#d7fcff}
-#back-button[hidden]{display:none}
+.page-heading-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-shrink:0}
+.page-close-button{background:#202b33;border:1px solid #34414a;color:#d6dfe3;font-size:16px}
+.page-close-button:hover{background:#3b2028;border-color:#673541;color:#ffb9c2}
 .global-search{
   width:100%;height:32px;max-width:none;flex:none;
   display:flex;align-items:center;gap:8px;
