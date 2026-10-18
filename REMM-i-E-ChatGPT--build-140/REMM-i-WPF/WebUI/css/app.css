@@ -417,3 +417,14 @@ body[data-window="calendar"] .page-content{padding:18px;height:100%}
 body[data-window="calendar"] .calendar-layout{grid-template-columns:1fr;gap:12px}
 body[data-window="calendar"] .page-heading{margin-bottom:14px;cursor:move;user-select:none}
 body[data-window="calendar"] .page-heading button{cursor:pointer}
+
+/* ── Routine detail fullscreen ──────────────────────────────────────── */
+.panel-view.routine-fullscreen .topbar{display:none}
+.panel-view.routine-fullscreen .connection-label{display:none}
+.routine-detail-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.routine-detail-nav{display:flex;align-items:flex-start;gap:10px}
+.routine-detail-nav .routine-back{width:32px;height:32px;flex-shrink:0;margin-top:18px;display:grid;place-items:center;border:1px solid #38434c;border-radius:9px;background:#1a2229;color:#9cabb5;font-size:20px;cursor:pointer}
+.routine-detail-nav .routine-back:hover{background:#542d39;color:#ffdce6;border-color:#915064}
+.routine-detail-header h1{margin:0;font-size:22px;font-weight:650;letter-spacing:-.4px}
+.routine-detail-header p{margin:5px 0 0;color:var(--muted);font-size:11px}
+.routine-detail-header .eyebrow{margin-bottom:5px}

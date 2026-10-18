@@ -217,7 +217,7 @@
       return `<button class="routine-day ${classes}" data-action="routine.day.select" data-date="${isoDay(date)}" aria-label="${esc(date.toLocaleDateString('id-ID'))}${dayEntry?.Completed ? ', rutinitas dijalankan' : ''}"><span>${date.getDate()}</span></button>`;
     }).join('');
     const selectedLabel = routineSelectedDay.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    return `${pageHeader('KALENDER RUTINITAS', routine.Title, routine.Schedule || 'Tandai hari rutinitas ini dijalankan dan simpan catatan harian.', `<button class="secondary-button" data-action="routine.edit" data-id="${esc(routine.Id)}">Edit</button><button class="primary-button" data-action="routine.share" data-id="${esc(routine.Id)}">✦ Bagikan pencapaian</button>`)}
+    return `<div class="routine-detail-header"><div class="routine-detail-nav"><button class="icon-action routine-back" data-page="routines" aria-label="Kembali ke daftar rutinitas">‹</button><div><div class="eyebrow">${esc('KALENDER RUTINITAS')}</div><h1>${esc(routine.Title)}</h1><p>${esc(routine.Schedule || 'Tandai hari rutinitas ini dijalankan dan simpan catatan harian.')}</p></div></div><div class="page-heading-actions"><button class="secondary-button" data-action="routine.edit" data-id="${esc(routine.Id)}">Edit</button><button class="primary-button" data-action="routine.share" data-id="${esc(routine.Id)}">✦ Bagikan pencapaian</button><button class="window-button" data-page="routines" aria-label="Tutup halaman" title="Tutup">×</button></div></div>
       <div class="routine-stats-grid"><div class="routine-stat"><span>Total dijalankan</span><strong>${routineRunCount(routine)}</strong></div><div class="routine-stat"><span>Bulan terpilih</span><strong>${entries.filter(item => item.Completed && new Date(item.Date).getFullYear() === year && new Date(item.Date).getMonth() === monthIndex).length}</strong></div><div class="routine-stat"><span>Streak saat ini</span><strong>${routineStreak(routine)} hari</strong></div></div>
       <section class="content-card routine-calendar-card"><div class="card-heading"><div class="month-toolbar"><button class="icon-action" data-action="routine.month.prev" aria-label="Bulan sebelumnya">‹</button><strong>${esc(monthName)}</strong><button class="icon-action" data-action="routine.month.next" aria-label="Bulan berikutnya">›</button></div><span class="routine-legend"><i></i> Dijalankan</span></div>
       <div class="routine-calendar-grid">${weekdays.map(day => `<div class="weekday">${day}</div>`).join('')}${dayButtons}</div></section>
@@ -605,6 +605,9 @@
 
   function renderPage() {
     if ((mode !== 'panel' && mode !== 'calendar') || !snapshot) return;
+    const isRoutineFullscreen = currentPage === 'routineDetail';
+    const panelView = document.getElementById('panel-view');
+    if (panelView) panelView.classList.toggle('routine-fullscreen', isRoutineFullscreen);
     document.querySelectorAll('[data-page]').forEach(button => button.classList.toggle('active', button.dataset.page === currentPage));
     document.getElementById('project-name').textContent = title(snapshot);
     document.getElementById('display-name').textContent = snapshot.DisplayName || 'Ruang produktivitasmu';
