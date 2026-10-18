@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
   'use strict';
 
   const query = new URLSearchParams(location.search);
@@ -13,6 +13,7 @@
   const bridge = window.chrome && window.chrome.webview;
   let snapshot = null;
   let currentPage = mode === 'calendar' ? 'calendar' : 'dashboard';
+  let activeOverlay = null;
   let taskFilter = 'Semua';
   let searchText = '';
   let month = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -603,7 +604,7 @@
   }
 
   function renderPage() {
-    if (mode !== 'panel' || !snapshot) return;
+    if ((mode !== 'panel' && mode !== 'calendar') || !snapshot) return;
     document.querySelectorAll('[data-page]').forEach(button => button.classList.toggle('active', button.dataset.page === currentPage));
     document.getElementById('project-name').textContent = title(snapshot);
     document.getElementById('display-name').textContent = snapshot.DisplayName || 'Ruang produktivitasmu';
@@ -696,6 +697,7 @@
       NotificationVolume: Number(document.getElementById('setting-volume')?.value || 75)
     };
     post('settings.save', { projectName: document.getElementById('setting-project')?.value || '', displayName: document.getElementById('setting-display')?.value || '', settings: s });
+    closeSettingsOverlay();
   }
 
   function handleClick(event) {
@@ -703,25 +705,33 @@
     if (!target) return;
     if (target.dataset.page) {
       const page = target.dataset.page;
-      if (mode === 'panel' && page === 'calendar') {
-        post('calendar.open');
+      if (mode === 'calendar' && (page === 'dashboard' || page === 'calendar')) {
+        post('calendar.close');
         return;
       }
-      if (mode === 'calendar' && page === 'dashboard') {
-        post('calendar.close');
+      if (page === 'calendar') {
+        if (mode === 'panel') {
+          post('calendar.open');
+          return;
+        }
+        currentPage = 'calendar';
+        renderPage();
         return;
       }
       if (page === 'settings') {
         openSettingsOverlay();
         return;
       }
-      if (!settingsOverlay.hidden) {
+      if (page === 'dashboard') {
+        closeModal();
         closeSettingsOverlay();
+        currentPage = 'dashboard';
+        renderPage();
+        return;
       }
       currentPage = page;
       if (currentPage === 'tasks') {
         post('search.update', { query: searchText, priority: taskFilter });
-        return;
       }
       renderPage();
       return;
@@ -729,6 +739,7 @@
     const { action, id, value } = target.dataset;
     switch (action) {
       case 'panel.close': post('panel.close'); break;
+      case 'calendar.close': post('calendar.close'); break;
       case 'task.new': showTaskForm(); break;
       case 'task.edit': { const item = allTasks().find(row => row.Id === id); if (item) showTaskForm(item); break; }
       case 'task.delete': doDelete('task', id, 'tugas ini'); break;
@@ -961,21 +972,14 @@
     document.addEventListener('click', handleClick);
     document.addEventListener('change', handleChange);
     document.addEventListener('submit', handleSubmit);
-    document.getElementById('global-search').addEventListener('input', event => sendSearch(event.target.value));
-    const topbar = document.querySelector('.topbar');
-    topbar.addEventListener('pointerdown', event => {
-      if (!event.target.closest('[data-drag-handle]') || event.target.closest('button,input,label')) return;
-      panelDragStart = { pointerId: event.pointerId, x: event.screenX, y: event.screenY };
-      topbar.setPointerCapture(event.pointerId);
+    document.getElementById('global-search')?.addEventListener('input', event => sendSearch(event.target.value));
+
+    document.addEventListener('pointerdown', event => {
+      const handle = event.target.closest(mode === 'calendar' ? '.page-heading' : '[data-drag-handle]');
+      if (!handle || event.target.closest('button,input,label,textarea,select,a')) return;
       post('panel.drag.start');
     });
-    topbar.addEventListener('pointermove', event => {
-      if (!panelDragStart || event.pointerId !== panelDragStart.pointerId) return;
-      post('panel.drag.move', { dx: event.screenX - panelDragStart.x, dy: event.screenY - panelDragStart.y });
-    });
-    const end = event => { if (panelDragStart && event.pointerId === panelDragStart.pointerId) { post('panel.drag.end'); panelDragStart = null; } };
-    topbar.addEventListener('pointerup', end);
-    topbar.addEventListener('pointercancel', end);
+
     document.addEventListener('input', event => {
       if (event.target.id === 'setting-opacity') document.getElementById('opacity-label').textContent = `${event.target.value}%`;
       if (event.target.id === 'routine-day-note' && selectedRoutineId) routineNoteDrafts.set(`${selectedRoutineId}:${isoDay(routineSelectedDay)}`, event.target.value);

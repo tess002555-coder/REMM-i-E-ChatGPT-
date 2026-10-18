@@ -1,0 +1,52 @@
+name: REMM V2 CI
+
+on:
+  push:
+    branches: [ main, master, v2-rebuild, v3-clean-widget ]
+  pull_request:
+    branches: [ main, master, v2-rebuild, v3-clean-widget ]
+  workflow_dispatch:
+
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --include=optional --no-audit --no-fund
+
+      - name: Check TypeScript
+        run: npm run lint
+
+      - name: Build Web App
+        run: npm run build
+
+  build-csharp:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore WPF project
+        run: dotnet restore .\REMM-i-WPF\REMM-i-WPF.csproj
+
+      - name: Build WPF project
+        run: dotnet build .\REMM-i-WPF\REMM-i-WPF.csproj -c Release --no-restore
+
+      - name: Upload WPF Executable Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: REMM-i-exe
+          path: .\REMM-i-WPF\bin\Release\net8.0-windows\*.exe

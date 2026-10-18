@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "NKVHwwWzGWU=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Acer Nitro\\Documents\\PROJECT\\REMM-i-E-ChatGPT-\\REMM-i-WPF\\REMM-i-WPF.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Acer Nitro\\.nuget\\packages\\microsoft.web.webview2\\1.0.3485.44\\microsoft.web.webview2.1.0.3485.44.nupkg.sha512"
+  ],
+  "logs": []
+}

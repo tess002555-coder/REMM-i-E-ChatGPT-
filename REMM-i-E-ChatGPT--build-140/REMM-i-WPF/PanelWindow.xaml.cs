@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
@@ -14,6 +15,16 @@ namespace RemmI;
 
 public partial class PanelWindow : Window
 {
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ReleaseCapture();
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+
+    private const int WM_NCLBUTTONDOWN = 0xA1;
+    private const int HTCAPTION = 0x2;
+
     private static readonly string[] AllowedThemes =
     {
         "Soft Sakura Pink",
@@ -31,10 +42,7 @@ public partial class PanelWindow : Window
     private RemmData _data;
     private bool _restoringPosition;
     private bool _positionReady;
-    private bool _dragging;
     private CalendarWindow? _calendarWindow;
-    private double _dragStartLeft;
-    private double _dragStartTop;
     private string _searchQuery = "";
     private string _taskPriorityFilter = "Semua";
 
@@ -46,7 +54,7 @@ public partial class PanelWindow : Window
         Loaded += PanelWindow_Loaded;
         LocationChanged += (_, _) =>
         {
-            if (!_restoringPosition && _positionReady && !_dragging)
+            if (!_restoringPosition && _positionReady)
                 SavePanelPosition();
         };
         Closing += (_, _) => SavePanelPosition();
@@ -160,23 +168,12 @@ public partial class PanelWindow : Window
                     Close();
                     break;
                 case "panel.drag.start":
-                    _dragging = true;
-                    _dragStartLeft = Left;
-                    _dragStartTop = Top;
+                    ReleaseCapture();
+                    SendMessage(new System.Windows.Interop.WindowInteropHelper(this).Handle, WM_NCLBUTTONDOWN, (IntPtr)HTCAPTION, IntPtr.Zero);
+                    SavePanelPosition();
                     break;
                 case "panel.drag.move":
-                    if (_dragging)
-                    {
-                        var transform = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice;
-                        var scaleX = transform?.M11 ?? 1.0;
-                        var scaleY = transform?.M22 ?? 1.0;
-                        Left = _dragStartLeft + GetNumber(root, "dx") / scaleX;
-                        Top = _dragStartTop + GetNumber(root, "dy") / scaleY;
-                    }
-                    break;
                 case "panel.drag.end":
-                    _dragging = false;
-                    SavePanelPosition();
                     break;
                 case "search.update":
                     UpdateSearch(root);

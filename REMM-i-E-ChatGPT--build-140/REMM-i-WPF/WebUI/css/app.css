@@ -415,4 +415,5 @@ body[data-window="calendar"] .panel-body{flex:1;min-height:0}
 body[data-window="calendar"] .page-shell{height:100%}
 body[data-window="calendar"] .page-content{padding:18px;height:100%}
 body[data-window="calendar"] .calendar-layout{grid-template-columns:1fr;gap:12px}
-body[data-window="calendar"] .page-heading{margin-bottom:14px}
+body[data-window="calendar"] .page-heading{margin-bottom:14px;cursor:move;user-select:none}
+body[data-window="calendar"] .page-heading button{cursor:pointer}

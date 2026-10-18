@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>REMM(i)E</title><link rel="stylesheet" href="css/app.css"></head>
+<body><div class="shell">
+<button class="move-pill" data-action="drag-window">••• <span>Pindah Panel</span></button>
+<header><div class="identity"><div class="avatar"><img src="../Assets/mascot.png" alt=""></div><div><strong>REMM(i)E</strong><small id="displayName">Maskot Denia</small></div></div><div class="head-actions"><button class="icon-btn" data-action="settings">⚙</button><button class="icon-btn" data-action="close">×</button></div></header>
+<label class="search"><span>⌕</span><input id="search" placeholder="Cari tugas / rutinitas..." autocomplete="off"></label>
+<section class="card calendar"><div class="card-head"><div class="title"><i>▣</i> Calender</div><div class="actions"><button class="plus" data-action="add-calendar">+</button><button class="detail" data-action="calendar-detail">Detail ›</button></div></div><div class="inner" id="calendarList"></div></section>
+<section class="card"><div class="card-head"><div class="title"><i>▣</i> Rutinitas</div><button class="plus" data-action="add-routine">+</button></div><div class="inner" id="routineList"></div></section>
+<section class="card tasks"><div class="card-head"><div class="title">Tugas <b id="taskCount">0</b></div><button class="plus" data-action="add-task">+</button></div>
+<div class="filters"><button class="filter active" data-filter="Semua">Semua</button><button class="filter" data-filter="Tinggi"><em class="high"></em>Tinggi</button><button class="filter" data-filter="Sedang"><em class="medium"></em>Sedang</button><button class="filter" data-filter="Rendah"><em class="low"></em>Rendah</button></div>
+<div id="taskList"></div><div id="empty" class="empty">Tidak ada tugas terdaftar.</div></section></div><script src="js/app.js"></script></body></html>

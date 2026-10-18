@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
@@ -12,6 +13,16 @@ namespace RemmI;
 
 public partial class CalendarWindow : Window
 {
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ReleaseCapture();
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+
+    private const int WM_NCLBUTTONDOWN = 0xA1;
+    private const int HTCAPTION = 0x2;
+
     private static readonly JsonSerializerOptions WebJsonOptions = new()
     {
         NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
@@ -68,6 +79,13 @@ public partial class CalendarWindow : Window
                     break;
                 case "calendar.close":
                     Close();
+                    break;
+                case "panel.drag.start":
+                    ReleaseCapture();
+                    SendMessage(new System.Windows.Interop.WindowInteropHelper(this).Handle, WM_NCLBUTTONDOWN, (IntPtr)HTCAPTION, IntPtr.Zero);
+                    break;
+                case "panel.drag.move":
+                case "panel.drag.end":
                     break;
                 case "schedule.create":
                     CreateOrUpdateSchedule(root, false);
@@ -175,4 +193,9 @@ public partial class CalendarWindow : Window
         root.TryGetProperty(name, out var value) && value.ValueKind != JsonValueKind.Null
             ? value.GetString() ?? ""
             : "";
+
+    private static double GetNumber(JsonElement root, string name, double fallback = 0) =>
+        root.TryGetProperty(name, out var value) && value.TryGetDouble(out var result) && double.IsFinite(result)
+            ? result
+            : fallback;
 }
